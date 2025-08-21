@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aptapy"
+version = "0.0.1"
+description = "Statistical tools for online monitoring and analysis"
+readme = "README.md"
+requires-python = ">=3.7"
+license = { file = "LICENSE" }
+authors = [{ name = "Luca Baldini" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+]
+
+[project.urls]
+Homepage = "https://github.com/lucabaldini/aptapy"
+Issues = "https://github.com/lucabaldini/aptapy/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aptapy"]
+
+[tool.hatch.build]
+include = ["aptapy/py.typed"]

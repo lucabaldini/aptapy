@@ -18,6 +18,8 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import wraps
+import inspect
 from numbers import Number
 from typing import Tuple, Iterator
 
@@ -50,10 +52,9 @@ class FitParameter:
         """
         self._default_value = self.value
 
-    def reset(self, value: float = None) -> None:
+    def reset(self) -> None:
         """Reset the parameter.
         """
-        self.value = value or self._default_value
         self.error = None
 
     def is_bound(self) -> bool:
@@ -228,6 +229,14 @@ class AbstractFitModel(ABC):
             self.init_parameters(xdata, ydata, sigma)
             p0 = self.parameter_values()
 
+        # _kwargs = {parameter._name: parameter.value for parameter in self if parameter.frozen}
+        # if _kwargs:
+        #     func = self.freeze(self.evaluate, **_kwargs)
+        #     p0 = p0[1:]
+        #     print(_kwargs, func, p0)
+        # else:
+        #     func = self.evaluate
+
         # Do the actual fit.
         popt, pcov = curve_fit(self.evaluate, xdata, ydata, p0, sigma, absolute_sigma,
                                True, self.bounds(), **kwargs)
@@ -326,7 +335,7 @@ class Gaussian(AbstractFitModel):
     """Gaussian model.
     """
 
-    normalization: FitParameter = 1.
+    prefactor: FitParameter = 1.
     mean: FitParameter = 0.
     sigma: FitParameter = 1.
 

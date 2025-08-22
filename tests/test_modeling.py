@@ -26,16 +26,16 @@ def test_fit_parameter():
     """Test the FitParameter class.
     """
     parameter = FitParameter('normalization', 1.)
-    assert not parameter.bound()
+    assert not parameter.is_bound()
     print(parameter)
     parameter = FitParameter('normalization', 1., 0.1)
-    assert not parameter.bound()
+    assert not parameter.is_bound()
     print(parameter)
     parameter = FitParameter('normalization', 1., frozen=True)
-    assert not parameter.bound()
+    assert not parameter.is_bound()
     print(parameter)
     parameter = FitParameter('normalization', 1., minimum=0.)
-    assert parameter.bound()
+    assert parameter.is_bound()
     print(parameter)
 
 
@@ -45,8 +45,8 @@ def test_model_parameters():
     """
     g1 = Gaussian()
     g2 = Gaussian()
-    assert g1.normalization == g2.normalization
-    assert id(g1.normalization) != id(g2.normalization)
+    assert g1.prefactor == g2.prefactor
+    assert id(g1.prefactor) != id(g2.prefactor)
 
 
 def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05):
@@ -82,16 +82,38 @@ def test_gaussian_fit_subrange():
     print(model)
     model.plot()
 
-# def test_plot():
-#     """Plot stuff.
+
+def test_gaussian_fit_bounded():
+    """
+    """
+    model = Gaussian()
+    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
+    model.mean.minimum = 0.1
+    model.mean.value = 0.2
+    plt.figure('Gaussian fit bounded')
+    plt.errorbar(xdata, ydata, sigma, fmt='o')
+    model.fit(xdata, ydata, sigma=sigma)
+    print(model)
+    model.plot()
+
+
+# def test_gaussian_fit_frozen():
 #     """
-#     for model in (Gaussian(), ):
-#         plt.figure(num=model.name())
-#         model.plot()
+#     """
+#     model = Gaussian()
+#     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
+#     model.prefactor.frozen = True
+#     plt.figure('Gaussian fit frozen')
+#     plt.errorbar(xdata, ydata, sigma, fmt='o')
+#     model.fit(xdata, ydata, sigma=sigma)
+#     print(model)
+#     model.plot()
+
 
 
 if __name__ == '__main__':
-    #test_plot()
     test_gaussian_fit()
     test_gaussian_fit_subrange()
+    test_gaussian_fit_bounded()
+    #test_gaussian_fit_frozen()
     plt.show()

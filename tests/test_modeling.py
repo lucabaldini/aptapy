@@ -97,17 +97,17 @@ def test_gaussian_fit_bounded():
     model.plot()
 
 
-# def test_gaussian_fit_frozen():
-#     """
-#     """
-#     model = Gaussian()
-#     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-#     model.prefactor.frozen = True
-#     plt.figure('Gaussian fit frozen')
-#     plt.errorbar(xdata, ydata, sigma, fmt='o')
-#     model.fit(xdata, ydata, sigma=sigma)
-#     print(model)
-#     model.plot()
+def test_gaussian_fit_frozen():
+    """
+    """
+    model = Gaussian()
+    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
+    model.prefactor.frozen = True
+    plt.figure('Gaussian fit frozen')
+    plt.errorbar(xdata, ydata, sigma, fmt='o')
+    model.fit(xdata, ydata, sigma=sigma)
+    print(model)
+    model.plot()
 
 
 
@@ -115,5 +115,5 @@ if __name__ == '__main__':
     test_gaussian_fit()
     test_gaussian_fit_subrange()
     test_gaussian_fit_bounded()
-    #test_gaussian_fit_frozen()
+    test_gaussian_fit_frozen()
     plt.show()

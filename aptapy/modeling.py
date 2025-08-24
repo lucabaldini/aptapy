@@ -18,7 +18,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import wraps
+import functools
 import inspect
 from numbers import Number
 from typing import Tuple, Iterator
@@ -147,6 +147,16 @@ class AbstractFitModel(ABC):
         """
         return tuple(parameter.value for parameter in self)
 
+    def free_parameters(self):
+        """
+        """
+        return tuple(parameter for parameter in self if not parameter.frozen)
+
+    def free_parameter_values(self) -> Tuple[float]:
+        """Return the current parameter values.
+        """
+        return tuple(parameter.value for parameter in self.free_parameters())
+
     @staticmethod
     @abstractmethod
     def evaluate(x: ArrayLike, *parameter_values: Tuple[float]) -> ArrayLike:
@@ -180,7 +190,7 @@ class AbstractFitModel(ABC):
     def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
         """Update the model parameters based on the output of the ``curve_fit()`` call.
         """
-        for parameter, value, error in zip(self, popt, np.sqrt(pcov.diagonal())):
+        for parameter, value, error in zip(self.free_parameters(), popt, np.sqrt(pcov.diagonal())):
             parameter.value = value
             parameter.error = error
 
@@ -196,6 +206,57 @@ class AbstractFitModel(ABC):
         model parameters.
         """
         return float((((ydata - self(xdata)) / sigma)**2.).sum())
+
+    @staticmethod
+    def freeze(model_function, /, **constraints):
+        """
+        """
+        if not constraints:
+            return model_function
+
+        # Cache a couple of constant to save on line length later.
+        POSITIONAL_ONLY = inspect.Parameter.POSITIONAL_ONLY
+        POSITIONAL_OR_KEYWORD = inspect.Parameter.POSITIONAL_OR_KEYWORD
+
+        # scipy.optimize.curve_fit assumes the first argument of the model function
+        # is the independent variable...
+        x, *parameters = inspect.signature(model_function).parameters.values()
+        # ... while all the others, internally, are passed positionally only
+        # (i.e., never as keywords), so here we cache all the names of the
+        # positional parameters.
+        parameter_names = [parameter.name for parameter in parameters if
+                        parameter.kind in (POSITIONAL_ONLY, POSITIONAL_OR_KEYWORD)]
+
+        # Make sure the constraints are valid, and we are not trying to freeze one
+        # or more non-existing parameter(s). This is actually clever, as it uses the fact
+        # that set(dict) returns the set of the keys, and after subtracting the two sets
+        # you end up with all the names of the unknown parameters, which is handy to
+        # print out an error message.
+        unknown_parameter_names = set(constraints) - set(parameter_names)
+        if unknown_parameter_names:
+            raise ValueError(f'Cannot freeze unknown parameters {unknown_parameter_names}')
+
+        # Now we need to build the signature for the new function, starting from  a
+        # clean copy of the parameter for the independent variable...
+        parameters = [x.replace(default=inspect._empty, kind=POSITIONAL_OR_KEYWORD)]
+        # ... and following up with all the free parameters.
+        free_parameter_names = [name for name in parameter_names if name not in constraints]
+        num_free_parameters = len(free_parameter_names)
+        for name in free_parameter_names:
+            parameters.append(inspect.Parameter(name, kind=POSITIONAL_OR_KEYWORD))
+        signature = inspect.Signature(parameters)
+
+        # And we have everything to prepare the glorious wrapper!
+        @functools.wraps(model_function)
+        def wrapper(x, *args):
+            if len(args) != num_free_parameters:
+                raise TypeError(f'Frozen wrapper got {len(args)} parameters instead of ' \
+                                f'{num_free_parameters} ({free_parameter_names})')
+            parameter_dict = {**dict(zip(free_parameter_names, args)), **constraints}
+            return model_function(x, *[parameter_dict[name] for name in parameter_names])
+
+        wrapper.__signature__ = signature
+        return wrapper
 
     def fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
             sigma: ArrayLike = 1., absolute_sigma: bool = False, xmin: float = -np.inf,
@@ -227,18 +288,13 @@ class AbstractFitModel(ABC):
         # try and do something sensible.
         if p0 is None:
             self.init_parameters(xdata, ydata, sigma)
-            p0 = self.parameter_values()
-
-        # _kwargs = {parameter._name: parameter.value for parameter in self if parameter.frozen}
-        # if _kwargs:
-        #     func = self.freeze(self.evaluate, **_kwargs)
-        #     p0 = p0[1:]
-        #     print(_kwargs, func, p0)
-        # else:
-        #     func = self.evaluate
+            p0 = self.free_parameter_values()
 
         # Do the actual fit.
-        popt, pcov = curve_fit(self.evaluate, xdata, ydata, p0, sigma, absolute_sigma,
+        constraints = {parameter._name: parameter.value for parameter in self \
+                       if parameter.frozen}
+        model = self.freeze(self.evaluate, **constraints)
+        popt, pcov = curve_fit(model, xdata, ydata, p0, sigma, absolute_sigma,
                                True, self.bounds(), **kwargs)
         self._update_parameters(popt, pcov)
         chisquare = self.calculate_chisqure(xdata, ydata, sigma)
@@ -340,8 +396,8 @@ class Gaussian(AbstractFitModel):
     sigma: FitParameter = 1.
 
     @staticmethod
-    def evaluate(x: ArrayLike, normalization: float, mean: float, sigma: float) -> ArrayLike:
-        return normalization * np.exp(-0.5 * ((x - mean) / sigma) ** 2.)
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        return prefactor * np.exp(-0.5 * ((x - mean) / sigma) ** 2.)
 
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
         mean, half_width = self.mean.value, num_sigma * self.sigma.value

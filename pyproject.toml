@@ -8,6 +8,12 @@ version = "0.0.1"
 description = "Statistical tools for online monitoring and analysis"
 readme = "README.md"
 requires-python = ">=3.7"
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "sphinx-book-theme",
+]
 license = { file = "LICENSE" }
 authors = [{ name = "Luca Baldini" }]
 classifiers = [

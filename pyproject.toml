@@ -31,3 +31,24 @@ packages = ["aptapy"]
 
 [tool.hatch.build]
 include = ["aptapy/py.typed"]
+
+[tool.ruff]
+target-version = "py37"
+line-length = 100
+src = ["aptapy", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort (imports)
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade (kept safe for py37)
+  "SIM", # flake8-simplify
+  "C4",  # flake8-comprehensions
+  "NPY", # NumPy-specific best practices
+  "PERF" # performance gotchas
+]
+ignore = [
+  "E501",  # line length handled by formatter (or ignore for now)
+]

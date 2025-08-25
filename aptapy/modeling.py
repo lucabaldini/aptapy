@@ -16,17 +16,17 @@
 """Modeling facilities.
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 import functools
 import inspect
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from numbers import Number
-from typing import Tuple, Iterator
+from typing import Iterator, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import curve_fit
 import uncertainties
+from scipy.optimize import curve_fit
 
 from aptapy.typing_ import ArrayLike
 
@@ -75,10 +75,7 @@ class FitParameter:
         is what is used in the actual printout of the fit parameters from a fit.
         """
         text = f'{self._name} ='
-        if self.error is None:
-            text = f'{text} {self.value}'
-        else:
-            text = f'{text} {self.ufloat()}'
+        text = f'{text} {self.value}' if self.error is None else f'{text} {self.ufloat()}'
         if self.frozen:
             text = f'{text} (frozen)'
         if self.is_bound():
@@ -184,8 +181,9 @@ class AbstractFitModel(ABC):
             parameter.value = value
 
     def init_parameters(self, x: ArrayLike, y: ArrayLike, sigma: ArrayLike) -> None:
+        """Optional: override in subclasses if needed.
         """
-        """
+        return
 
     def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
         """Update the model parameters based on the output of the ``curve_fit()`` call.
@@ -208,7 +206,7 @@ class AbstractFitModel(ABC):
         return float((((ydata - self(xdata)) / sigma)**2.).sum())
 
     @staticmethod
-    def freeze(model_function, /, **constraints):
+    def freeze(model_function, **constraints):
         """
         """
         if not constraints:

@@ -18,12 +18,11 @@
 
 from typing import Any
 
-from cycler import cycler
-from loguru import logger
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
+from cycler import cycler
+from loguru import logger
 
 DEFAULT_FIGURE_WIDTH = 8.
 DEFAULT_FIGURE_HEIGHT = 6.
@@ -32,8 +31,6 @@ DEFAULT_COLOR_CYCLE = [
     '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
     '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
 ]
-
-
 
 
 def _set(key: str, value: Any):
@@ -243,13 +240,15 @@ def configure() -> None:
     _set('axes.autolimit_mode', 'data')
     _set('polaraxes.grid', True)   # display grid on polar axes
     _set('axes3d.grid', True)   # display grid on 3D axes
-    _set('axes3d.automargin', False)  # automatically add margin when manually setting 3D axis limits
+    # Automatically add margin when manually setting 3D axis limits
+    _set('axes3d.automargin', False)
     _set('axes3d.xaxis.panecolor', (0.95, 0.95, 0.95, 0.5))  # background pane on 3D axes
     _set('axes3d.yaxis.panecolor', (0.90, 0.90, 0.90, 0.5))  # background pane on 3D axes
     _set('axes3d.zaxis.panecolor', (0.925, 0.925, 0.925, 0.5))  # background pane on 3D axes
     _set('axes3d.mouserotationstyle', 'arcball')  # {azel, trackball, sphere, arcball}
     _set('axes3d.trackballsize', 0.667)  # trackball diameter, in units of the Axes bbox
-    _set('axes3d.trackballborder', 0.2)  # trackball border width, in units of the Axes bbox (only for 'sphere' and 'arcball' style)
+    # trackball border width, in units of the Axes bbox (only for 'sphere' and 'arcball' style)
+    _set('axes3d.trackballborder', 0.2)
 
     # Axis
     _set('xaxis.labellocation', 'center')  # {left, right, center}
@@ -440,7 +439,8 @@ def configure() -> None:
     _set('savefig.directory', '')
     # Whether figures are saved with a transparent background by default
     _set('savefig.transparent', False)
-    _set('savefig.orientation', 'portrait')  # orientation of saved figure, for PostScript output only
+    # Orientation of saved figure, for PostScript output only
+    _set('savefig.orientation', 'portrait')
     _set('macosx.window_mode', 'system')
     _set('tk.window_focus', False)  # Maintain shell focus for TkAgg
     # Integer from 0 to 9, 0 disables compression (good for debugging)

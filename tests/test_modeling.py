@@ -52,10 +52,11 @@ def test_model_parameters():
 def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05):
     """
     """
+    rng = np.random.default_rng(seed=313)
     xdata = np.linspace(xmin, xmax, num_points)
     ydata = model(xdata)
     sigma = ydata * relative_error
-    ydata += np.random.normal(0., sigma)
+    ydata += rng.normal(0., sigma)
     return xdata, ydata, sigma
 
 

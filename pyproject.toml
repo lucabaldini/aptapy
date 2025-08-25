@@ -9,6 +9,8 @@ description = "Statistical tools for online monitoring and analysis"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
+    "cycler",
+    "loguru",
     "numpy",
     "scipy",
     "matplotlib",
@@ -35,7 +37,8 @@ include = ["aptapy/py.typed"]
 [tool.ruff]
 target-version = "py37"
 line-length = 100
-src = ["aptapy", "tests"]
+src = ["."]
+namespace-packages = ["aptapy"]
 
 [tool.ruff.lint]
 select = [
@@ -50,5 +53,5 @@ select = [
   "PERF" # performance gotchas
 ]
 ignore = [
-  "E501",  # line length handled by formatter (or ignore for now)
+
 ]

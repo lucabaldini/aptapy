@@ -28,7 +28,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 import uncertainties
 
-from aptapy.typing import ArrayLike
+from aptapy.typing_ import ArrayLike
 
 
 @dataclass

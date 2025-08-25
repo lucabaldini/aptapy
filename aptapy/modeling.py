@@ -144,8 +144,8 @@ class AbstractFitModel(ABC):
         """
         return tuple(parameter.value for parameter in self)
 
-    def free_parameters(self):
-        """
+    def free_parameters(self) -> Tuple[FitParameter]:
+        """Return the list of free parameters.
         """
         return tuple(parameter for parameter in self if not parameter.frozen)
 
@@ -175,7 +175,7 @@ class AbstractFitModel(ABC):
         return self.evaluate(x, *self.parameter_values())
 
     def set_parameters(self, *values: float) -> None:
-        """
+        """Set the values for all the parameters.
         """
         for parameter, value in zip(self, values):
             parameter.value = value
@@ -183,6 +183,7 @@ class AbstractFitModel(ABC):
     def init_parameters(self, x: ArrayLike, y: ArrayLike, sigma: ArrayLike) -> None:
         """Optional: override in subclasses if needed.
         """
+        # pylint: disable=unused-argument
         return
 
     def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
@@ -207,14 +208,14 @@ class AbstractFitModel(ABC):
 
     @staticmethod
     def freeze(model_function, **constraints):
-        """
+        """Freeze a subset of the model parameters.
         """
         if not constraints:
             return model_function
 
         # Cache a couple of constant to save on line length later.
-        POSITIONAL_ONLY = inspect.Parameter.POSITIONAL_ONLY
-        POSITIONAL_OR_KEYWORD = inspect.Parameter.POSITIONAL_OR_KEYWORD
+        positional_only = inspect.Parameter.POSITIONAL_ONLY
+        positional_or_keyword = inspect.Parameter.POSITIONAL_OR_KEYWORD
 
         # scipy.optimize.curve_fit assumes the first argument of the model function
         # is the independent variable...
@@ -223,7 +224,7 @@ class AbstractFitModel(ABC):
         # (i.e., never as keywords), so here we cache all the names of the
         # positional parameters.
         parameter_names = [parameter.name for parameter in parameters if
-                        parameter.kind in (POSITIONAL_ONLY, POSITIONAL_OR_KEYWORD)]
+                           parameter.kind in (positional_only, positional_or_keyword)]
 
         # Make sure the constraints are valid, and we are not trying to freeze one
         # or more non-existing parameter(s). This is actually clever, as it uses the fact
@@ -236,12 +237,12 @@ class AbstractFitModel(ABC):
 
         # Now we need to build the signature for the new function, starting from  a
         # clean copy of the parameter for the independent variable...
-        parameters = [x.replace(default=inspect._empty, kind=POSITIONAL_OR_KEYWORD)]
+        parameters = [x.replace(default=inspect._empty, kind=positional_or_keyword)]
         # ... and following up with all the free parameters.
         free_parameter_names = [name for name in parameter_names if name not in constraints]
         num_free_parameters = len(free_parameter_names)
         for name in free_parameter_names:
-            parameters.append(inspect.Parameter(name, kind=POSITIONAL_OR_KEYWORD))
+            parameters.append(inspect.Parameter(name, kind=positional_or_keyword))
         signature = inspect.Signature(parameters)
 
         # And we have everything to prepare the glorious wrapper!

@@ -91,22 +91,17 @@ class FitParameter:
         self.value = value
         self.error = error
 
-    def freeze(self) -> None:
+    def freeze(self, value: float = None) -> None:
         """Freeze the fit parameter.
         """
+        if value is not None:
+            self.set(value)
         self._frozen = True
 
     def thaw(self) -> None:
         """Un-freeze the fit parameter.
         """
         self._frozen = False
-
-    def reset(self) -> None:
-        """Reset the parameter.
-
-        REMOVEME!
-        """
-        self.error = None
 
     def ufloat(self) -> uncertainties.ufloat:
         """Return the parameter value and error as a ufloat object.
@@ -135,14 +130,24 @@ class FitStatus:
     """Small dataclass to hold the fit status.
     """
 
-    chisquare: float
-    dof: int
-    # pvalue: float
+    chisquare: float = None
+    dof: int = None
+    # pvalue: float = None
+    fit_range: Tuple[float, float] = None
+
+    def reset(self) -> None:
+        """Reset the fit status.
+        """
+        self.chisquare = None
+        self.dof = None
+        self.fit_range = None
 
     def __str__(self) -> str:
         """String formatting.
         """
-        return f'chisquare = {self.chisquare:.2f} / {self.dof} dof'
+        if self.chisquare is not None:
+            return f'chisquare = {self.chisquare:.2f} / {self.dof} dof'
+        return 'N/A'
 
 
 class AbstractFitModel(ABC):
@@ -150,25 +155,23 @@ class AbstractFitModel(ABC):
     """Abstract base class for a fit model.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Constructor.
+
+        Here we loop over the FitParameter objects defined at the class level, and
+        create copies that are attached to the instance, so that the latter has its
+        own state.
         """
         self._parameters = []
         for name, value in self.__class__.__dict__.items():
             if isinstance(value, FitParameter):
                 parameter = value.copy(name)
+                # Note we also set one instance attribute for each parameter so
+                # that we can use the notation model.parameter
                 setattr(self, name, parameter)
                 self._parameters.append(parameter)
-        self.status = None
-        self._fit_range = None
-
-    def reset(self) -> None:
-        """Reset all the fit parameters.
-        """
-        self.status = None
-        self._fit_range = None
-        for parameter in self:
-            parameter.reset()
+        # Fit status object holding all the additional information from the fit.
+        self.status = FitStatus()
 
     def name(self) -> str:
         """Return the model name.
@@ -243,8 +246,9 @@ class AbstractFitModel(ABC):
         """Return the bounds on the fit parameters in a form that can be use by the
         fitting method.
         """
-        return (tuple(parameter.minimum for parameter in self),
-                tuple(parameter.maximum for parameter in self))
+        free_parameters = self.free_parameters()
+        return (tuple(parameter.minimum for parameter in free_parameters),
+                tuple(parameter.maximum for parameter in free_parameters))
 
     def calculate_chisqure(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
         """Calculate the chisquare of the fit to some input data with the current
@@ -308,8 +312,8 @@ class AbstractFitModel(ABC):
             xmax: float = np.inf, **kwargs) -> None:
         """Fit a series of points.
         """
-        # Reset the fit status and the fit parameters.
-        self.reset()
+        # Reset the fit status.
+        self.status.reset()
 
         # Prepare the data. We want to make sure all the relevant things are numpy
         # arrays so that we can vectorize operations downstream, taking advantage of
@@ -319,15 +323,15 @@ class AbstractFitModel(ABC):
         # If we are fitting over a subrange, filter the input data.
         mask = np.logical_and(xdata >= xmin, xdata <= xmax)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
-        dof = int(mask.sum() - len(self))
-        if dof < 0:
-            raise RuntimeError('The model has no degrees of freedom')
+        self.status.dof = int(mask.sum() - len(self))
+        if self.status.dof < 0:
+            raise RuntimeError(f'{self.name()} has no degrees of freedom')
         xdata = xdata[mask]
         ydata = ydata[mask]
         if not isinstance(sigma, Number):
             sigma = np.asarray(sigma)[mask]
         # Cache the fit range for later use.
-        self._fit_range = (xdata.min(), xdata.max())
+        self.status.fit_range = (xdata.min(), xdata.max())
 
         # If we are not passing default starting points for the model parameters,
         # try and do something sensible.
@@ -339,11 +343,10 @@ class AbstractFitModel(ABC):
         constraints = {parameter.name: parameter.value for parameter in self \
                        if parameter.frozen}
         model = self.freeze(self.evaluate, **constraints)
-        popt, pcov = curve_fit(model, xdata, ydata, p0, sigma, absolute_sigma,
-                               True, self.bounds(), **kwargs)
+        args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
+        popt, pcov = curve_fit(*args, **kwargs)
         self._update_parameters(popt, pcov)
-        chisquare = self.calculate_chisqure(xdata, ydata, sigma)
-        self.status = FitStatus(chisquare, dof)
+        self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
         return self.status
 
     def default_plotting_range(self) -> Tuple[float, float]:
@@ -362,8 +365,8 @@ class AbstractFitModel(ABC):
         """
         # If we have fitted the model to some data, we take the fit range and pad it
         # a little bit.
-        if self._fit_range is not None:
-            _xmin, _xmax = self._fit_range
+        if self.status.fit_range is not None:
+            _xmin, _xmax = self.status.fit_range
             fit_padding *= (_xmax - _xmin)
             _xmin -= fit_padding
             _xmax += fit_padding
@@ -382,7 +385,7 @@ class AbstractFitModel(ABC):
         """
         x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
         y = self(x)
-        plt.plot(x, y)
+        plt.plot(x, y, label=str(self))
 
     def __str__(self):
         """String formatting.
@@ -390,7 +393,7 @@ class AbstractFitModel(ABC):
         text = f'{self.__class__.__name__} ({self.status})\n'
         for parameter in self._parameters:
             text = f'{text}{parameter}\n'
-        return text
+        return text.strip('\n')
 
 
 class Constant(AbstractFitModel):

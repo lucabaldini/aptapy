@@ -19,9 +19,7 @@
 from typing import Any
 
 import matplotlib
-
-# import matplotlib.pyplot as plt
-# import numpy as np
+import matplotlib.pyplot as plt  # noqa: F401 pylint: disable=unused-import
 from cycler import cycler
 from loguru import logger
 
@@ -338,7 +336,7 @@ def configure() -> None:
     _set('legend.numpoints', 1)  # the number of marker points in the legend line
     _set('legend.scatterpoints', 1)  # number of scatter points
     _set('legend.markerscale', 1.0)  # the relative size of legend markers vs. original
-    _set('legend.fontsize', 'medium')
+    _set('legend.fontsize', 'small')
     _set('legend.labelcolor', None)
     _set('legend.title_fontsize', None)  # None sets to the same as the default axes.
     # Dimensions as fraction of font size:

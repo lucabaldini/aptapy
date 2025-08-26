@@ -16,26 +16,46 @@
 """Unit tests for the modeling module.
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from aptapy.modeling import FitParameter, Gaussian
+from aptapy.plotting import plt
 
 
 def test_fit_parameter():
-    """Test the FitParameter class.
+    """Test the FitParameter class and the various interfaces.
     """
     parameter = FitParameter(1., 'normalization')
     assert not parameter.is_bound()
+    assert not parameter.frozen
+    print(parameter)
+    parameter.set(3., 0.1)
+    assert parameter.value == 3.
+    assert parameter.error == 0.1
+    print(parameter)
+    parameter.set(4.)
+    assert parameter.value == 4.
+    assert parameter.error is None
     print(parameter)
     parameter = FitParameter(1., 'normalization', 0.1)
+    assert not parameter.frozen
     assert not parameter.is_bound()
     print(parameter)
     parameter = FitParameter(1., 'normalization', _frozen=True)
     assert not parameter.is_bound()
+    assert parameter.frozen
+    print(parameter)
+    parameter.thaw()
+    assert not parameter.frozen
     print(parameter)
     parameter = FitParameter(1., 'normalization', minimum=0.)
     assert parameter.is_bound()
+    assert not parameter.frozen
+    print(parameter)
+    parameter.freeze(3.)
+    assert parameter.value == 3.
+    assert parameter.error is None
+    assert parameter.frozen
     print(parameter)
 
 
@@ -53,13 +73,13 @@ def test_model_parameters():
     assert id(p1) != id(p2)
 
 
-def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05):
+def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05, min_error=0.01):
     """
     """
     rng = np.random.default_rng(seed=313)
     xdata = np.linspace(xmin, xmax, num_points)
     ydata = model(xdata)
-    sigma = ydata * relative_error
+    sigma = ydata * relative_error + min_error
     ydata += rng.normal(0., sigma)
     return xdata, ydata, sigma
 
@@ -74,6 +94,7 @@ def test_gaussian_fit(relative_error=0.05):
     model.fit(xdata, ydata, sigma=sigma)
     print(model)
     model.plot()
+    plt.legend()
 
 
 def test_gaussian_fit_subrange():
@@ -86,20 +107,22 @@ def test_gaussian_fit_subrange():
     model.fit(xdata, ydata, sigma=sigma, xmin=-2., xmax=2.)
     print(model)
     model.plot()
+    plt.legend()
 
 
-def test_gaussian_fit_bounded():
+def test_gaussian_fit_bound():
     """
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
     model.mean.minimum = 0.1
     model.mean.value = 0.2
-    plt.figure('Gaussian fit bounded')
+    plt.figure('Gaussian fit bound')
     plt.errorbar(xdata, ydata, sigma, fmt='o')
     model.fit(xdata, ydata, sigma=sigma)
     print(model)
     model.plot()
+    plt.legend()
 
 
 def test_gaussian_fit_frozen():
@@ -113,12 +136,28 @@ def test_gaussian_fit_frozen():
     model.fit(xdata, ydata, sigma=sigma)
     print(model)
     model.plot()
+    plt.legend()
 
+
+def test_gaussian_fit_frozen_and_bound():
+    """
+    """
+    model = Gaussian()
+    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
+    model.sigma.freeze(1.1)
+    model.sigma.minimum = 0.
+    plt.figure('Gaussian fit frozen and bound')
+    plt.errorbar(xdata, ydata, sigma, fmt='o')
+    model.fit(xdata, ydata, sigma=sigma)
+    print(model)
+    model.plot()
+    plt.legend()
 
 
 if __name__ == '__main__':
     test_gaussian_fit()
     test_gaussian_fit_subrange()
-    test_gaussian_fit_bounded()
+    test_gaussian_fit_bound()
     test_gaussian_fit_frozen()
+    test_gaussian_fit_frozen_and_bound()
     plt.show()

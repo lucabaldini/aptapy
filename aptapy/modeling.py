@@ -74,12 +74,16 @@ class FitParameter:
         class variables holding the default value, and each instance gets their own
         copy of the parameter, where the name is automatically inferred.
 
+        Note that, in addition to the name being passed as an argument, we only carry
+        over the value and bounds of the original fit parameter: the new object is
+        created with error = None and _frozen = False.
+
         Arguments
         ---------
         name : str
             The name for the new FitParameter object.
         """
-        return self.__class__(self.value, name)
+        return self.__class__(self.value, name, minimum=self.minimum, maximum=self.maximum)
 
     def set(self, value: float, error: float = None) -> None:
         """Set the parameter value and error.

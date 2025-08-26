@@ -37,30 +37,72 @@ class FitParameter:
     """Small class describing a fit parameter.
     """
 
-    _name: str
     value: float
+    _name: str = None
     error: float = None
-    frozen: bool = False
+    _frozen: bool = False
     minimum: float = -np.inf
     maximum: float = np.inf
 
-    def __post_init__(self) -> None:
-        """Post-initialization.
+    @property
+    def name(self) -> str:
+        """Return the parameter name.
 
-        Here we basically cache the value that is given to the parameter at creation time
-        so that we can later reset it to that value.
+        We are wrapping this into a property because, arguably, the parameter name is
+        the only thing we never, ever want to change after the fact.
         """
-        self._default_value = self.value
+        return self._name
 
-    def reset(self) -> None:
-        """Reset the parameter.
+    @property
+    def frozen(self) -> bool:
+        """Return True if the parameter is frozen.
+
+        We are wrapping this into a property because we interact with this member
+        via the freeze() and thaw() methods.
         """
-        self.error = None
+        return self._frozen
 
     def is_bound(self) -> bool:
         """Return True if the parameter is bounded.
         """
         return not np.isinf(self.minimum) or not np.isinf(self.maximum)
+
+    def copy(self, name: str) -> 'FitParameter':
+        """Create a copy of the parameter object with a new name.
+
+        This is necessary becase we define the fit parameters of the actual model as
+        class variables holding the default value, and each instance gets their own
+        copy of the parameter, where the name is automatically inferred.
+
+        Arguments
+        ---------
+        name : str
+            The name for the new FitParameter object.
+        """
+        return self.__class__(self.value, name)
+
+    def set(self, value: float, error: float = None) -> None:
+        """Set the parameter value and error.
+        """
+        self.value = value
+        self.error = error
+
+    def freeze(self) -> None:
+        """Freeze the fit parameter.
+        """
+        self._frozen = True
+
+    def thaw(self) -> None:
+        """Un-freeze the fit parameter.
+        """
+        self._frozen = False
+
+    def reset(self) -> None:
+        """Reset the parameter.
+
+        REMOVEME!
+        """
+        self.error = None
 
     def ufloat(self) -> uncertainties.ufloat:
         """Return the parameter value and error as a ufloat object.
@@ -76,7 +118,7 @@ class FitParameter:
         """
         text = f'{self._name} ='
         text = f'{text} {self.value}' if self.error is None else f'{text} {self.ufloat()}'
-        if self.frozen:
+        if self._frozen:
             text = f'{text} (frozen)'
         if self.is_bound():
             text = f'{text} [{self.minimum}--{self.maximum}]'
@@ -108,9 +150,9 @@ class AbstractFitModel(ABC):
         """Constructor.
         """
         self._parameters = []
-        for name, annotation in self.__annotations__.items():
-            if annotation is FitParameter:
-                parameter = FitParameter(name, getattr(self, name, 1.))
+        for name, value in self.__class__.__dict__.items():
+            if isinstance(value, FitParameter):
+                parameter = value.copy(name)
                 setattr(self, name, parameter)
                 self._parameters.append(parameter)
         self.status = None
@@ -237,7 +279,7 @@ class AbstractFitModel(ABC):
 
         # Now we need to build the signature for the new function, starting from  a
         # clean copy of the parameter for the independent variable...
-        parameters = [x.replace(default=inspect._empty, kind=positional_or_keyword)]
+        parameters = [x.replace(default=inspect.Parameter.empty, kind=positional_or_keyword)]
         # ... and following up with all the free parameters.
         free_parameter_names = [name for name in parameter_names if name not in constraints]
         num_free_parameters = len(free_parameter_names)
@@ -290,7 +332,7 @@ class AbstractFitModel(ABC):
             p0 = self.free_parameter_values()
 
         # Do the actual fit.
-        constraints = {parameter._name: parameter.value for parameter in self \
+        constraints = {parameter.name: parameter.value for parameter in self \
                        if parameter.frozen}
         model = self.freeze(self.evaluate, **constraints)
         popt, pcov = curve_fit(model, xdata, ydata, p0, sigma, absolute_sigma,
@@ -352,7 +394,7 @@ class Constant(AbstractFitModel):
     """Constant model.
     """
 
-    value: FitParameter = 1.
+    value = FitParameter(1.)
 
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
@@ -365,8 +407,8 @@ class Line(AbstractFitModel):
     """Linear model.
     """
 
-    slope: FitParameter = 1.
-    intercept: FitParameter = 0.
+    slope = FitParameter(1.)
+    intercept = FitParameter(0.)
 
     @staticmethod
     def evaluate(x: ArrayLike, slope: float, intercept: float) -> ArrayLike:
@@ -379,8 +421,8 @@ class PowerLaw(AbstractFitModel):
     """Power-law model.
     """
 
-    prefactor: FitParameter = 1.
-    index: FitParameter = -1.
+    prefactor = FitParameter(1.)
+    index = FitParameter(-1.)
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
@@ -393,9 +435,9 @@ class Gaussian(AbstractFitModel):
     """Gaussian model.
     """
 
-    prefactor: FitParameter = 1.
-    mean: FitParameter = 0.
-    sigma: FitParameter = 1.
+    prefactor = FitParameter(1.)
+    mean = FitParameter(0.)
+    sigma = FitParameter(1.)
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:

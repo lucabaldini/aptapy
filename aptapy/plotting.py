@@ -19,8 +19,9 @@
 from typing import Any
 
 import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
+
+# import matplotlib.pyplot as plt
+# import numpy as np
 from cycler import cycler
 from loguru import logger
 
@@ -485,11 +486,3 @@ def configure() -> None:
 
 
 configure()
-
-
-x = np.linspace(0., 1., 100)
-y = x**2
-text = 'Quadratic\na = 3\nb = 2\nc = 4'
-plt.plot(x, y, label=text)
-plt.legend()
-plt.show()

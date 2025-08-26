@@ -25,16 +25,16 @@ from aptapy.modeling import FitParameter, Gaussian
 def test_fit_parameter():
     """Test the FitParameter class.
     """
-    parameter = FitParameter('normalization', 1.)
+    parameter = FitParameter(1., 'normalization')
     assert not parameter.is_bound()
     print(parameter)
-    parameter = FitParameter('normalization', 1., 0.1)
+    parameter = FitParameter(1., 'normalization', 0.1)
     assert not parameter.is_bound()
     print(parameter)
-    parameter = FitParameter('normalization', 1., frozen=True)
+    parameter = FitParameter(1., 'normalization', _frozen=True)
     assert not parameter.is_bound()
     print(parameter)
-    parameter = FitParameter('normalization', 1., minimum=0.)
+    parameter = FitParameter(1., 'normalization', minimum=0.)
     assert parameter.is_bound()
     print(parameter)
 
@@ -45,8 +45,12 @@ def test_model_parameters():
     """
     g1 = Gaussian()
     g2 = Gaussian()
-    assert g1.prefactor == g2.prefactor
-    assert id(g1.prefactor) != id(g2.prefactor)
+    p1 = g1.prefactor
+    p2 = g2.prefactor
+    print(p1, id(p1))
+    print(p2, id(p2))
+    assert p1 == p2
+    assert id(p1) != id(p2)
 
 
 def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05):
@@ -103,7 +107,7 @@ def test_gaussian_fit_frozen():
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-    model.prefactor.frozen = True
+    model.prefactor.freeze()
     plt.figure('Gaussian fit frozen')
     plt.errorbar(xdata, ydata, sigma, fmt='o')
     model.fit(xdata, ydata, sigma=sigma)

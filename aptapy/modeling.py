@@ -334,7 +334,7 @@ class AbstractFitModel(ABC):
     def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
         """Plot the model.
         """
-        x = np.linspace(*self._plotting_range(), num_points)
+        x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
         y = self(x)
         plt.plot(x, y)
 
@@ -356,6 +356,7 @@ class Constant(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
         return np.full(value, x.shape)
 
 
@@ -369,6 +370,7 @@ class Line(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, slope: float, intercept: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
         return slope * x + intercept
 
 
@@ -382,6 +384,7 @@ class PowerLaw(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
         return prefactor * x**index
 
 
@@ -396,6 +399,7 @@ class Gaussian(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
         return prefactor * np.exp(-0.5 * ((x - mean) / sigma) ** 2.)
 
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:

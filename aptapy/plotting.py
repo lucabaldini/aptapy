@@ -52,6 +52,8 @@ def configure() -> None:
     """See https://matplotlib.org/stable/users/explain/customizing.html for more
     information.
     """
+    # pylint:disable=too-many-statements
+
     # Backends
     _set('interactive', False)
     _set('timezone', 'UTC')

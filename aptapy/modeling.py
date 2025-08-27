@@ -20,6 +20,7 @@ import functools
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import StrEnum
 from numbers import Number
 from typing import Iterator, Tuple
 
@@ -29,6 +30,15 @@ import uncertainties
 from scipy.optimize import curve_fit
 
 from aptapy.typing_ import ArrayLike
+
+
+class Format(StrEnum):
+
+    """Small enum class to control string formatting.
+    """
+
+    PRETTY = 'P'
+    LATEX = 'L'
 
 
 @dataclass
@@ -70,7 +80,7 @@ class FitParameter:
     def copy(self, name: str) -> 'FitParameter':
         """Create a copy of the parameter object with a new name.
 
-        This is necessary becase we define the fit parameters of the actual model as
+        This is necessary because we define the fit parameters of the actual model as
         class variables holding the default value, and each instance gets their own
         copy of the parameter, where the name is automatically inferred.
 
@@ -115,10 +125,10 @@ class FitParameter:
         # f'{parameter}', so we can't really assign a default value to spec.
         if self.error is not None:
             param = format(self.ufloat(), spec)
-            if spec.endswith('L'):
+            if spec.endswith(Format.LATEX):
                 param = f'${param}$'
         else:
-            spec = spec.rstrip('P').rstrip('L')
+            spec = spec.rstrip(Format.PRETTY).rstrip(Format.LATEX)
             param = format(self.value, spec)
         text = f'{self._name.title()}: {param}'
         info = []
@@ -139,7 +149,7 @@ class FitParameter:
         than the default ``__repr__`` implementation from the dataclass decorator, and it
         is what is used in the actual printout of the fit parameters from a fit.
         """
-        return format(self, 'P')
+        return format(self, Format.PRETTY)
 
 
 @dataclass
@@ -165,16 +175,16 @@ class FitStatus:
         """
         if self.chisquare is None:
             return 'N/A'
-        if spec.endswith('L'):
+        if spec.endswith(Format.LATEX):
             return f'$\\chi^2$ = {self.chisquare:.2f} / {self.dof} dof'
-        if spec.endswith('P'):
+        if spec.endswith(Format.PRETTY):
             return f'χ² = {self.chisquare:.2f} / {self.dof} dof'
         return f'chisquare = {self.chisquare:.2f} / {self.dof} dof'
 
     def __str__(self) -> str:
         """String formatting.
         """
-        return format(self, 'P')
+        return format(self, Format.PRETTY)
 
 
 class AbstractFitModel(ABC):
@@ -412,7 +422,7 @@ class AbstractFitModel(ABC):
         """
         x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
         y = self(x)
-        plt.plot(x, y, label=format(self, 'L'))
+        plt.plot(x, y, label=format(self, Format.LATEX))
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -425,7 +435,7 @@ class AbstractFitModel(ABC):
     def __str__(self):
         """String formatting.
         """
-        return format(self, 'P')
+        return format(self, Format.PRETTY)
 
 
 class Constant(AbstractFitModel):

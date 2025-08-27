@@ -16,11 +16,11 @@
 """Modeling facilities.
 """
 
+import enum
 import functools
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import StrEnum
 from numbers import Number
 from typing import Iterator, Tuple
 
@@ -32,7 +32,7 @@ from scipy.optimize import curve_fit
 from aptapy.typing_ import ArrayLike
 
 
-class Format(StrEnum):
+class Format(enum.StrEnum):
 
     """Small enum class to control string formatting.
     """

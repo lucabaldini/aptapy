@@ -32,7 +32,7 @@ from scipy.optimize import curve_fit
 from aptapy.typing_ import ArrayLike
 
 
-class Format(enum.StrEnum):
+class Format(str, enum.Enum):
 
     """Small enum class to control string formatting.
 

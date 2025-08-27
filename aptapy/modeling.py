@@ -108,6 +108,30 @@ class FitParameter:
         """
         return uncertainties.ufloat(self.value, self.error)
 
+    def __format__(self, spec: str) -> str:
+        """String formatting.
+        """
+        # Keep in mind Python passes an empty string explicitly when you call
+        # f'{parameter}', so we can't really assign a default value to spec.
+        if self.error is not None:
+            param = format(self.ufloat(), spec)
+            if spec.endswith('L'):
+                param = f'${param}$'
+        else:
+            spec = spec.rstrip('P').rstrip('L')
+            param = format(self.value, spec)
+        text = f'{self._name.title()}: {param}'
+        info = []
+        if self._frozen:
+            info.append('frozen')
+        if not np.isinf(self.minimum):
+            info.append(f'min={self.minimum}')
+        if not np.isinf(self.maximum):
+            info.append(f'max={self.maximum}')
+        if info:
+            text = f'{text} ({", ".join(info)})'
+        return text
+
     def __str__(self) -> str:
         """String formatting.
 
@@ -115,13 +139,7 @@ class FitParameter:
         than the default ``__repr__`` implementation from the dataclass decorator, and it
         is what is used in the actual printout of the fit parameters from a fit.
         """
-        text = f'{self._name} ='
-        text = f'{text} {self.value}' if self.error is None else f'{text} {self.ufloat()}'
-        if self._frozen:
-            text = f'{text} (frozen)'
-        if self.is_bound():
-            text = f'{text} [{self.minimum}--{self.maximum}]'
-        return text
+        return format(self, 'P')
 
 
 @dataclass
@@ -142,12 +160,21 @@ class FitStatus:
         self.dof = None
         self.fit_range = None
 
+    def __format__(self, spec: str) -> str:
+        """String formatting.
+        """
+        if self.chisquare is None:
+            return 'N/A'
+        if spec.endswith('L'):
+            return f'$\\chi^2$ = {self.chisquare:.2f} / {self.dof} dof'
+        if spec.endswith('P'):
+            return f'χ² = {self.chisquare:.2f} / {self.dof} dof'
+        return f'chisquare = {self.chisquare:.2f} / {self.dof} dof'
+
     def __str__(self) -> str:
         """String formatting.
         """
-        if self.chisquare is not None:
-            return f'chisquare = {self.chisquare:.2f} / {self.dof} dof'
-        return 'N/A'
+        return format(self, 'P')
 
 
 class AbstractFitModel(ABC):
@@ -385,15 +412,20 @@ class AbstractFitModel(ABC):
         """
         x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
         y = self(x)
-        plt.plot(x, y, label=str(self))
+        plt.plot(x, y, label=format(self, 'L'))
+
+    def __format__(self, spec: str) -> str:
+        """String formatting.
+        """
+        text = f'{self.__class__.__name__} ({format(self.status, spec)})\n'
+        for parameter in self._parameters:
+            text = f'{text}{format(parameter, spec)}\n'
+        return text.strip('\n')
 
     def __str__(self):
         """String formatting.
         """
-        text = f'{self.__class__.__name__} ({self.status})\n'
-        for parameter in self._parameters:
-            text = f'{text}{parameter}\n'
-        return text.strip('\n')
+        return format(self, 'P')
 
 
 class Constant(AbstractFitModel):

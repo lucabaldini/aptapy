@@ -35,6 +35,9 @@ from aptapy.typing_ import ArrayLike
 class Format(enum.StrEnum):
 
     """Small enum class to control string formatting.
+
+    This is leveraging the custom formatting of the uncertainties package, where
+    a trailing 'P' means "pretty print" and a trailing "L" means LaTeX.
     """
 
     PRETTY = 'P'

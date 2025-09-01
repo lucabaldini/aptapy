@@ -100,15 +100,29 @@ class FitParameter:
 
     def set(self, value: float, error: float = None) -> None:
         """Set the parameter value and error.
+
+        Arguments
+        ---------
+        value : float
+            The new value for the parameter.
+
+        error : float, optional
+            The new error for the parameter (default None).
         """
         self.value = value
         self.error = error
 
-    def freeze(self, value: float = None) -> None:
-        """Freeze the fit parameter.
+    def freeze(self, value: float) -> None:
+        """Freeze the fit parameter to a given value.
+
+        Note that the error is set to None.
+
+        Arguments
+        ---------
+        value : float
+            The new value for the parameter.
         """
-        if value is not None:
-            self.set(value)
+        self.set(value)
         self._frozen = True
 
     def thaw(self) -> None:

@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 
 
 [project]
-name = "archetype"
+name = "aptapy"
 dynamic = ["version"]
 description = "Python repository template"
 readme = "README.md"
@@ -17,6 +17,11 @@ authors = [
   { name = "Luca Baldini", email = "luca.baldini@unipi.it" }
   ]
 dependencies = [
+    "cycler",
+    "loguru",
+    "numpy",
+    "scipy",
+    "matplotlib",
   ]
 
 [project.optional-dependencies]
@@ -32,11 +37,11 @@ docs = [
   ]
 
 [project.urls]
-Homepage = "https://github.com/lucabaldini/archetype"
-Issues = "https://github.com/lucabaldini/archetype/issues"
+Homepage = "https://github.com/lucabaldini/aptapy"
+Issues = "https://github.com/lucabaldini/aptapy/issues"
 
 [tool.hatch.version]
-path = "src/archetype/_version.py"
+path = "src/aptapy/_version.py"
 
 # ruff configuration, see https://docs.astral.sh/ruff/configuration/
 # Note we target the oldest Python version that we support, which helps

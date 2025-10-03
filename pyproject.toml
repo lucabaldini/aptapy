@@ -43,10 +43,6 @@ Issues = "https://github.com/lucabaldini/aptapy/issues"
 [tool.hatch.version]
 path = "src/aptapy/_version.py"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/aptapy"]
-
-
 # ruff configuration, see https://docs.astral.sh/ruff/configuration/
 # Note we target the oldest Python version that we support, which helps
 # in avoiding features that are only available in newer versions.

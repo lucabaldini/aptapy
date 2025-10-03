@@ -130,7 +130,7 @@ def test_gaussian_fit_frozen():
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-    model.prefactor.freeze()
+    model.prefactor.freeze(1.)
     plt.figure('Gaussian fit frozen')
     plt.errorbar(xdata, ydata, sigma, fmt='o', label='Data')
     model.fit(xdata, ydata, sigma=sigma)

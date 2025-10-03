@@ -18,7 +18,7 @@ import shutil
 
 import nox
 
-from archetype import __name__ as __package_name__
+from aptapy import __name__ as __package_name__
 
 # Basic environment.
 _ROOT_DIR = pathlib.Path(__file__).parent

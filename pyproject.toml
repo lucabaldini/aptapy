@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 [project]
 name = "aptapy"
 dynamic = ["version"]
-description = "Python repository template"
+description = "Statistical tools for online monitoring and analysis"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.7"

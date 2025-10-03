@@ -13,3 +13,4 @@ Statistical tools for online monitoring and analysis.
    :caption: Contents:
 
    modeling
+   release_notes

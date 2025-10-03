@@ -268,7 +268,7 @@ class AbstractFitModel(ABC):
         x : array_like
             The value(s) of the independent variable.
 
-        *params : tuple of float
+        params : tuple of float
             The value of the model parameters.
         """
 

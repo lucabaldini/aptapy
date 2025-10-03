@@ -4,7 +4,7 @@
 
 import importlib.metadata
 
-from archetype import __version__, __name__ as __package_name__
+from aptapy import __version__, __name__ as __package_name__
 
 
 # Get package metadata.

@@ -84,7 +84,7 @@ def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05, min_er
     return xdata, ydata, sigma
 
 
-def test_gaussian_fit(relative_error=0.05):
+def test_gaussian_fit():
     """Test the Gaussian model.
     """
     model = Gaussian()
@@ -98,7 +98,7 @@ def test_gaussian_fit(relative_error=0.05):
 
 
 def test_gaussian_fit_subrange():
-    """
+    """Test fit in a subrange.
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
@@ -111,7 +111,7 @@ def test_gaussian_fit_subrange():
 
 
 def test_gaussian_fit_bound():
-    """
+    """Test a bounded fit.
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
@@ -126,7 +126,7 @@ def test_gaussian_fit_bound():
 
 
 def test_gaussian_fit_frozen():
-    """
+    """Fit with a frozen parameter.
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)
@@ -140,7 +140,7 @@ def test_gaussian_fit_frozen():
 
 
 def test_gaussian_fit_frozen_and_bound():
-    """
+    """And yet more complex: frozen and bound.
     """
     model = Gaussian()
     xdata, ydata, sigma = _test_data_set(model, -4., 4.)

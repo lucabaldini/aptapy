@@ -1,52 +1,68 @@
 # Configuration file for the Sphinx documentation builder.
-#
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# -- Path setup --------------------------------------------------------------
+import importlib.metadata
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../aptapy'))
+from archetype import __version__, __name__ as __package_name__
 
 
-# -- Project information -----------------------------------------------------
+# Get package metadata.
+_metadata = importlib.metadata.metadata(__package_name__)
+
+
+# --- Project information ---
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'aptapy'
-copyright = '2025, Luca Baldini'
-author = 'Luca Baldini'
+project = __package_name__
+author = _metadata["Author-email"]
+copyright = f"2025-%Y, {author}"
+version = __version__
+release = version
 
-# -- General configuration ---------------------------------------------------
+
+# --- General configuration ---
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.extlinks',
-    'sphinxcontrib.programoutput'
+    "sphinx.ext.autodoc",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
 ]
-
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
 autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'undoc-members': True,
-    'private-members': True
+    "members": True,
+    "member-order": "bysource",
+    "undoc-members": True,
+    "private-members": True
 }
+todo_include_todos = True
 
-# -- Options for HTML output -------------------------------------------------
+# Options for syntax highlighting.
+pygments_style = "default"
+pygments_dark_style = "default"
+
+# Options for internationalization.
+language = "en"
+
+# Options for markup.
+rst_prolog = f"""
+"""
+
+# Options for source files.
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+# Options for templating.
+templates_path = ["_templates"]
+
+
+# --- Options for HTML output ---
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_book_theme'
-html_static_path = ['_static']
+html_theme = "sphinxawesome_theme"
+html_theme_options = {
+    "awesome_external_links": True,
+}
+html_logo = "_static/logo_small.png"
+html_favicon = "_static/favicon.ico"
+html_permalinks_icon = "<span>#</span>"
+html_static_path = ["_static"]

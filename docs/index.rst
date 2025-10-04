@@ -12,5 +12,6 @@ Statistical tools for online monitoring and analysis.
    :maxdepth: 2
    :caption: Contents:
 
+   hist
    modeling
    release_notes

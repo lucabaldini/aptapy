@@ -21,7 +21,7 @@ from typing import Sequence, Tuple
 
 import numpy as np
 
-from .plotting import matplotlib, plt
+from .plotting import matplotlib, plt, setup_axes
 
 
 class AbstractHistogram(ABC):
@@ -37,7 +37,7 @@ class AbstractHistogram(ABC):
         the text labels for the different axes.
     """
 
-    PLOT_OPTIONS = {}
+    DEFAULT_PLOT_OPTIONS = {}
 
     def __init__(self, edges: Sequence[np.ndarray], labels: Sequence[str] = None) -> None:
         """Constructor.
@@ -100,11 +100,6 @@ class AbstractHistogram(ABC):
         """Return the bin widths for a specific axis.
         """
         return np.diff(self._edges[axis])
-
-    def set_axis_label(self, axis: int, label: str) -> None:
-        """Set the label for a given axis.
-        """
-        self.labels[axis] = label
 
     def fill(self, *values: np.ndarray, weights: np.ndarray = None) -> "AbstractHistogram":
         """Fill the histogram from unbinned data.
@@ -194,10 +189,9 @@ class AbstractHistogram(ABC):
         """
         if axes is None:
             axes = plt.gca()
-        for key, value in self.PLOT_OPTIONS.items():
+        for key, value in self.DEFAULT_PLOT_OPTIONS.items():
             kwargs.setdefault(key, value)
         self._do_plot(axes, **kwargs)
-        #setup_axes(axes, xlabel=self.labels[0], ylabel=self.labels[1])
 
 
 class Histogram1d(AbstractHistogram):
@@ -205,7 +199,7 @@ class Histogram1d(AbstractHistogram):
     """A one-dimensional histogram.
     """
 
-    PLOT_OPTIONS = dict(lw=1.25, alpha=0.4, histtype="stepfilled")
+    DEFAULT_PLOT_OPTIONS = dict(linewidth=1.25, alpha=0.4, histtype="stepfilled")
 
     def __init__(self, xedges: np.array, xlabel: str = "", ylabel: str = "Entries/bin") -> None:
         """Constructor.
@@ -216,6 +210,7 @@ class Histogram1d(AbstractHistogram):
         """Overloaded make_plot() method.
         """
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.bin_contents, **kwargs)
+        setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])
 
 
 # class Histogram2d(HistogramBase):

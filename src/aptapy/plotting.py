@@ -32,6 +32,42 @@ DEFAULT_COLOR_CYCLE = [
 ]
 
 
+def setup_axes(axes, **kwargs):
+    """Setup a generic axes object.
+    """
+    if kwargs.get('logx'):
+        axes.set_xscale('log')
+    if kwargs.get('logx'):
+        axes.set_yscale('log')
+    xticks = kwargs.get('xticks')
+    if xticks is not None:
+        axes.set_xticks(xticks)
+    yticks = kwargs.get('yticks')
+    if yticks is not None:
+        axes.set_yticks(yticks)
+    xlabel = kwargs.get('xlabel')
+    if xlabel is not None:
+        axes.set_xlabel(xlabel)
+    ylabel = kwargs.get('ylabel')
+    if ylabel is not None:
+        axes.set_ylabel(ylabel)
+    xmin, xmax, ymin, ymax = [kwargs.get(key) for key in ('xmin', 'xmax', 'ymin', 'ymax')]
+    if xmin is None and xmax is None and ymin is None and ymax is None:
+        pass
+    else:
+        axes.axis([xmin, xmax, ymin, ymax])
+    if kwargs.get('grids'):
+        axes.grid(which='both')
+    if kwargs.get('legend'):
+        axes.legend()
+
+
+def setup_gca(**kwargs):
+    """Setup the axes for the current plot.
+    """
+    setup_axes(plt.gca(), **kwargs)
+
+
 def _set(key: str, value: Any):
     """Set the value for a single matplotlib parameter.
 

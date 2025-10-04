@@ -37,11 +37,11 @@ class Format(str, enum.Enum):
     """Small enum class to control string formatting.
 
     This is leveraging the custom formatting of the uncertainties package, where
-    a trailing 'P' means "pretty print" and a trailing "L" means LaTeX.
+    a trailing `P` means "pretty print" and a trailing `L` means "LaTeX".
     """
 
-    PRETTY = 'P'
-    LATEX = 'L'
+    PRETTY = "P"
+    LATEX = "L"
 
 
 @dataclass
@@ -80,7 +80,7 @@ class FitParameter:
         """
         return not np.isinf(self.minimum) or not np.isinf(self.maximum)
 
-    def copy(self, name: str) -> 'FitParameter':
+    def copy(self, name: str) -> "FitParameter":
         """Create a copy of the parameter object with a new name.
 
         This is necessary because we define the fit parameters of the actual model as
@@ -139,24 +139,24 @@ class FitParameter:
         """String formatting.
         """
         # Keep in mind Python passes an empty string explicitly when you call
-        # f'{parameter}', so we can't really assign a default value to spec.
+        # f"{parameter}", so we can't really assign a default value to spec.
         if self.error is not None:
             param = format(self.ufloat(), spec)
             if spec.endswith(Format.LATEX):
-                param = f'${param}$'
+                param = f"${param}$"
         else:
             spec = spec.rstrip(Format.PRETTY).rstrip(Format.LATEX)
             param = format(self.value, spec)
-        text = f'{self._name.title()}: {param}'
+        text = f"{self._name.title()}: {param}"
         info = []
         if self._frozen:
-            info.append('frozen')
+            info.append("frozen")
         if not np.isinf(self.minimum):
-            info.append(f'min={self.minimum}')
+            info.append(f"min={self.minimum}")
         if not np.isinf(self.maximum):
-            info.append(f'max={self.maximum}')
+            info.append(f"max={self.maximum}")
         if info:
-            text = f'{text} ({", ".join(info)})'
+            text = f"{text} ({", ".join(info)})"
         return text
 
     def __str__(self) -> str:
@@ -191,12 +191,12 @@ class FitStatus:
         """String formatting.
         """
         if self.chisquare is None:
-            return 'N/A'
+            return "N/A"
         if spec.endswith(Format.LATEX):
-            return f'$\\chi^2$ = {self.chisquare:.2f} / {self.dof} dof'
+            return f"$\\chi^2$ = {self.chisquare:.2f} / {self.dof} dof"
         if spec.endswith(Format.PRETTY):
-            return f'χ² = {self.chisquare:.2f} / {self.dof} dof'
-        return f'chisquare = {self.chisquare:.2f} / {self.dof} dof'
+            return f"χ² = {self.chisquare:.2f} / {self.dof} dof"
+        return f"chisquare = {self.chisquare:.2f} / {self.dof} dof"
 
     def __str__(self) -> str:
         """String formatting.
@@ -337,7 +337,7 @@ class AbstractFitModel(ABC):
         # print out an error message.
         unknown_parameter_names = set(constraints) - set(parameter_names)
         if unknown_parameter_names:
-            raise ValueError(f'Cannot freeze unknown parameters {unknown_parameter_names}')
+            raise ValueError(f"Cannot freeze unknown parameters {unknown_parameter_names}")
 
         # Now we need to build the signature for the new function, starting from  a
         # clean copy of the parameter for the independent variable...
@@ -353,8 +353,8 @@ class AbstractFitModel(ABC):
         @functools.wraps(model_function)
         def wrapper(x, *args):
             if len(args) != num_free_parameters:
-                raise TypeError(f'Frozen wrapper got {len(args)} parameters instead of ' \
-                                f'{num_free_parameters} ({free_parameter_names})')
+                raise TypeError(f"Frozen wrapper got {len(args)} parameters instead of " \
+                                f"{num_free_parameters} ({free_parameter_names})")
             parameter_dict = {**dict(zip(free_parameter_names, args)), **constraints}
             return model_function(x, *[parameter_dict[name] for name in parameter_names])
 
@@ -379,7 +379,7 @@ class AbstractFitModel(ABC):
         # (And, since we are at it, make sure we have enough degrees of freedom.)
         self.status.dof = int(mask.sum() - len(self))
         if self.status.dof < 0:
-            raise RuntimeError(f'{self.name()} has no degrees of freedom')
+            raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
         ydata = ydata[mask]
         if not isinstance(sigma, Number):
@@ -444,10 +444,10 @@ class AbstractFitModel(ABC):
     def __format__(self, spec: str) -> str:
         """String formatting.
         """
-        text = f'{self.__class__.__name__} ({format(self.status, spec)})\n'
+        text = f"{self.__class__.__name__} ({format(self.status, spec)})\n"
         for parameter in self._parameters:
-            text = f'{text}{format(parameter, spec)}\n'
-        return text.strip('\n')
+            text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
 
     def __str__(self):
         """String formatting.

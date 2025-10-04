@@ -25,6 +25,7 @@ from aptapy.plotting import plt
 def test():
     """
     """
+    plt.figure("test")
     edges = np.linspace(-5., 5., 100)
     h = Histogram1d(edges, 'x')
     h.fill(np.random.normal(size=100000))

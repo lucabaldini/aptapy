@@ -130,7 +130,7 @@ def configure() -> None:
     # By default, Patches and Collections do not draw edges. Set this to True to draw
     # edges with patch.edgedcolor as the default edgecolor. This is mainly relevant
     # for styles.
-    _set("patch.force_edgecolor", False)
+    _set("patch.force_edgecolor", True)
     _set("patch.antialiased", True)  # render patches in antialiased (no jaggies)
 
     # Hatches

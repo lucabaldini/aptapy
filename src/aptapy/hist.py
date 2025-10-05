@@ -33,13 +33,13 @@ class AbstractHistogram(ABC):
     edges : n-dimensional sequence of arrays
         the bin edges on the different axes.
 
-    labels : n-dimensional tuple of strings
+    labels : sequence of strings
         the text labels for the different axes.
     """
 
     DEFAULT_PLOT_OPTIONS = {}
 
-    def __init__(self, edges: Sequence[np.ndarray], labels: Sequence[str] = None) -> None:
+    def __init__(self, edges: Sequence[np.ndarray], labels: Sequence[str]) -> None:
         """Constructor.
         """
         # Edges are fixed once and forever, so we create a copy. Also, no matter
@@ -53,8 +53,8 @@ class AbstractHistogram(ABC):
                 raise ValueError(f"Bin edges {item} are not a 1-dimensional array.")
             if item.size < 2:
                 raise ValueError(f"Bin edges {item} have less than 2 entries.")
-            #if any(np.any(np.diff(item) <= 0)):
-            #    raise ValueError(f"Bin edges {item} not strictly increasing.")
+            if np.any(np.diff(item) <= 0):
+                raise ValueError(f"Bin edges {item} not strictly increasing.")
         if labels is not None and len(labels) > self._num_axes + 1:
             raise ValueError(f"Too many labels {labels} for {self._num_axes} axes.")
 
@@ -62,11 +62,7 @@ class AbstractHistogram(ABC):
         self._shape = tuple(item.size - 1 for item in self._edges)
         self._sumw = self._zeros()
         self._sumw2 = self._zeros()
-        # Prepare the axis labels: set them all to None...
-        self._labels = [None] * self._num_axes
-        # ... and overwrite with the input arguments, if any.
-        if labels is not None:
-            self._labels[:len(labels)] = labels
+        self._labels = labels
 
     def _zeros(self, dtype: type = float) -> np.ndarray:
         """Return an array of zeros of the proper shape for the underlying

@@ -17,12 +17,34 @@
 """
 
 import numpy as np
+import pytest
 
 from aptapy.hist import Histogram1d
 from aptapy.plotting import plt
 
 
-def test():
+def test_init():
+    """Test all the initialization cross checks.
+    """
+    edges = np.array([[1., 2.], [3., 4]])
+    with pytest.raises(ValueError, match="not a 1-dimensional array"):
+        _ = Histogram1d(edges)
+    edges = np.array([1.])
+    with pytest.raises(ValueError, match="less than 2 entries"):
+        _ = Histogram1d(edges)
+    edges = np.array([2., 1.])
+    with pytest.raises(ValueError, match="not strictly increasing"):
+        _ = Histogram1d(edges)
+
+
+def test_filling1d():
+    """
+    """
+    hist = Histogram1d(np.linspace(0., 1., 100))
+    hist.fill(np.random.random(size=100000))
+
+
+def test_plotting1d():
     """
     """
     plt.figure("test")
@@ -33,5 +55,5 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    test_plotting1d()
     plt.show()

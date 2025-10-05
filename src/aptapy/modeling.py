@@ -156,7 +156,7 @@ class FitParameter:
         if not np.isinf(self.maximum):
             info.append(f"max={self.maximum}")
         if info:
-            text = f"{text} ({", ".join(info)})"
+            text = f"{text} ({', '.join(info)})"
         return text
 
     def __str__(self) -> str:

@@ -17,11 +17,12 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Sequence, Tuple
+from typing import Sequence
 
 import numpy as np
 
-from .plotting import matplotlib, plt, setup_axes
+from .plotting import plt, setup_axes
+from .typing_ import ArrayLike
 
 
 class AbstractHistogram(ABC):
@@ -60,44 +61,38 @@ class AbstractHistogram(ABC):
 
         # Go ahead and create all the necessary data structures.
         self._shape = tuple(item.size - 1 for item in self._edges)
-        self._sumw = self._zeros()
-        self._sumw2 = self._zeros()
+        self._sumw = np.zeros(self._shape, dtype=float)
+        self._sumw2 = np.zeros(self._shape, dtype=float)
         self._labels = labels
 
-    def _zeros(self, dtype: type = float) -> np.ndarray:
-        """Return an array of zeros of the proper shape for the underlying
-        histograms quantities.
-        """
-        return np.zeros(shape=self._shape, dtype=dtype)
-
     @property
-    def bin_contents(self) -> np.ndarray:
+    def content(self) -> np.ndarray:
         """Return the bin contents.
         """
         return self._sumw
 
     @property
-    def bin_errors(self) -> np.ndarray:
+    def errors(self) -> np.ndarray:
         """Return the bin errors.
         """
         return np.sqrt(self._sumw2)
 
-    def bin_edges(self, axis: int = 0) -> np.array:
+    def bin_edges(self, axis: int = 0) -> np.ndarray:
         """Return a view on the binning for specific axis.
         """
         return self._edges[axis].view()
 
-    def bin_centers(self, axis: int = 0) -> np.array:
+    def bin_centers(self, axis: int = 0) -> np.ndarray:
         """Return the bin centers for a specific axis.
         """
         return 0.5 * (self._edges[axis][1:] + self._edges[axis][:-1])
 
-    def bin_widths(self, axis: int = 0) -> np.array:
+    def bin_widths(self, axis: int = 0) -> np.ndarray:
         """Return the bin widths for a specific axis.
         """
         return np.diff(self._edges[axis])
 
-    def fill(self, *values: np.ndarray, weights: np.ndarray = None) -> "AbstractHistogram":
+    def fill(self, *values: ArrayLike, weights: ArrayLike = None) -> "AbstractHistogram":
         """Fill the histogram from unbinned data.
 
         Note this method is returning the histogram instance, so that the function
@@ -113,68 +108,66 @@ class AbstractHistogram(ABC):
         self._sumw2 += sumw2
         return self
 
-    # @staticmethod
-    # def bisect(binning: np.array, values: np.array, side: str = 'left') -> np.array:
-    #     """Return the indices corresponding to a given array of values for a
-    #     given binning.
-    #     """
-    #     return np.searchsorted(binning, values, side) - 1
+    def _check_compat(self, other: "AbstractHistogram") -> None:
+        """Check whether two histogram objects are compatible with each other,
+        meaning, e.g., that they can be summed or subtracted.
+        """
+        # pylint: disable=protected-access
+        if not isinstance(other, AbstractHistogram):
+            raise TypeError(f"{other} is not a histogram.")
+        if self._num_axes != other._num_axes or self._shape != other._shape:
+            raise ValueError("Histogram dimensionality/shape mismatch.")
+        for edges in zip(self._edges, other._edges):
+            if not np.allclose(*edges):
+                raise ValueError("Histogram bin edges differ.")
 
-    # def find_bin(self, *coords):
-    #     """Find the bin corresponding to a given set of "physical" coordinates
-    #     on the histogram axes.
+    def empty_copy(self) -> "AbstractHistogram":
+        """Create an empty copy of a histogram.
+        """
+        return self.__class__(self._edges, self._labels)
 
-    #     This returns a tuple of integer indices that can be used to address
-    #     the histogram content.
-    #     """
-    #     return tuple(self.bisect(binning, value) for binning, value in zip(self.binning, coords))
+    def copy(self) -> "AbstractHistogram":
+        """Create a full copy of a histogram.
+        """
+        # pylint: disable=protected-access
+        histogram = self.empty_copy()
+        histogram._sumw = self._sumw.copy()
+        histogram._sumw2 = self._sumw2.copy()
+        return histogram
 
-    # def find_bin_value(self, *coords):
-    #     """Find the histogram content corresponding to a given set of "physical"
-    #     coordinates on the histogram axes.
-    #     """
-    #     return self.content[self.find_bin(*coords)]
+    def __add__(self, other: "AbstractHistogram") -> "AbstractHistogram":
+        """Histogram addition.
+        """
+        self._check_compat(other)
+        histogram = self.empty_copy()
+        histogram._sumw = self._sumw + other._sumw
+        histogram._sumw2 = self._sumw2 + other._sumw2
+        return histogram
 
+    def __iadd__(self, other: "AbstractHistogram") -> "AbstractHistogram":
+        """Histogram addition (in place).
+        """
+        self._check_compat(other)
+        self._sumw += other._sumw
+        self._sumw2 += other._sumw2
+        return self
 
-    # def empty_copy(self):
-    #     """Create an empty copy of a histogram.
-    #     """
-    #     return self.__class__(*self.binning, *self.labels)
+    def __sub__(self, other: "AbstractHistogram") -> "AbstractHistogram":
+        """Histogram subtraction.
+        """
+        self._check_compat(other)
+        histogram = self.empty_copy()
+        histogram._sumw = self._sumw - other._sumw
+        histogram._sumw2 = self._sumw2 + other._sumw2
+        return histogram
 
-    # def copy(self):
-    #     """Create a full copy of a histogram.
-    #     """
-    #     hist = self.empty_copy()
-    #     hist.set_content(self.content.copy(), self.entries.copy())
-    #     return hist
-
-    # def __add__(self, other):
-    #     """Histogram addition.
-    #     """
-    #     hist = self.empty_copy()
-    #     hist.set_content(self.content + other.content, self.entries + other.entries,
-    #                      np.sqrt(self._sumw2 + other._sumw2))
-    #     return hist
-
-    # def __sub__(self, other):
-    #     """Histogram subtraction.
-    #     """
-    #     hist = self.empty_copy()
-    #     hist.set_content(self.content - other.content, self.entries + other.entries,
-    #                      np.sqrt(self._sumw2 + other._sumw2))
-    #     return hist
-
-    # def __mul__(self, value):
-    #     """Histogram multiplication by a scalar.
-    #     """
-    #     hist = self.empty_copy()
-    #     hist.set_content(self.content * value, self.entries, self.errors() * value)
-    #     return hist
-
-    # def __rmul__(self, value):
-    #     """Histogram multiplication by a scalar.
-    #     """
-    #     return self.__mul__(value)
+    def __isub__(self, other: "AbstractHistogram") -> "AbstractHistogram":
+        """Histogram subtraction (in place).
+        """
+        self._check_compat(other)
+        self._sumw -= other._sumw
+        self._sumw2 += other._sumw2
+        return self
 
     @abstractmethod
     def _do_plot(self, axes, **kwargs) -> None:
@@ -197,7 +190,7 @@ class Histogram1d(AbstractHistogram):
 
     DEFAULT_PLOT_OPTIONS = dict(linewidth=1.25, alpha=0.4, histtype="stepfilled")
 
-    def __init__(self, xedges: np.array, xlabel: str = "", ylabel: str = "Entries/bin") -> None:
+    def __init__(self, xedges: np.ndarray, xlabel: str = "", ylabel: str = "Entries/bin") -> None:
         """Constructor.
         """
         super().__init__((xedges, ), [xlabel, ylabel])
@@ -205,7 +198,7 @@ class Histogram1d(AbstractHistogram):
     def _do_plot(self, axes, **kwargs) -> None:
         """Overloaded make_plot() method.
         """
-        axes.hist(self.bin_centers(0), self._edges[0], weights=self.bin_contents, **kwargs)
+        axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
         setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])
 
 

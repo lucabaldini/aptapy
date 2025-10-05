@@ -23,7 +23,7 @@ from aptapy.hist import Histogram1d
 from aptapy.plotting import plt
 
 
-def test_init():
+def test_init1d():
     """Test all the initialization cross checks.
     """
     edges = np.array([[1., 2.], [3., 4]])
@@ -37,15 +37,31 @@ def test_init():
         _ = Histogram1d(edges)
 
 
+def test_binning1d():
+    """Test the binning-related methods.
+    """
+    edges = np.linspace(0., 1., 11)
+    hist = Histogram1d(edges)
+    assert np.allclose(hist.content, 0.)
+    assert np.allclose(hist.errors, 0.)
+    assert np.allclose(hist.bin_centers(), np.linspace(0.05, 0.95, 10))
+    assert np.allclose(hist.bin_widths(), 0.1)
+
+
 def test_filling1d():
+    """Simple filling test with a 1-bin, 1-dimensional histogram.
     """
-    """
-    hist = Histogram1d(np.linspace(0., 1., 100))
-    hist.fill(np.random.random(size=100000))
+    hist = Histogram1d(np.linspace(0., 1., 2))
+    # Fill with a numpy array.
+    hist.fill(np.full(100, 0.5))
+    assert hist.content == 100.
+    # Fill with a number.
+    hist.fill(0.5)
+    assert hist.content == 101.
 
 
 def test_plotting1d():
-    """
+    """Test plotting.
     """
     plt.figure("test")
     edges = np.linspace(-5., 5., 100)

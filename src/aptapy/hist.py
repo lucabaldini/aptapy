@@ -108,6 +108,18 @@ class AbstractHistogram(ABC):
         self._sumw2 += sumw2
         return self
 
+    def copy(self) -> "AbstractHistogram":
+        """Create a full copy of a histogram.
+        """
+        # pylint: disable=protected-access
+        # Note we really need the * in the constructor, here, as the abstract
+        # base class is never instantiated, and the arguments are unpacked in the
+        # constructors of all the derived classes.
+        histogram = self.__class__(*self._edges, *self._labels)
+        histogram._sumw = self._sumw.copy()
+        histogram._sumw2 = self._sumw2.copy()
+        return histogram
+
     def _check_compat(self, other: "AbstractHistogram") -> None:
         """Check whether two histogram objects are compatible with each other,
         meaning, e.g., that they can be summed or subtracted.
@@ -121,29 +133,6 @@ class AbstractHistogram(ABC):
             if not np.allclose(*edges):
                 raise ValueError("Histogram bin edges differ.")
 
-    def empty_copy(self) -> "AbstractHistogram":
-        """Create an empty copy of a histogram.
-        """
-        return self.__class__(self._edges, self._labels)
-
-    def copy(self) -> "AbstractHistogram":
-        """Create a full copy of a histogram.
-        """
-        # pylint: disable=protected-access
-        histogram = self.empty_copy()
-        histogram._sumw = self._sumw.copy()
-        histogram._sumw2 = self._sumw2.copy()
-        return histogram
-
-    def __add__(self, other: "AbstractHistogram") -> "AbstractHistogram":
-        """Histogram addition.
-        """
-        self._check_compat(other)
-        histogram = self.empty_copy()
-        histogram._sumw = self._sumw + other._sumw
-        histogram._sumw2 = self._sumw2 + other._sumw2
-        return histogram
-
     def __iadd__(self, other: "AbstractHistogram") -> "AbstractHistogram":
         """Histogram addition (in place).
         """
@@ -152,13 +141,11 @@ class AbstractHistogram(ABC):
         self._sumw2 += other._sumw2
         return self
 
-    def __sub__(self, other: "AbstractHistogram") -> "AbstractHistogram":
-        """Histogram subtraction.
+    def __add__(self, other: "AbstractHistogram") -> "AbstractHistogram":
+        """Histogram addition.
         """
-        self._check_compat(other)
-        histogram = self.empty_copy()
-        histogram._sumw = self._sumw - other._sumw
-        histogram._sumw2 = self._sumw2 + other._sumw2
+        histogram = self.copy()
+        histogram += other
         return histogram
 
     def __isub__(self, other: "AbstractHistogram") -> "AbstractHistogram":
@@ -168,6 +155,13 @@ class AbstractHistogram(ABC):
         self._sumw -= other._sumw
         self._sumw2 += other._sumw2
         return self
+
+    def __sub__(self, other: "AbstractHistogram") -> "AbstractHistogram":
+        """Histogram subtraction.
+        """
+        histogram = self.copy()
+        histogram -= other
+        return histogram
 
     @abstractmethod
     def _do_plot(self, axes, **kwargs) -> None:

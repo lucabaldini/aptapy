@@ -22,6 +22,8 @@ import pytest
 from aptapy.hist import Histogram1d
 from aptapy.plotting import plt
 
+_RNG = np.random.default_rng()
+
 
 def test_init1d():
     """Test all the initialization cross checks.
@@ -60,13 +62,43 @@ def test_filling1d():
     assert hist.content == 101.
 
 
+def test_compat1d():
+    """Test the histogram compatibility.
+    """
+    # pylint: disable=protected-access
+    hist = Histogram1d(np.array([0., 1., 2]))
+    hist._check_compat(hist.copy())
+    with pytest.raises(TypeError, match="not a histogram"):
+        hist._check_compat(None)
+    with pytest.raises(ValueError, match="dimensionality/shape mismatch"):
+        hist._check_compat(Histogram1d(np.array([0., 1., 2., 3.])))
+    with pytest.raises(ValueError, match="bin edges differ"):
+        hist._check_compat(Histogram1d(np.array([0., 1.1, 2.])))
+
+
+def test_aritmethics1d():
+    """Test the basic arithmetics.
+    """
+    # pylint: disable=protected-access
+    sample1 = _RNG.uniform(size=10000)
+    sample2 = _RNG.uniform(size=10000)
+    edges = np.linspace(0., 1., 100)
+    hist1 = Histogram1d(edges).fill(sample1)
+    hist2 = Histogram1d(edges).fill(sample2)
+    hist3 = Histogram1d(edges).fill(sample1).fill(sample2)
+    hist_sum = hist1 + hist2
+    # hist_sub = hist1 - hist2
+    assert np.allclose(hist_sum._sumw, hist3._sumw)
+    assert np.allclose(hist_sum._sumw2, hist3._sumw2)
+
+
 def test_plotting1d():
     """Test plotting.
     """
     plt.figure("test")
     edges = np.linspace(-5., 5., 100)
     h = Histogram1d(edges, 'x')
-    h.fill(np.random.normal(size=100000))
+    h.fill(_RNG.normal(size=100000))
     h.plot()
 
 

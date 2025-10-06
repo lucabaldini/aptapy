@@ -32,6 +32,43 @@ DEFAULT_COLOR_CYCLE = [
 ]
 
 
+def setup_axes(axes, **kwargs):
+    """Setup a generic axes object.
+    """
+    if kwargs.get('logx'):
+        axes.set_xscale('log')
+    if kwargs.get('logy'):
+        axes.set_yscale('log')
+    xticks = kwargs.get('xticks')
+    if xticks is not None:
+        axes.set_xticks(xticks)
+    yticks = kwargs.get('yticks')
+    if yticks is not None:
+        axes.set_yticks(yticks)
+    xlabel = kwargs.get('xlabel')
+    if xlabel is not None:
+        axes.set_xlabel(xlabel)
+    ylabel = kwargs.get('ylabel')
+    if ylabel is not None:
+        axes.set_ylabel(ylabel)
+    xmin, xmax, ymin, ymax = [kwargs.get(key) for key in ('xmin', 'xmax', 'ymin', 'ymax')]
+    # Set axis limits individually to avoid passing None to axes.axis()
+    if xmin is not None or xmax is not None:
+        axes.set_xlim(left=xmin, right=xmax)
+    if ymin is not None or ymax is not None:
+        axes.set_ylim(bottom=ymin, top=ymax)
+    if kwargs.get('grids'):
+        axes.grid(which='both')
+    if kwargs.get('legend'):
+        axes.legend()
+
+
+def setup_gca(**kwargs):
+    """Setup the axes for the current plot.
+    """
+    setup_axes(plt.gca(), **kwargs)
+
+
 def _set(key: str, value: Any):
     """Set the value for a single matplotlib parameter.
 
@@ -94,7 +131,7 @@ def configure() -> None:
     # By default, Patches and Collections do not draw edges. Set this to True to draw
     # edges with patch.edgedcolor as the default edgecolor. This is mainly relevant
     # for styles.
-    _set("patch.force_edgecolor", False)
+    _set("patch.force_edgecolor", True)
     _set("patch.antialiased", True)  # render patches in antialiased (no jaggies)
 
     # Hatches

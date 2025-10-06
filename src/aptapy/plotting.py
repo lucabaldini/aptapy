@@ -37,7 +37,7 @@ def setup_axes(axes, **kwargs):
     """
     if kwargs.get('logx'):
         axes.set_xscale('log')
-    if kwargs.get('logx'):
+    if kwargs.get('logy'):
         axes.set_yscale('log')
     xticks = kwargs.get('xticks')
     if xticks is not None:

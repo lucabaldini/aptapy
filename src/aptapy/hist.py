@@ -17,9 +17,8 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Sequence, List
+from typing import List, Sequence
 
-from matplotlib import axes
 import numpy as np
 
 from .plotting import matplotlib, plt, setup_axes
@@ -208,7 +207,6 @@ class Histogram2d(AbstractHistogram):
     """
 
     DEFAULT_PLOT_OPTIONS = dict(cmap=plt.get_cmap('hot'))
-
 
     def __init__(self, xedges, yedges, xlabel='', ylabel='', zlabel='Entries/bin') -> None:
         """Constructor.

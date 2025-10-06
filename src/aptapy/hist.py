@@ -224,7 +224,7 @@ class Histogram2d(AbstractHistogram):
         if logz:
             # Hack for a deprecated functionality in matplotlib 3.3.0
             # Parameters norm and vmin/vmax should not be used simultaneously
-            # If logz is requested, we intercent the bounds when created the norm
+            # If logz is requested, we intercept the bounds when created the norm
             # and refrain from passing vmin/vmax downstream.
             vmin = kwargs.pop('vmin', None)
             vmax = kwargs.pop('vmax', None)

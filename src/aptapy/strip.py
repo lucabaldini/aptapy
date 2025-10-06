@@ -24,16 +24,11 @@ import numpy as np
 from .plotting import plt, setup_axes
 
 
-class SlidingStripChart:
+class StripChart:
 
-    """Class describing a strip chart, that is, a scatter plot where the number of
-    points is limited to a maximum, so that the thing acts essentially as a sliding
-    window, typically in time.
-
-    This is mainly meant to represent the time history of a signal over a reasonable
-    span---a long-term acquisition might go on for weeks, and it would not make sense
-    to try and plot on the screen millions of points, but the last segment of the
-    acquisition is the most important part when we want to monitor what is happening.
+    """Class describing a sliding strip chart, that is, a scatter plot where the
+    number of points is limited to a maximum, so that the thing acts essentially
+    as a sliding window, typically in time.
 
     Arguments
     ---------
@@ -42,7 +37,7 @@ class SlidingStripChart:
         the number of points is unlimited.
 
     label : str, optional
-        a text label for the data series (default None).
+        a text label for the data series (default is None).
 
     xlabel : str, optional
         the label for the x axis.
@@ -52,7 +47,7 @@ class SlidingStripChart:
 
     datetime : bool, optional
         if True, the x values are treated as POSIX timestamps and converted to
-        datetime objects for plotting purposes.
+        datetime objects for plotting purposes (default is False).
     """
 
     def __init__(self, max_length: int = None, label: str = '', xlabel: str = None,

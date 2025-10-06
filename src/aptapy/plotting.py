@@ -52,10 +52,11 @@ def setup_axes(axes, **kwargs):
     if ylabel is not None:
         axes.set_ylabel(ylabel)
     xmin, xmax, ymin, ymax = [kwargs.get(key) for key in ('xmin', 'xmax', 'ymin', 'ymax')]
-    if xmin is None and xmax is None and ymin is None and ymax is None:
-        pass
-    else:
-        axes.axis([xmin, xmax, ymin, ymax])
+    # Set axis limits individually to avoid passing None to axes.axis()
+    if xmin is not None or xmax is not None:
+        axes.set_xlim(left=xmin, right=xmax)
+    if ymin is not None or ymax is not None:
+        axes.set_ylim(bottom=ymin, top=ymax)
     if kwargs.get('grids'):
         axes.grid(which='both')
     if kwargs.get('legend'):

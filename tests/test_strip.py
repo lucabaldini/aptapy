@@ -16,15 +16,38 @@
 """Unit tests for the strip module.
 """
 
+import inspect
+
 import numpy as np
 
+from aptapy.plotting import plt
 from aptapy.strip import SlidingStripChart
 
 
-def test_seconds():
+def test_strip_chart_seconds():
+    """Test a strip chart with seconds on the x axis.
     """
-    """
-    chart = SlidingStripChart()
+    plt.figure(inspect.currentframe().f_code.co_name)
+    chart = SlidingStripChart(label='Strip chart', xlabel='Time [s]')
     t = np.linspace(0., 10., 100)
     y = np.sin(t)
+    chart.extend(t, y)
+    chart.plot()
+    plt.legend()
 
+
+def test_strip_chart_datetime():
+    """Test a strip chart with datetime on the x axis.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    chart = SlidingStripChart(datetime=True, xlabel='UTC time')
+    t = np.linspace(1_600_000_000., 1_600_000_100., 100)
+    y = np.sin(np.linspace(0., 10., 100))
+    chart.extend(t, y)
+    chart.plot()
+
+
+if __name__ == '__main__':
+    test_strip_chart_seconds()
+    test_strip_chart_datetime()
+    plt.show()

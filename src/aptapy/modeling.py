@@ -29,7 +29,7 @@ import numpy as np
 import uncertainties
 from scipy.optimize import curve_fit
 
-from aptapy.typing_ import ArrayLike
+from .typing_ import ArrayLike
 
 
 class Format(str, enum.Enum):

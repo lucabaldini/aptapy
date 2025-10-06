@@ -99,9 +99,21 @@ def test_plotting1d(size: int = 100000):
     """Test plotting.
     """
     plt.figure(inspect.currentframe().f_code.co_name)
-    hist = Histogram1d(np.linspace(-5., 5., 100), 'x')
-    hist.fill(_RNG.normal(size=size))
-    hist.plot()
+    # Create the first histogram. This has no label attached, so we will have to
+    # provide one at plotting time, if we want to have a corresponding legend entry.
+    hist1 = Histogram1d(np.linspace(-5., 5., 100), xlabel='x')
+    hist1.fill(_RNG.normal(size=size))
+    hist1.plot(label='Standard histogram')
+    # Create a second histogram, this time with a label---this should have a
+    # proper entry in the legend automatically.
+    hist2 = Histogram1d(np.linspace(-5., 5., 100), label='Offset histogram')
+    hist2.fill(_RNG.normal(size=size, loc=1.))
+    hist2.plot()
+    # And this one should end up with no legend entry, as it has no label
+    hist3 = Histogram1d(np.linspace(-5., 5., 100))
+    hist3.fill(_RNG.normal(size=size // 2, loc=-1.))
+    hist3.plot()
+    plt.legend()
 
 
 def test_plotting2d(size: int = 100000):

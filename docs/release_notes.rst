@@ -3,6 +3,12 @@
 Release notes
 =============
 
+* New strip-chart facilities added.
+
+* Pull requests merged:
+
+  - https://github.com/lucabaldini/aptapy/pull/3
+
 
 Version 0.2.0 (2025-10-06)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

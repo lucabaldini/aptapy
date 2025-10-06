@@ -12,7 +12,7 @@ with concrete implementations for 1D and 2D histograms:
 
 Histograms are constructed with the bin edges (and, optionally, labels to be
 used at the plotting stage) and are filled using the
-:meth:`~aptapy.hist.AbstractHistogram.fill` method. The basic semantic is as
+:meth:`~aptapy.hist.AbstractHistogram.fill` method. The basic semantics is as
 follows:
 
 .. code-block:: python

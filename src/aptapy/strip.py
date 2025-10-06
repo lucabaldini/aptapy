@@ -17,6 +17,7 @@
 """
 
 import collections
+from typing import Sequence
 
 import numpy as np
 
@@ -33,42 +34,64 @@ class SlidingStripChart:
     span---a long-term acquisition might go on for weeks, and it would not make sense
     to try and plot on the screen millions of points, but the last segment of the
     acquisition is the most important part when we want to monitor what is happening.
+
+    Arguments
+    ---------
+    max_length : int, optional
+        the maximum number of points to keep in the strip chart. If None (the default),
+        the number of points is unlimited.
+
+    label : str, optional
+        a text label for the data series (default None).
+
+    xlabel : str, optional
+        the label for the x axis.
+
+    ylabel : str, optional
+        the label for the y axis.
+
+    datetime : bool, optional
+        if True, the x values are treated as POSIX timestamps and converted to
+        datetime objects for plotting purposes.
     """
 
-    def __init__(self, max_length: int = None, label: str = '', xoffset: float = 0.,
-                 xlabel: str = None, ylabel: str = None, datetime: bool = False) -> None:
+    def __init__(self, max_length: int = None, label: str = '', xlabel: str = None,
+                 ylabel: str = None, datetime: bool = False) -> None:
         """Constructor.
         """
         self.label = label
-        self.xoffset = xoffset
         self.xlabel = xlabel
-        if self.xlabel is None and datetime:
-            self.xlabel = 'UTC'
         self.ylabel = ylabel
-        self.datetime = datetime
+        self._datetime = datetime
         self.x = collections.deque(maxlen=max_length)
         self.y = collections.deque(maxlen=max_length)
 
-    def reset(self, max_length: int = None) -> None:
+    def clear(self) -> None:
         """Reset the strip chart.
         """
-        self.x = collections.deque(maxlen=max_length)
-        self.y = collections.deque(maxlen=max_length)
+        self.x.clear()
+        self.y.clear()
 
-    def add_point(self, x: float, y: float) -> None:
+    def append(self, x: float, y: float) -> None:
         """Append a data point to the strip chart.
         """
-        self.x.append(x + self.xoffset)
+        self.x.append(x)
         self.y.append(y)
+
+    def extend(self, x: Sequence[float], y: Sequence[float]) -> None:
+        """Append multiple data points to the strip chart.
+        """
+        if len(x) != len(y):
+            raise ValueError("x and y must have the same length")
+        self.x.extend(x)
+        self.y.extend(y)
 
     def plot(self, axes=None, **kwargs) -> None:
         """Plot the strip chart.
         """
+        kwargs.setdefault("label", self.label)
         if axes is None:
             axes = plt.gca()
-        if self.datetime:
-            x = np.array(self.x).astype('datetime64[s]')
-        else:
-            x = self.x
-        axes.plot(x, self.y, label=self.label, **kwargs)
+        x = np.array(self.x).astype('datetime64[s]') if self._datetime else self.x
+        axes.plot(x, self.y, **kwargs)
         setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)

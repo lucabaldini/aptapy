@@ -14,4 +14,5 @@ Statistical tools for online monitoring and analysis.
 
    hist
    modeling
+   strip
    release_notes

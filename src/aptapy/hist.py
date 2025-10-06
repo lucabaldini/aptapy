@@ -34,13 +34,13 @@ class AbstractHistogram(ABC):
     edges : n-dimensional sequence of arrays
         the bin edges on the different axes.
 
-    labels : sequence of strings
-        the text labels for the different axes.
+    axis_labels : sequence of strings
+        the text labels for the different histogram axes.
     """
 
     DEFAULT_PLOT_OPTIONS = {}
 
-    def __init__(self, edges: Sequence[np.ndarray], labels: List[str]) -> None:
+    def __init__(self, edges: Sequence[np.ndarray], axis_labels: List[str]) -> None:
         """Constructor.
         """
         # Edges are fixed once and forever, so we create a copy. Also, no matter
@@ -56,14 +56,14 @@ class AbstractHistogram(ABC):
                 raise ValueError(f"Bin edges {item} have less than 2 entries.")
             if np.any(np.diff(item) <= 0):
                 raise ValueError(f"Bin edges {item} not strictly increasing.")
-        if labels is not None and len(labels) > self._num_axes + 1:
-            raise ValueError(f"Too many labels {labels} for {self._num_axes} axes.")
+        if axis_labels is not None and len(axis_labels) > self._num_axes + 1:
+            raise ValueError(f"Too many axis labels {axis_labels} for {self._num_axes} axes.")
 
         # Go ahead and create all the necessary data structures.
         self._shape = tuple(item.size - 1 for item in self._edges)
         self._sumw = np.zeros(self._shape, dtype=float)
         self._sumw2 = np.zeros(self._shape, dtype=float)
-        self._labels = labels
+        self.axis_labels = axis_labels
 
     @property
     def content(self) -> np.ndarray:
@@ -115,7 +115,7 @@ class AbstractHistogram(ABC):
         # Note we really need the * in the constructor, here, as the abstract
         # base class is never instantiated, and the arguments are unpacked in the
         # constructors of all the derived classes.
-        histogram = self.__class__(*self._edges, *self._labels)
+        histogram = self.__class__(*self._edges, *self.axis_labels)
         histogram._sumw = self._sumw.copy()
         histogram._sumw2 = self._sumw2.copy()
         return histogram
@@ -185,30 +185,68 @@ class AbstractHistogram(ABC):
 class Histogram1d(AbstractHistogram):
 
     """One-dimensional histogram.
+
+    Arguments
+    ---------
+    edges : 1-dimensional array
+        the bin edges.
+
+    label : str
+        overall label for the histogram (if defined, this will be used in the
+        legend by default).
+
+    xlabel : str
+        the text label for the x axis.
+
+    ylabel : str
+        the text label for the y axis (default: "Entries/bin").
     """
 
     DEFAULT_PLOT_OPTIONS = dict(linewidth=1.25, alpha=0.4, histtype="stepfilled")
 
-    def __init__(self, xedges: np.ndarray, xlabel: str = "", ylabel: str = "Entries/bin") -> None:
+    def __init__(self, xedges: np.ndarray, label: str = None, xlabel: str = None,
+                 ylabel: str = "Entries/bin") -> None:
         """Constructor.
         """
         super().__init__((xedges, ), [xlabel, ylabel])
+        self.label = label
 
     def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
         """Overloaded make_plot() method.
         """
+        # If we are not explicitly providing a label at plotting time, use
+        # the one attached to the histogram, if any.
+        kwargs.setdefault('label', self.label)
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
-        setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])
+        setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])
 
 
 class Histogram2d(AbstractHistogram):
 
     """Two-dimensional histogram.
+
+    Arguments
+    ---------
+    xedges : 1-dimensional array
+        the bin edges on the x axis.
+
+    yedges : 1-dimensional array
+        the bin edges on the y axis.
+
+    xlabel : str
+        the text label for the x axis.
+
+    ylabel : str
+        the text label for the y axis.
+
+    zlabel : str
+        the text label for the z axis (default: "Entries/bin").
     """
 
     DEFAULT_PLOT_OPTIONS = dict(cmap=plt.get_cmap('hot'))
 
-    def __init__(self, xedges, yedges, xlabel='', ylabel='', zlabel='Entries/bin') -> None:
+    def __init__(self, xedges, yedges, xlabel: str = None, ylabel: str = None,
+                 zlabel: str = 'Entries/bin') -> None:
         """Constructor.
         """
         super().__init__((xedges, yedges), [xlabel, ylabel, zlabel])
@@ -222,5 +260,5 @@ class Histogram2d(AbstractHistogram):
             vmax = kwargs.pop('vmax', None)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm(vmin, vmax))
         mappable = axes.pcolormesh(*self._edges, self.content.T, **kwargs)
-        plt.colorbar(mappable, ax=axes, label=self._labels[2])
-        setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])
+        plt.colorbar(mappable, ax=axes, label=self.axis_labels[2])
+        setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])

@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.2.0 (2025-10-06)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * New histogram facilities added.
 
 * Pull requests merged:

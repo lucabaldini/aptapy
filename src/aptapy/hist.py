@@ -17,11 +17,12 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Sequence
+from typing import Sequence, List
 
+from matplotlib import axes
 import numpy as np
 
-from .plotting import plt, setup_axes
+from .plotting import matplotlib, plt, setup_axes
 from .typing_ import ArrayLike
 
 
@@ -40,7 +41,7 @@ class AbstractHistogram(ABC):
 
     DEFAULT_PLOT_OPTIONS = {}
 
-    def __init__(self, edges: Sequence[np.ndarray], labels: Sequence[str]) -> None:
+    def __init__(self, edges: Sequence[np.ndarray], labels: List[str]) -> None:
         """Constructor.
         """
         # Edges are fixed once and forever, so we create a copy. Also, no matter
@@ -176,10 +177,15 @@ class AbstractHistogram(ABC):
             kwargs.setdefault(key, value)
         self._do_plot(axes, **kwargs)
 
+    def __repr__(self) -> str:
+        """String representation of the histogram.
+        """
+        return f"{self.__class__.__name__}({self._num_axes} axes, shape={self._shape})"
+
 
 class Histogram1d(AbstractHistogram):
 
-    """A one-dimensional histogram.
+    """One-dimensional histogram.
     """
 
     DEFAULT_PLOT_OPTIONS = dict(linewidth=1.25, alpha=0.4, histtype="stepfilled")
@@ -189,85 +195,40 @@ class Histogram1d(AbstractHistogram):
         """
         super().__init__((xedges, ), [xlabel, ylabel])
 
-    def _do_plot(self, axes, **kwargs) -> None:
+    def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
         """Overloaded make_plot() method.
         """
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
         setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])
 
 
-# class Histogram2d(HistogramBase):
+class Histogram2d(AbstractHistogram):
 
-#     """A two-dimensional histogram.
-#     """
+    """Two-dimensional histogram.
+    """
 
-#     PLOT_OPTIONS = dict(cmap=plt.get_cmap('hot'))
-#     # pylint: disable=invalid-name
+    DEFAULT_PLOT_OPTIONS = dict(cmap=plt.get_cmap('hot'))
 
-#     def __init__(self, xbinning, ybinning, xlabel='', ylabel='', zlabel='Entries/bin'):
-#         """Constructor.
-#         """
-#         # pylint: disable=too-many-arguments
-#         HistogramBase.__init__(self, (xbinning, ybinning), [xlabel, ylabel, zlabel])
 
-#     def _plot(self, axes, logz=False, **kwargs):
-#         """Overloaded make_plot() method.
-#         """
-#         # pylint: disable=arguments-differ
-#         x, y = (v.flatten() for v in np.meshgrid(self.bin_centers(0), self.bin_centers(1)))
-#         bins = self.binning
-#         w = self.content.T.flatten()
-#         if logz:
-#             # Hack for a deprecated functionality in matplotlib 3.3.0
-#             # Parameters norm and vmin/vmax should not be used simultaneously
-#             # If logz is requested, we intercent the bounds when created the norm
-#             # and refrain from passing vmin/vmax downstream.
-#             vmin = kwargs.pop('vmin', None)
-#             vmax = kwargs.pop('vmax', None)
-#             kwargs.setdefault('norm', matplotlib.colors.LogNorm(vmin, vmax))
-#         axes.hist2d(x, y, bins, weights=w, **kwargs)
-#         color_bar = axes.colorbar()
-#         if self.labels[2] is not None:
-#             color_bar.set_label(self.labels[2])
+    def __init__(self, xedges, yedges, xlabel='', ylabel='', zlabel='Entries/bin') -> None:
+        """Constructor.
+        """
+        super().__init__((xedges, yedges), [xlabel, ylabel, zlabel])
 
-#     def slice(self, bin_index: int, axis: int = 0):
-#         """Return a slice of the two-dimensional histogram along the given axis.
-#         """
-#         hist = Histogram1d(self.binning[axis], self.labels[axis])
-#         hist.set_content(self.content[:, bin_index], self.entries[:, bin_index])
-#         return hist
-
-#     def slices(self, axis: int = 0):
-#         """Return all the slices along a given axis.
-#         """
-#         return tuple(self.slice(bin_index, axis) for bin_index in range(self._shape[axis]))
-
-#     def hslice(self, bin_index: int):
-#         """Return the horizontal slice for a given bin.
-#         """
-#         return self.slice(bin_index, 0)
-
-#     def hslices(self):
-#         """Return a list of all the horizontal slices.
-#         """
-#         return self.slices(0)
-
-#     def hbisect(self, y: float):
-#         """Return the horizontal slice corresponding to a given y value.
-#         """
-#         return self.hslice(self.bisect(self.binning[1], y))
-
-#     def vslice(self, bin_index):
-#         """Return the vertical slice for a given bin.
-#         """
-#         return self.slice(bin_index, 1)
-
-#     def vslices(self):
-#         """Return a list of all the vertical slices.
-#         """
-#         return self.slices(1)
-
-#     def vbisect(self, x):
-#         """Return the vertical slice corresponding to a given y value.
-#         """
-#         return self.vslice(self.bisect(self.binning[0], x))
+    def _do_plot(self, axes: matplotlib.axes._axes.Axes, logz: bool = False, **kwargs) -> None:
+        """Overloaded make_plot() method.
+        """
+        # pylint: disable=arguments-differ
+        x, y = (v.flatten() for v in np.meshgrid(self.bin_centers(0), self.bin_centers(1)))
+        w = self.content.T.flatten()
+        if logz:
+            # Hack for a deprecated functionality in matplotlib 3.3.0
+            # Parameters norm and vmin/vmax should not be used simultaneously
+            # If logz is requested, we intercent the bounds when created the norm
+            # and refrain from passing vmin/vmax downstream.
+            vmin = kwargs.pop('vmin', None)
+            vmax = kwargs.pop('vmax', None)
+            kwargs.setdefault('norm', matplotlib.colors.LogNorm(vmin, vmax))
+        _, _, _, mappable = axes.hist2d(x, y, self._edges, weights=w, **kwargs)
+        color_bar = plt.colorbar(mappable, ax=axes, label=self._labels[2])
+        setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])

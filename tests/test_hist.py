@@ -16,10 +16,11 @@
 """Unit tests for the hist module.
 """
 
+import inspect
 import numpy as np
 import pytest
 
-from aptapy.hist import Histogram1d
+from aptapy.hist import Histogram1d, Histogram2d
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng()
@@ -87,21 +88,33 @@ def test_aritmethics1d():
     hist2 = Histogram1d(edges).fill(sample2)
     hist3 = Histogram1d(edges).fill(sample1).fill(sample2)
     hist_sum = hist1 + hist2
-    # hist_sub = hist1 - hist2
+    hist_sub = hist1 - hist1
     assert np.allclose(hist_sum._sumw, hist3._sumw)
     assert np.allclose(hist_sum._sumw2, hist3._sumw2)
+    assert np.allclose(hist_sub._sumw, 0.)
 
 
-def test_plotting1d():
+def test_plotting1d(size: int = 100000):
     """Test plotting.
     """
-    plt.figure("test")
+    plt.figure(inspect.currentframe().f_code.co_name)
+    hist = Histogram1d(np.linspace(-5., 5., 100), 'x')
+    hist.fill(_RNG.normal(size=size))
+    hist.plot()
+
+
+def test_plotting2d(size: int = 100000):
+    """Test plotting.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
     edges = np.linspace(-5., 5., 100)
-    h = Histogram1d(edges, 'x')
-    h.fill(_RNG.normal(size=100000))
-    h.plot()
+    hist = Histogram2d(edges, edges, 'x', 'y')
+    hist.fill(_RNG.normal(size=size), _RNG.normal(size=size))
+    hist.plot()
+    plt.gca().set_aspect('equal')
 
 
 if __name__ == '__main__':
     test_plotting1d()
+    test_plotting2d()
     plt.show()

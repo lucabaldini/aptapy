@@ -217,16 +217,10 @@ class Histogram2d(AbstractHistogram):
         """Overloaded make_plot() method.
         """
         # pylint: disable=arguments-differ
-        x, y = (v.flatten() for v in np.meshgrid(self.bin_centers(0), self.bin_centers(1)))
-        w = self.content.T.flatten()
         if logz:
-            # Hack for a deprecated functionality in matplotlib 3.3.0
-            # Parameters norm and vmin/vmax should not be used simultaneously
-            # If logz is requested, we intercept the bounds when created the norm
-            # and refrain from passing vmin/vmax downstream.
             vmin = kwargs.pop('vmin', None)
             vmax = kwargs.pop('vmax', None)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm(vmin, vmax))
-        _, _, _, mappable = axes.hist2d(x, y, self._edges, weights=w, **kwargs)
+        mappable = axes.pcolormesh(*self._edges, self.content.T, **kwargs)
         plt.colorbar(mappable, ax=axes, label=self._labels[2])
         setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])

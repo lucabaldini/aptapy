@@ -110,7 +110,9 @@ def test_plotting2d(size: int = 100000):
     plt.figure(inspect.currentframe().f_code.co_name)
     edges = np.linspace(-5., 5., 100)
     hist = Histogram2d(edges, edges, 'x', 'y')
-    hist.fill(_RNG.normal(size=size), _RNG.normal(size=size))
+    # Note we are adding different offsets to x and y so that we can see
+    # the effect on the plot.
+    hist.fill(_RNG.normal(size=size) + 1., _RNG.normal(size=size) - 1.)
     hist.plot()
     plt.gca().set_aspect('equal')
 

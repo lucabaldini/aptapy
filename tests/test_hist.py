@@ -78,7 +78,7 @@ def test_compat1d():
         hist._check_compat(Histogram1d(np.array([0., 1.1, 2.])))
 
 
-def test_aritmethics1d():
+def test_arithmetics1d():
     """Test the basic arithmetics.
     """
     # pylint: disable=protected-access

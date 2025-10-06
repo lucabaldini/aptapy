@@ -449,10 +449,35 @@ class AbstractFitModel(ABC):
             text = f"{text}{format(parameter, spec)}\n"
         return text.strip("\n")
 
+    def __add__(self, other):
+        """Model sum.
+        """
+        if not isinstance(other, AbstractFitModel):
+            raise TypeError(f"{other} is not a fit model")
+        return FitModelSum(self, other)
+
     def __str__(self):
         """String formatting.
         """
         return format(self, Format.PRETTY)
+
+
+class FitModelSum:
+
+    def __init__(self, *components) -> None:
+        """
+        """
+        self._components = components
+
+    def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
+        """
+        """
+        cursor = 0
+        out = np.zeros(x.shape)
+        for component in self._components:
+            out += component(x, *parameter_values[cursor:cursor + len(component)])
+            cursor += len(component)
+        return out
 
 
 class Constant(AbstractFitModel):
@@ -465,7 +490,7 @@ class Constant(AbstractFitModel):
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return np.full(value, x.shape)
+        return np.full(x.shape, value)
 
 
 class Line(AbstractFitModel):

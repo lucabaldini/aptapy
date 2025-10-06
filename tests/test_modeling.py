@@ -18,7 +18,7 @@
 
 import numpy as np
 
-from aptapy.modeling import FitParameter, Gaussian
+from aptapy.modeling import FitParameter, Constant, Gaussian
 from aptapy.plotting import plt
 
 
@@ -152,6 +152,20 @@ def test_gaussian_fit_frozen_and_bound():
     print(model)
     model.plot()
     plt.legend()
+
+
+def test_model_sum():
+    """
+    """
+    constant = Constant()
+    gaussian = Gaussian()
+    model = constant + gaussian
+    print(constant)
+    print(gaussian)
+    print(model)
+    x = np.linspace(-1., 1., 10)
+    print(constant(x) + gaussian(x))
+    print(model.evaluate(x))
 
 
 if __name__ == '__main__':

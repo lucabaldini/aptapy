@@ -230,5 +230,5 @@ class Histogram2d(AbstractHistogram):
             vmax = kwargs.pop('vmax', None)
             kwargs.setdefault('norm', matplotlib.colors.LogNorm(vmin, vmax))
         _, _, _, mappable = axes.hist2d(x, y, self._edges, weights=w, **kwargs)
-        color_bar = plt.colorbar(mappable, ax=axes, label=self._labels[2])
+        plt.colorbar(mappable, ax=axes, label=self._labels[2])
         setup_axes(axes, xlabel=self._labels[0], ylabel=self._labels[1])

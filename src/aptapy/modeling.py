@@ -136,6 +136,50 @@ class FitParameter:
         """
         return uncertainties.ufloat(self.value, self.error)
 
+    def pull(self, expected: float) -> float:
+        """Calculate the pull of the parameter with respect to an expected value.
+
+        Arguments
+        ---------
+        expected : float
+            The expected value for the parameter.
+
+        Returns
+        -------
+        pull : float
+            The pull of the parameter with respect to the expected value, defined as
+            (value - expected) / error.
+
+        Raises
+        ------
+        RuntimeError
+            If the parameter has no error associated to it.
+        """
+        if self.error is None or self.error <= 0.:
+            raise RuntimeError(f"Cannot calculate pull for parameter {self.name} "
+                               "with no error")
+        return (self.value - expected) / self.error
+
+    def compatible_with(self, expected: float, num_sigma: float = 3.) -> bool:
+        """Check if the parameter is compatible with an expected value within
+        n_sigma.
+
+        Arguments
+        ---------
+        expected : float
+            The expected value for the parameter.
+
+        num_sigma : float, optional
+            The number of sigmas to use for the compatibility check (default 3).
+
+        Returns
+        -------
+        compatible : bool
+            True if the parameter is compatible with the expected value within
+            num_sigma.
+        """
+        return abs(self.pull(expected)) <= num_sigma
+
     def __format__(self, spec: str) -> str:
         """String formatting.
         """

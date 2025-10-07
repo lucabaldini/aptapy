@@ -216,13 +216,7 @@ class AbstractFitModelBase(ABC):
     def __init__(self) -> None:
         """Constructor.
         """
-        # Fit status object holding all the information from the fit.
         self.status = FitStatus()
-
-    @abstractmethod
-    def name(self) -> str:
-        """Delegated to concrete classes: this should return the name of the model.
-        """
 
     @abstractmethod
     def __len__(self) -> int:
@@ -257,6 +251,14 @@ class AbstractFitModelBase(ABC):
         parameter_values : sequence of float
             The value of the model parameters.
         """
+
+    def name(self) -> str:
+        """Return the model name, e.g., for legends.
+
+        Note this can be reimplemented in concrete subclasses, but it should provide
+        a sensible default value in most circumstances.
+        """
+        return self.__class__.__name__
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the model at the current value of the parameters.
@@ -332,16 +334,21 @@ class AbstractFitModelBase(ABC):
         # the broadcast facilities.
         xdata = np.asarray(xdata)
         ydata = np.asarray(ydata)
+        if isinstance(sigma, Number):
+            sigma = np.full(ydata.shape, sigma)
+        sigma = np.asarray(sigma)
         # If we are fitting over a subrange, filter the input data.
         mask = np.logical_and(xdata >= xmin, xdata <= xmax)
+        # Also, filter out any points with non-positive uncertainties.
+        mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
         self.status.dof = int(mask.sum() - len(self))
         if self.status.dof < 0:
             raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
         ydata = ydata[mask]
-        if not isinstance(sigma, Number):
-            sigma = np.asarray(sigma)[mask]
+        sigma = sigma[mask]
+
         # Cache the fit range for later use.
         self.status.fit_range = (xdata.min(), xdata.max())
 
@@ -357,6 +364,23 @@ class AbstractFitModelBase(ABC):
         model parameters.
         """
         return float((((ydata - self(xdata)) / sigma)**2.).sum())
+
+    def fit_histogram(self, histogram: "Histogram1d", p0: ArrayLike = None, **kwargs) -> None:
+        """Convenience function for fitting a 1-dimensional histogram.
+
+        Arguments
+        ---------
+        histogram : Histogram1d
+            The histogram to fit.
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        **kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+        """
+        args = histogram.bin_centers(), histogram.content, p0, histogram.errors
+        return self.fit(*args, **kwargs)
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Return the default plotting range for the model.
@@ -418,11 +442,6 @@ class AbstractFitModel(AbstractFitModelBase):
                 # that we can use the notation model.parameter
                 setattr(self, name, parameter)
                 self._parameters.append(parameter)
-
-    def name(self) -> str:
-        """Return the model name.
-        """
-        return self.__class__.__name__
 
     def __len__(self) -> int:
         """Return the `total` number of fit parameters in the model.

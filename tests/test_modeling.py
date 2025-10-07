@@ -152,14 +152,13 @@ def test_gaussian_fit_frozen_and_bound():
     plt.legend()
 
 
-def test_model_sum():
+def test_sum_gauss_line():
     """
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     hist = TEST_HISTOGRAM.copy()
     hist.fill(_RNG.uniform(-5., 5., size=100000))
     model = Constant() + Gaussian()
-
     hist.plot()
     model.fit_histogram(hist)
     model.plot()
@@ -172,5 +171,5 @@ if __name__ == '__main__':
     test_gaussian_fit_bound()
     test_gaussian_fit_frozen()
     test_gaussian_fit_frozen_and_bound()
-    test_model_sum()
+    test_sum_gauss_line()
     plt.show()

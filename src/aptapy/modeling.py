@@ -366,136 +366,11 @@ class AbstractFitModelBase(ABC):
             parameter.value = value
             parameter.error = error
 
-    def prepare_fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
-                    sigma: ArrayLike = 1., xmin: float = -np.inf, xmax: float = np.inf) -> None:
-        """Setup the model and the input data for a fit.
-        """
-        # Reset the fit status.
-        self.status.reset()
-
-        # Prepare the data. We want to make sure all the relevant things are numpy
-        # arrays so that we can vectorize operations downstream, taking advantage of
-        # the broadcast facilities.
-        xdata = np.asarray(xdata)
-        ydata = np.asarray(ydata)
-        if isinstance(sigma, Number):
-            sigma = np.full(ydata.shape, sigma)
-        sigma = np.asarray(sigma)
-        # If we are fitting over a subrange, filter the input data.
-        mask = np.logical_and(xdata >= xmin, xdata <= xmax)
-        # Also, filter out any points with non-positive uncertainties.
-        mask = np.logical_and(mask, sigma > 0.)
-        # (And, since we are at it, make sure we have enough degrees of freedom.)
-        self.status.dof = int(mask.sum() - len(self))
-        if self.status.dof < 0:
-            raise RuntimeError(f"{self.name()} has no degrees of freedom")
-        xdata = xdata[mask]
-        ydata = ydata[mask]
-        sigma = sigma[mask]
-
-        # Cache the fit range for later use.
-        self.status.fit_range = (xdata.min(), xdata.max())
-
-        # If we are not passing default starting points for the model parameters,
-        # try and do something sensible.
-        if p0 is None:
-            self.init_parameters(xdata, ydata, sigma)
-            p0 = self.free_parameter_values()
-        return xdata, ydata, p0, sigma
-
     def calculate_chisqure(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
         """Calculate the chisquare of the fit to some input data with the current
         model parameters.
         """
         return float((((ydata - self(xdata)) / sigma)**2.).sum())
-
-    def fit_histogram(self, histogram: "Histogram1d", p0: ArrayLike = None, **kwargs) -> None:
-        """Convenience function for fitting a 1-dimensional histogram.
-
-        Arguments
-        ---------
-        histogram : Histogram1d
-            The histogram to fit.
-
-        p0 : array_like, optional
-            The initial values for the fit parameters.
-
-        **kwargs : dict, optional
-            Additional keyword arguments passed to `fit()`.
-        """
-        args = histogram.bin_centers(), histogram.content, p0, histogram.errors
-        return self.fit(*args, **kwargs)
-
-    def default_plotting_range(self) -> Tuple[float, float]:
-        """Return the default plotting range for the model.
-
-        This can be reimplemnted in concrete models, and can be parameter-dependent
-        (e.g., for a gaussian we might want to plot within 5 sigma from the mean by
-        dafault).
-        """
-        return (0., 1.)
-
-    def _plotting_range(self, xmin: float = None, xmax: float = None,
-                        fit_padding: float = 0.) -> Tuple[float, float]:
-        """Convenience function trying to come up with the most sensible plot range
-        for the model.
-        """
-        # If we have fitted the model to some data, we take the fit range and pad it
-        # a little bit.
-        if self.status.fit_range is not None:
-            _xmin, _xmax = self.status.fit_range
-            fit_padding *= (_xmax - _xmin)
-            _xmin -= fit_padding
-            _xmax += fit_padding
-        # Otherwise we fall back to the default plotting range for the model.
-        else:
-            _xmin, _xmax = self.default_plotting_range()
-        # And are free to override either end!
-        if xmin is not None:
-            _xmin = xmin
-        if xmax is not None:
-            _xmax = xmax
-        return (_xmin, _xmax)
-
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
-        """Plot the model.
-        """
-        x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
-        y = self(x)
-        plt.plot(x, y, label=format(self, Format.LATEX))
-
-
-class AbstractFitModel(AbstractFitModelBase):
-
-    """Abstract base class for a fit model.
-    """
-
-    def __init__(self) -> None:
-        """Constructor.
-
-        Here we loop over the FitParameter objects defined at the class level, and
-        create copies that are attached to the instance, so that the latter has its
-        own state.
-        """
-        super().__init__()
-        self._parameters = []
-        for name, value in self.__class__.__dict__.items():
-            if isinstance(value, FitParameter):
-                parameter = value.copy(name)
-                # Note we also set one instance attribute for each parameter so
-                # that we can use the notation model.parameter
-                setattr(self, name, parameter)
-                self._parameters.append(parameter)
-
-    def __len__(self) -> int:
-        """Return the `total` number of fit parameters in the model.
-        """
-        return len(self._parameters)
-
-    def __iter__(self) -> Iterator[FitParameter]:
-        """Iterate over `all` the model parameters.
-        """
-        return iter(self._parameters)
 
     @staticmethod
     def freeze(model_function, **constraints):
@@ -553,8 +428,37 @@ class AbstractFitModel(AbstractFitModelBase):
             xmax: float = np.inf, **kwargs) -> None:
         """Fit a series of points.
         """
-        # Prepare the data and the initial parameter values.
-        xdata, ydata, p0, sigma = self.prepare_fit(xdata, ydata, p0, sigma, xmin, xmax)
+        # Reset the fit status.
+        self.status.reset()
+
+        # Prepare the data. We want to make sure all the relevant things are numpy
+        # arrays so that we can vectorize operations downstream, taking advantage of
+        # the broadcast facilities.
+        xdata = np.asarray(xdata)
+        ydata = np.asarray(ydata)
+        if isinstance(sigma, Number):
+            sigma = np.full(ydata.shape, sigma)
+        sigma = np.asarray(sigma)
+        # If we are fitting over a subrange, filter the input data.
+        mask = np.logical_and(xdata >= xmin, xdata <= xmax)
+        # Also, filter out any points with non-positive uncertainties.
+        mask = np.logical_and(mask, sigma > 0.)
+        # (And, since we are at it, make sure we have enough degrees of freedom.)
+        self.status.dof = int(mask.sum() - len(self))
+        if self.status.dof < 0:
+            raise RuntimeError(f"{self.name()} has no degrees of freedom")
+        xdata = xdata[mask]
+        ydata = ydata[mask]
+        sigma = sigma[mask]
+
+        # Cache the fit range for later use.
+        self.status.fit_range = (xdata.min(), xdata.max())
+
+        # If we are not passing default starting points for the model parameters,
+        # try and do something sensible.
+        if p0 is None:
+            self.init_parameters(xdata, ydata, sigma)
+            p0 = self.free_parameter_values()
 
         # Do the actual fit.
         constraints = {parameter.name: parameter.value for parameter in self \
@@ -566,13 +470,109 @@ class AbstractFitModel(AbstractFitModelBase):
         self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
         return self.status
 
+    def fit_histogram(self, histogram: "Histogram1d", p0: ArrayLike = None, **kwargs) -> None:
+        """Convenience function for fitting a 1-dimensional histogram.
+
+        Arguments
+        ---------
+        histogram : Histogram1d
+            The histogram to fit.
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        **kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+        """
+        args = histogram.bin_centers(), histogram.content, p0, histogram.errors
+        return self.fit(*args, **kwargs)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Return the default plotting range for the model.
+
+        This can be reimplemnted in concrete models, and can be parameter-dependent
+        (e.g., for a gaussian we might want to plot within 5 sigma from the mean by
+        dafault).
+        """
+        return (0., 1.)
+
+    def _plotting_range(self, xmin: float = None, xmax: float = None,
+                        fit_padding: float = 0.) -> Tuple[float, float]:
+        """Convenience function trying to come up with the most sensible plot range
+        for the model.
+        """
+        # If we have fitted the model to some data, we take the fit range and pad it
+        # a little bit.
+        if self.status.fit_range is not None:
+            _xmin, _xmax = self.status.fit_range
+            fit_padding *= (_xmax - _xmin)
+            _xmin -= fit_padding
+            _xmax += fit_padding
+        # Otherwise we fall back to the default plotting range for the model.
+        else:
+            _xmin, _xmax = self.default_plotting_range()
+        # And are free to override either end!
+        if xmin is not None:
+            _xmin = xmin
+        if xmax is not None:
+            _xmax = xmax
+        return (_xmin, _xmax)
+
+    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> np.ndarray:
+        """Plot the model.
+        """
+        x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
+        y = self(x)
+        plt.plot(x, y, label=format(self, Format.LATEX))
+        return x
+
     def __format__(self, spec: str) -> str:
         """String formatting.
         """
-        text = f"{self.name()} ({format(self.status, spec)})\n"
-        for parameter in self._parameters:
+        text = f"{self.name()}\n"
+        if self.status is not None:
+            text = f"{text}{format(self.status, spec)}\n"
+        for parameter in self:
             text = f"{text}{format(parameter, spec)}\n"
         return text.strip("\n")
+
+    def __str__(self):
+        """String formatting.
+        """
+        return format(self, Format.PRETTY)
+
+
+class AbstractFitModel(AbstractFitModelBase):
+
+    """Abstract base class for a fit model.
+    """
+
+    def __init__(self) -> None:
+        """Constructor.
+
+        Here we loop over the FitParameter objects defined at the class level, and
+        create copies that are attached to the instance, so that the latter has its
+        own state.
+        """
+        super().__init__()
+        self._parameters = []
+        for name, value in self.__class__.__dict__.items():
+            if isinstance(value, FitParameter):
+                parameter = value.copy(name)
+                # Note we also set one instance attribute for each parameter so
+                # that we can use the notation model.parameter
+                setattr(self, name, parameter)
+                self._parameters.append(parameter)
+
+    def __len__(self) -> int:
+        """Return the `total` number of fit parameters in the model.
+        """
+        return len(self._parameters)
+
+    def __iter__(self) -> Iterator[FitParameter]:
+        """Iterate over `all` the model parameters.
+        """
+        return iter(self._parameters)
 
     def __add__(self, other):
         """Model sum.
@@ -580,11 +580,6 @@ class AbstractFitModel(AbstractFitModelBase):
         if not isinstance(other, AbstractFitModel):
             raise TypeError(f"{other} is not a fit model")
         return FitModelSum(self, other)
-
-    def __str__(self):
-        """String formatting.
-        """
-        return format(self, Format.PRETTY)
 
 
 class FitModelSum(AbstractFitModelBase):
@@ -611,7 +606,7 @@ class FitModelSum(AbstractFitModelBase):
         return chain(*self._components)
 
     def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
-        """
+        """Overloaded method.
         """
         cursor = 0
         value = np.zeros(x.shape)
@@ -620,35 +615,26 @@ class FitModelSum(AbstractFitModelBase):
             cursor += len(component)
         return value
 
-    def fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
-            sigma: ArrayLike = 1., absolute_sigma: bool = False, xmin: float = -np.inf,
-            xmax: float = np.inf, **kwargs) -> None:
-        """Fit a series of points.
-        """
-        # Prepare the data and the initial parameter values.
-        xdata, ydata, p0, sigma = self.prepare_fit(xdata, ydata, p0, sigma, xmin, xmax)
-
-        # Do the actual fit.
-        #constraints = {parameter.name: parameter.value for parameter in self \
-        #               if parameter.frozen}
-        #model = self.freeze(self.evaluate, **constraints)
-        model = self.evaluate
-        args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
-        popt, pcov = curve_fit(*args, **kwargs)
-        self.update_parameters(popt, pcov)
-        self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
-        return self.status
-
     def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
         """Plot the model.
         """
-        x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
-        y = self(x)
-        plt.plot(x, y)
+        x = super().plot(xmin, xmax, num_points)
         color = plt.gca().lines[-1].get_color()
         for component in self._components:
             y = component(x)
-            plt.plot(x, y, ls="--", color=color)
+            plt.plot(x, y, label=None, ls="--", color=color)
+
+    def __format__(self, spec: str) -> str:
+        """String formatting.
+        """
+        text = f"{self.name()}\n"
+        if self.status is not None:
+            text = f"{text}{format(self.status, spec)}\n"
+        for component in self._components:
+            text = f"{text}[{component.name()}]\n"
+            for parameter in component:
+                text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
 
 
 class Constant(AbstractFitModel):

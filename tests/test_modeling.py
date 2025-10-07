@@ -155,21 +155,11 @@ def test_gaussian_fit_frozen_and_bound():
 def test_model_sum():
     """
     """
-    hist = Histogram1d(np.linspace(-5., 5., 100), label="Test data")
-    hist.fill(_RNG.normal(size=100000))
-    hist.fill(_RNG.uniform(-5., 5., size=100000))
-    constant = Constant()
-    gaussian = Gaussian()
-    model = constant + gaussian
-    print(model)
-    for parameter in model:
-        print(parameter)
-
-    x = np.linspace(-1., 1., 10)
-    print(constant(x) + gaussian(x))
-
-    print(model(x))
     plt.figure(inspect.currentframe().f_code.co_name)
+    hist = TEST_HISTOGRAM.copy()
+    hist.fill(_RNG.uniform(-5., 5., size=100000))
+    model = Constant() + Gaussian()
+
     hist.plot()
     model.fit_histogram(hist)
     model.plot()

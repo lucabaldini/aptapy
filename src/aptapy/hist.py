@@ -40,7 +40,7 @@ class AbstractHistogram(ABC):
 
     DEFAULT_PLOT_OPTIONS = {}
 
-    def __init__(self, edges: Sequence[np.ndarray], axis_labels: List[str]) -> None:
+    def __init__(self, edges: Sequence[np.ndarray], label: str, axis_labels: List[str]) -> None:
         """Constructor.
         """
         # Edges are fixed once and forever, so we create a copy. Also, no matter
@@ -63,6 +63,7 @@ class AbstractHistogram(ABC):
         self._shape = tuple(item.size - 1 for item in self._edges)
         self._sumw = np.zeros(self._shape, dtype=float)
         self._sumw2 = np.zeros(self._shape, dtype=float)
+        self.label = label
         self.axis_labels = axis_labels
 
     @property
@@ -115,7 +116,7 @@ class AbstractHistogram(ABC):
         # Note we really need the * in the constructor, here, as the abstract
         # base class is never instantiated, and the arguments are unpacked in the
         # constructors of all the derived classes.
-        histogram = self.__class__(*self._edges, *self.axis_labels)
+        histogram = self.__class__(*self._edges, self.label, *self.axis_labels)
         histogram._sumw = self._sumw.copy()
         histogram._sumw2 = self._sumw2.copy()
         return histogram
@@ -208,8 +209,7 @@ class Histogram1d(AbstractHistogram):
                  ylabel: str = "Entries/bin") -> None:
         """Constructor.
         """
-        super().__init__((xedges, ), [xlabel, ylabel])
-        self.label = label
+        super().__init__((xedges, ), label, [xlabel, ylabel])
 
     def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
         """Overloaded make_plot() method.
@@ -233,6 +233,9 @@ class Histogram2d(AbstractHistogram):
     yedges : 1-dimensional array
         the bin edges on the y axis.
 
+    label : str
+        overall label for the histogram
+
     xlabel : str
         the text label for the x axis.
 
@@ -245,11 +248,11 @@ class Histogram2d(AbstractHistogram):
 
     DEFAULT_PLOT_OPTIONS = dict(cmap=plt.get_cmap('hot'))
 
-    def __init__(self, xedges, yedges, xlabel: str = None, ylabel: str = None,
-                 zlabel: str = 'Entries/bin') -> None:
+    def __init__(self, xedges, yedges, label: str = None, xlabel: str = None,
+                 ylabel: str = None, zlabel: str = 'Entries/bin') -> None:
         """Constructor.
         """
-        super().__init__((xedges, yedges), [xlabel, ylabel, zlabel])
+        super().__init__((xedges, yedges), label, [xlabel, ylabel, zlabel])
 
     def _do_plot(self, axes: matplotlib.axes._axes.Axes, logz: bool = False, **kwargs) -> None:
         """Overloaded make_plot() method.

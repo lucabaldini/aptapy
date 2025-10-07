@@ -269,11 +269,11 @@ class AbstractFitModelBase(ABC):
 
         .. note::
 
-            I still have mixed feelings about this method, as it is not clear whether
-            we are returning the number of parameters, or the number of free parameters,
-            but I think it is fine, as long as we document it. Also note that, while
-            the number of parameters is fixed once and for all for simple models,
-            it can change at runtime for composite models.
+           I still have mixed feelings about this method, as it is not clear whether
+           we are returning the number of parameters, or the number of free parameters,
+           but I think it is fine, as long as we document it. Also note that, while
+           the number of parameters is fixed once and for all for simple models,
+           it can change at runtime for composite models.
         """
 
     @abstractmethod
@@ -645,6 +645,10 @@ class FitModelSum(AbstractFitModelBase):
         x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
         y = self(x)
         plt.plot(x, y)
+        color = plt.gca().lines[-1].get_color()
+        for component in self._components:
+            y = component(x)
+            plt.plot(x, y, ls="--", color=color)
 
 
 class Constant(AbstractFitModel):

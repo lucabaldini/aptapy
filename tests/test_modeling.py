@@ -21,7 +21,7 @@ import inspect
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Constant, FitParameter, Gaussian
+from aptapy.modeling import FitParameter, Gaussian, Line
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -158,8 +158,10 @@ def test_sum_gauss_line():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     hist = TEST_HISTOGRAM.copy()
-    hist.fill(_RNG.uniform(-5., 5., size=100000))
-    model = Constant() + Gaussian()
+    u = np.random.rand(100000)
+    x = 5. - 10. * np.sqrt(1 - u)
+    hist.fill(x)
+    model = Gaussian() + Line()
     hist.plot()
     model.fit_histogram(hist)
     model.plot()

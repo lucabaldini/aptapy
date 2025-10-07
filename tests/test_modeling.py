@@ -16,10 +16,15 @@
 """Unit tests for the modeling module.
 """
 
+import inspect
+
 import numpy as np
 
+from aptapy.hist import Histogram1d
 from aptapy.modeling import FitParameter, Constant, Gaussian
 from aptapy.plotting import plt
+
+_RNG = np.random.default_rng()
 
 
 def test_fit_parameter():
@@ -76,11 +81,10 @@ def test_model_parameters():
 def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05, min_error=0.01):
     """
     """
-    rng = np.random.default_rng(seed=313)
     xdata = np.linspace(xmin, xmax, num_points)
     ydata = model(xdata)
     sigma = ydata * relative_error + min_error
-    ydata += rng.normal(0., sigma)
+    ydata += _RNG.normal(0., sigma)
     return xdata, ydata, sigma
 
 
@@ -157,15 +161,27 @@ def test_gaussian_fit_frozen_and_bound():
 def test_model_sum():
     """
     """
+    hist = Histogram1d(np.linspace(-5., 5., 100))
+    hist.fill(_RNG.normal(size=100000))
+    hist.fill(_RNG.uniform(-5., 5., size=100000))
     constant = Constant()
     gaussian = Gaussian()
     model = constant + gaussian
     print(constant)
     print(gaussian)
     print(model)
+    for parameter in model:
+        print(parameter)
+
     x = np.linspace(-1., 1., 10)
     print(constant(x) + gaussian(x))
-    print(model.evaluate(x))
+
+    print(model(x))
+    plt.figure(inspect.currentframe().f_code.co_name)
+    hist.plot()
+    model.fit(hist.bin_centers(), hist.content, sigma=hist.errors)
+    model.plot()
+    plt.legend()
 
 
 if __name__ == '__main__':
@@ -174,4 +190,5 @@ if __name__ == '__main__':
     test_gaussian_fit_bound()
     test_gaussian_fit_frozen()
     test_gaussian_fit_frozen_and_bound()
+    test_model_sum()
     plt.show()

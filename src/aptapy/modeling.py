@@ -225,8 +225,17 @@ class AbstractFitModelBase(ABC):
         """
 
     @abstractmethod
-    def parameter_values(self) -> Tuple[float]:
-        """Delegated to concrete classes: this should return the current parameter values.
+    def __len__(self) -> int:
+        """Delegated to concrete classes: this should return the `total` number of
+        fit parameters (not only the free ones) in the model.
+
+        .. note::
+
+            I still have mixed feelings about this method, as it is not clear whether
+            we are returning the number of parameters, or the number of free parameters,
+            but I think it is fine, as long as we document it. Also note that, while
+            the number of parameters is fixed once and for all for simple models,
+            it can change at runtime for composite models.
         """
 
     @abstractmethod
@@ -247,11 +256,6 @@ class AbstractFitModelBase(ABC):
 
         parameter_values : sequence of float
             The value of the model parameters.
-        """
-
-    @abstractmethod
-    def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
-        """Update the model parameters based on the output of the ``curve_fit()`` call.
         """
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
@@ -279,11 +283,17 @@ class AbstractFitModelBase(ABC):
 
     def parameter_values(self) -> Tuple[float]:
         """Return the current parameter values.
+
+        Note this only relies on the __iter__() method, so it works both for simple
+        and composite models.
         """
         return tuple(parameter.value for parameter in self)
 
     def free_parameters(self) -> Tuple[FitParameter]:
         """Return the list of free parameters.
+
+        Note this only relies on the __iter__() method, so it works both for simple
+        and composite models.
         """
         return tuple(parameter for parameter in self if not parameter.frozen)
 
@@ -292,9 +302,27 @@ class AbstractFitModelBase(ABC):
         """
         return tuple(parameter.value for parameter in self.free_parameters())
 
+    def bounds(self) -> Tuple[ArrayLike, ArrayLike]:
+        """Return the bounds on the fit parameters in a form that can be use by the
+        fitting method.
+        """
+        free_parameters = self.free_parameters()
+        return (tuple(parameter.minimum for parameter in free_parameters),
+                tuple(parameter.maximum for parameter in free_parameters))
+
+    def update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
+        """Update the model parameters based on the output of the ``curve_fit()`` call.
+
+        Note this only relies on the __iter__() method, so it works both for simple
+        and composite models.
+        """
+        for parameter, value, error in zip(self.free_parameters(), popt, np.sqrt(pcov.diagonal())):
+            parameter.value = value
+            parameter.error = error
+
     def prepare_fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
                     sigma: ArrayLike = 1., xmin: float = -np.inf, xmax: float = np.inf) -> None:
-        """Fit a series of points.
+        """Setup the model and the input data for a fit.
         """
         # Reset the fit status.
         self.status.reset()
@@ -397,43 +425,14 @@ class AbstractFitModel(AbstractFitModelBase):
         return self.__class__.__name__
 
     def __len__(self) -> int:
-        """Overloaded method.
-
-        .. warning::
-
-            This is potentially unbiguous, as it is not clear whether we should
-            return the number of parameters, or the number of free parameters.
-            (And in fact we are using this incorrectly in the chisquare calculation.)
+        """Return the `total` number of fit parameters in the model.
         """
         return len(self._parameters)
 
     def __iter__(self) -> Iterator[FitParameter]:
-        """Iteration protocol.
-
-        This allows to loop over all the fit parameters of the model.
+        """Iterate over `all` the model parameters.
         """
         return iter(self._parameters)
-
-    def set_parameters(self, *values: float) -> None:
-        """Set the values for all the parameters.
-        """
-        for parameter, value in zip(self, values):
-            parameter.value = value
-
-    def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
-        """Update the model parameters based on the output of the ``curve_fit()`` call.
-        """
-        for parameter, value, error in zip(self.free_parameters(), popt, np.sqrt(pcov.diagonal())):
-            parameter.value = value
-            parameter.error = error
-
-    def bounds(self) -> Tuple[ArrayLike, ArrayLike]:
-        """Return the bounds on the fit parameters in a form that can be use by the
-        fitting method.
-        """
-        free_parameters = self.free_parameters()
-        return (tuple(parameter.minimum for parameter in free_parameters),
-                tuple(parameter.maximum for parameter in free_parameters))
 
     @staticmethod
     def freeze(model_function, **constraints):
@@ -500,7 +499,7 @@ class AbstractFitModel(AbstractFitModelBase):
         model = self.freeze(self.evaluate, **constraints)
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = curve_fit(*args, **kwargs)
-        self._update_parameters(popt, pcov)
+        self.update_parameters(popt, pcov)
         self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
         return self.status
 
@@ -534,25 +533,17 @@ class FitModelSum(AbstractFitModelBase):
         self._components = components
 
     def name(self) -> str:
-        """
+        """Return the model name.
         """
         return " + ".join(component.name() for component in self._components)
 
     def __len__(self) -> int:
-        """
+        """Return the sum of `all` the fit parameters in the underlying models.
         """
         return sum(len(component) for component in self._components)
 
-    def parameter_values(self) -> Tuple[float]:
-        """
-        """
-        values = []
-        for component in self._components:
-            values.extend(component.parameter_values())
-        return tuple(values)
-
     def __iter__(self) -> Iterator[FitParameter]:
-        """Iterate over all the parameters of the underlying components.
+        """Iterate over `all` the parameters of the underlying components.
         """
         return chain(*self._components)
 
@@ -565,17 +556,6 @@ class FitModelSum(AbstractFitModelBase):
             value += component.evaluate(x, *parameter_values[cursor:cursor + len(component)])
             cursor += len(component)
         return value
-
-    def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
-        """Update the model parameters based on the output of the ``curve_fit()`` call.
-        """
-        cursor = 0
-        for component in self._components:
-            n_parameters = len(component)
-            component._update_parameters(popt[cursor:cursor + n_parameters],
-                                         pcov[cursor:cursor + n_parameters,
-                                              cursor:cursor + n_parameters])
-            cursor += n_parameters
 
     def fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
             sigma: ArrayLike = 1., absolute_sigma: bool = False, xmin: float = -np.inf,
@@ -590,9 +570,9 @@ class FitModelSum(AbstractFitModelBase):
         #               if parameter.frozen}
         #model = self.freeze(self.evaluate, **constraints)
         model = self.evaluate
-        args = model, xdata, ydata, p0, sigma, absolute_sigma, True#, self.bounds()
+        args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = curve_fit(*args, **kwargs)
-        self._update_parameters(popt, pcov)
+        self.update_parameters(popt, pcov)
         self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
         return self.status
 

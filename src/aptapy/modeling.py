@@ -19,17 +19,18 @@
 import enum
 import functools
 import inspect
-from itertools import chain
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from itertools import chain
 from numbers import Number
-from typing import Iterator, Tuple, Sequence
+from typing import Iterator, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
 from scipy.optimize import curve_fit
 
+from .hist import Histogram1d
 from .typing_ import ArrayLike
 
 
@@ -470,7 +471,7 @@ class AbstractFitModelBase(ABC):
         self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
         return self.status
 
-    def fit_histogram(self, histogram: "Histogram1d", p0: ArrayLike = None, **kwargs) -> None:
+    def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:
         """Convenience function for fitting a 1-dimensional histogram.
 
         Arguments
@@ -607,7 +608,11 @@ class FitModelSum(AbstractFitModelBase):
 
     def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
         """Overloaded method.
+
+        Note this is not a static method, as we need to access the list of components
+        to sum over.
         """
+        # pylint: disable=arguments-differ
         cursor = 0
         value = np.zeros(x.shape)
         for component in self._components:

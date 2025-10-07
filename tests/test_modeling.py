@@ -21,12 +21,13 @@ import inspect
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import FitParameter, Constant, Gaussian
+from aptapy.modeling import Constant, FitParameter, Gaussian
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
 
-TEST_HISTOGRAM = Histogram1d(np.linspace(-5., 5., 100), label="Test data").fill(_RNG.normal(size=100000))
+TEST_HISTOGRAM = Histogram1d(np.linspace(-5., 5., 100), label="Test data")
+TEST_HISTOGRAM.fill(_RNG.normal(size=100000))
 NUM_SIGMA = 4.
 
 
@@ -153,7 +154,7 @@ def test_gaussian_fit_frozen_and_bound():
 
 
 def test_sum_gauss_line():
-    """
+    """Test the sum of of two models.
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     hist = TEST_HISTOGRAM.copy()

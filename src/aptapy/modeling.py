@@ -481,7 +481,7 @@ class AbstractFitModelBase(ABC):
             parameter.value = value
             parameter.error = error
 
-    def calculate_chisqure(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
+    def calculate_chisquare(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
         """Calculate the chisquare of the fit to some input data with the current
         model parameters.
 
@@ -640,7 +640,7 @@ class AbstractFitModelBase(ABC):
         popt, pcov = curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
         # Consider moving this to the FitStatus class?
-        self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
+        self.status.chisquare = self.calculate_chisquare(xdata, ydata, sigma)
         self.status.pvalue = chi2.sf(self.status.chisquare, self.status.dof)
         if self.status.pvalue > 0.5:
             self.status.pvalue = 1. - self.status.pvalue

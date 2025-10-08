@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
 from scipy.optimize import curve_fit
+from scipy.stats import chi2
 
 from .hist import Histogram1d
 from .typing_ import ArrayLike
@@ -263,7 +264,7 @@ class FitStatus:
 
     chisquare: float = None
     dof: int = None
-    # pvalue: float = None
+    pvalue: float = None
     fit_range: Tuple[float, float] = None
 
     def reset(self) -> None:
@@ -271,6 +272,7 @@ class FitStatus:
         """
         self.chisquare = None
         self.dof = None
+        self.pvalue = None
         self.fit_range = None
 
     def __format__(self, spec: str) -> str:
@@ -614,7 +616,7 @@ class AbstractFitModelBase(ABC):
         # Also, filter out any points with non-positive uncertainties.
         mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
-        self.status.dof = int(mask.sum() - len(self))
+        self.status.dof = int(mask.sum() - len(self.free_parameters()))
         if self.status.dof < 0:
             raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
@@ -637,7 +639,11 @@ class AbstractFitModelBase(ABC):
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
+        # Consider moving this to the FitStatus class?
         self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
+        self.status.pvalue = chi2.sf(self.status.chisquare, self.status.dof)
+        if self.status.pvalue > 0.5:
+            self.status.pvalue = 1. - self.status.pvalue
         return self.status
 
     def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:

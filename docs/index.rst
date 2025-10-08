@@ -9,11 +9,16 @@ aptapy documentation
 Statistical tools for online monitoring and analysis.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    auto_examples/index
+   release_notes
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API:
+
    hist
    modeling
    strip
-   release_notes

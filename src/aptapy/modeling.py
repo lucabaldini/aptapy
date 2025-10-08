@@ -963,21 +963,31 @@ class PowerLaw(AbstractFitModel):
 class Gaussian(AbstractFitModel):
 
     """Gaussian model.
-
-    .. todo::
-
-       Consider using the gaussian formula normalized to one?
     """
 
     prefactor = FitParameter(1.)
     mean = FitParameter(0.)
-    sigma = FitParameter(1.)
+    sigma = FitParameter(1., minimum=0.)
+
+    _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
+    _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * np.exp(-0.5 * ((x - mean) / sigma) ** 2.)
+        z = (x - mean) / sigma
+        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z** 2.)
 
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
         mean, half_width = self.mean.value, num_sigma * self.sigma.value
         return (mean - half_width, mean + half_width)
+
+    def fwhm(self) -> uncertainties.ufloat:
+        """Return the full-width at half-maximum (FWHM) of the gaussian.
+
+        Returns
+        -------
+        fwhm : uncertainties.ufloat
+            The FWHM of the gaussian.
+        """
+        return self.sigma.ufloat() * self._SIGMA_TO_FWHM

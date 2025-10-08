@@ -130,7 +130,7 @@ def test_gaussian_fit_frozen():
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
     # Calculate the normalization from the histogram.
-    norm = (TEST_HISTOGRAM.content * TEST_HISTOGRAM.bin_widths()).sum() / np.sqrt(2. * np.pi)
+    norm = (TEST_HISTOGRAM.content * TEST_HISTOGRAM.bin_widths()).sum()
     model.prefactor.freeze(norm)
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)

@@ -17,7 +17,7 @@ from aptapy.plotting import plt
 hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
 hist.fill(np.random.default_rng().normal(size=100000))
 hist.plot()
-norm = (hist.content * hist.bin_widths()).sum() / np.sqrt(2. * np.pi)
+norm = (hist.content * hist.bin_widths()).sum()
 
 model = Gaussian()
 model.prefactor.freeze(norm)

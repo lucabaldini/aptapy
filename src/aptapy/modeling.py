@@ -227,7 +227,9 @@ class FitParameter:
             if spec.endswith(Format.LATEX):
                 param = f"${param}$"
         else:
-            spec = spec.rstrip(Format.PRETTY).rstrip(Format.LATEX)
+            # Note in this case we are not passing the format spec to format(), as
+            # the only thing we can do in absence of an error is to use the
+            # Python default formatting.
             param = format(self.value, "g")
         text = f"{self._name.title()}: {param}"
         info = []

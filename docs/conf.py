@@ -43,7 +43,7 @@ sphinx_gallery_conf = {
     "filename_pattern": r".*",          # build all files in examples/
     # Optional niceties:
     "download_all_examples": False,
-    "remove_config_comments": True,
+    #"remove_config_comments": True,
     # "backreferences_dir": "gen_modules/backreferences",
     # "doc_module": ("yourpkg",),       # populate backrefs for your package API
     # "thumbnail_size": (320, 240),

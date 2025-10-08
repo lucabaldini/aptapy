@@ -1,5 +1,6 @@
 # Custom files.
 docs/sg_execution_times.rst
+docs/auto_examples
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

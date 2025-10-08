@@ -12,6 +12,7 @@ Statistical tools for online monitoring and analysis.
    :maxdepth: 2
    :caption: Contents:
 
+   auto_examples/index
    hist
    modeling
    strip

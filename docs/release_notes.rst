@@ -4,10 +4,15 @@ Release notes
 =============
 
 * New strip-chart facilities added.
+* Introduction of model summation capability through operator overloading
+* Refactored class hierarchy with new abstract base classes
+* Enhanced parameter compatibility checking methods
+* Improved histogram integration for fitting
 
 * Pull requests merged:
 
   - https://github.com/lucabaldini/aptapy/pull/3
+  - https://github.com/lucabaldini/aptapy/pull/4
 
 
 Version 0.2.0 (2025-10-06)

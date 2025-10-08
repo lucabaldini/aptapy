@@ -17,10 +17,11 @@ from aptapy.plotting import plt
 hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
 hist.fill(np.random.default_rng().normal(size=100000))
 hist.plot()
-norm = (hist.content * hist.bin_widths()).sum()
 
 model = Gaussian()
-model.prefactor.freeze(norm)
+# Fix the prefactor to the histogram area---note this only works because the
+# Gaussian model is normalized to 1 over the full range when the prefactor is 1.
+model.prefactor.freeze(hist.area())
 model.fit_histogram(hist)
 print(model)
 model.plot()

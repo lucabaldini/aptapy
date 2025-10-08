@@ -35,6 +35,7 @@ dev = [
 docs = [
     "sphinx",
     "sphinxawesome-theme",
+    "sphinx-gallery",
   ]
 
 [project.urls]

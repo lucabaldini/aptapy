@@ -944,6 +944,10 @@ class PowerLaw(AbstractFitModel):
 class Gaussian(AbstractFitModel):
 
     """Gaussian model.
+
+    .. todo::
+
+       Consider using the gaussian formula normalized to one?
     """
 
     prefactor = FitParameter(1.)

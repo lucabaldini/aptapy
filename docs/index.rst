@@ -6,7 +6,19 @@
 aptapy documentation
 ====================
 
-Statistical tools for online monitoring and analysis.
+.. image:: _static/logo.png
+   :alt: Project logo
+   :width: 200px
+   :align: left
+
+This is a small, pure-Python library providing statistical tools for online monitoring
+and analysis of experimental data, with a focus on histogramming, time series, and
+fitting. It is designed to be lightweight and easy to use, making it suitable for
+integration into existing data processing pipelines.
+
+The :doc:`examples Gallery <auto_examples/index>` is probably the best place to start.
+Have fun!
+
 
 .. toctree::
    :maxdepth: 1

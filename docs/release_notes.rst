@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.3.0 (2025-10-08)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * New strip-chart facilities added.
 * Introduction of model summation capability through operator overloading
 * Refactored class hierarchy with new abstract base classes

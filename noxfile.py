@@ -43,7 +43,7 @@ def cleanup(session: nox.Session) -> None:
         if _path.exists():
             shutil.rmtree(_path)
     # Cleanup the docs.
-    for folder_name in ("build", "auto_examples"):
+    for folder_name in ("_build", "auto_examples"):
         _path = _DOCS_DIR / folder_name
         if _path.exists():
             shutil.rmtree(_path)

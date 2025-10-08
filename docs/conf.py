@@ -37,6 +37,8 @@ autodoc_default_options = {
     "private-members": True
 }
 todo_include_todos = True
+
+
 sphinx_gallery_conf = {
     "examples_dirs": ["examples"],      # source example scripts (relative to conf.py)
     "gallery_dirs": ["auto_examples"],  # generated output (reST + images)
@@ -47,6 +49,7 @@ sphinx_gallery_conf = {
     # "backreferences_dir": "gen_modules/backreferences",
     # "doc_module": ("yourpkg",),       # populate backrefs for your package API
     # "thumbnail_size": (320, 240),
+    "reset_modules": ("matplotlib", "aptapy.plotting.configure"),
 }
 
 # Options for syntax highlighting.

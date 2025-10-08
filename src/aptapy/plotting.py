@@ -84,9 +84,16 @@ def _set(key: str, value: Any):
         logger.warning(f"{exception}, skipping...")
 
 
-def configure() -> None:
+def configure(*args) -> None:
     """See https://matplotlib.org/stable/users/explain/customizing.html for more
     information.
+
+    .. note::
+
+       Note that this function can be used as a hook by Sphinx Gallery to
+       configure the plotting environment for each example, so that the matplotlib
+       configuration is consistent across all examples and is not reset each time.
+       This is the reason why the function signature includes unused arguments.
     """
     # pylint:disable=too-many-statements
 

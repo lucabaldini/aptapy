@@ -978,7 +978,7 @@ class Gaussian(AbstractFitModel):
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
-        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z** 2.)
+        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
         mean, half_width = self.mean.value, num_sigma * self.sigma.value

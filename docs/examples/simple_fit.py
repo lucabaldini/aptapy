@@ -2,7 +2,7 @@
 Simple fit example
 ==================
 
-Short narrative paragraph shown above the thumbnail.
+Simple gaussian fit to histogram data.
 """
 
 # %%
@@ -13,12 +13,13 @@ from aptapy.hist import Histogram1d
 from aptapy.modeling import Gaussian
 from aptapy.plotting import plt
 
-hist = Histogram1d(np.linspace(-5., 5., 100), label="Test data", xlabel="x")
-rng = np.random.default_rng(313)
-hist.fill(rng.normal(size=100000))
-model = Gaussian()
+hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
+hist.fill(np.random.default_rng().normal(size=100000))
 hist.plot()
+
+model = Gaussian()
 model.fit_histogram(hist)
 print(model)
 model.plot()
+
 plt.legend()

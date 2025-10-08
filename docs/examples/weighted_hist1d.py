@@ -21,4 +21,5 @@ sample = np.random.default_rng().random(size=n)
 weights = 1. - sample
 hist.fill(sample, weights=weights)
 hist.plot()
+
 plt.legend()

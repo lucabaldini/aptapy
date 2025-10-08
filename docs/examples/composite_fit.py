@@ -2,7 +2,7 @@
 Composite fit example
 =====================
 
-Short narrative paragraph shown above the thumbnail.
+Composite fit with a Gaussian plus a straight line.
 """
 
 # %%
@@ -13,13 +13,16 @@ from aptapy.hist import Histogram1d
 from aptapy.modeling import Gaussian, Line
 from aptapy.plotting import plt
 
-hist = Histogram1d(np.linspace(-5., 5., 100), label="Test data")
-rng = np.random.default_rng(313)
-hist.fill(rng.normal(size=100000))
-hist.fill(5. - 10. * np.sqrt(1 - rng.random(100000)))
-model = Gaussian() + Line()
+hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
+# Fill with the sum of a gaussian...
+hist.fill(np.random.default_rng().normal(size=100000))
+# ... and a triangular distribution (this is done via the inverse transform method).
+hist.fill(5. - 10. * np.sqrt(1 - np.random.default_rng().random(100000)))
 hist.plot()
+
+model = Gaussian() + Line()
 model.fit_histogram(hist)
 print(model)
 model.plot()
+
 plt.legend()

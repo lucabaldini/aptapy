@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
 from scipy.optimize import curve_fit
+from scipy.stats import chi2
 
 from .hist import Histogram1d
 from .typing_ import ArrayLike
@@ -226,8 +227,10 @@ class FitParameter:
             if spec.endswith(Format.LATEX):
                 param = f"${param}$"
         else:
-            spec = spec.rstrip(Format.PRETTY).rstrip(Format.LATEX)
-            param = format(self.value, spec)
+            # Note in this case we are not passing the format spec to format(), as
+            # the only thing we can do in absence of an error is to use the
+            # Python default formatting.
+            param = format(self.value, "g")
         text = f"{self._name.title()}: {param}"
         info = []
         if self._frozen:
@@ -263,7 +266,7 @@ class FitStatus:
 
     chisquare: float = None
     dof: int = None
-    # pvalue: float = None
+    pvalue: float = None
     fit_range: Tuple[float, float] = None
 
     def reset(self) -> None:
@@ -271,7 +274,31 @@ class FitStatus:
         """
         self.chisquare = None
         self.dof = None
+        self.pvalue = None
         self.fit_range = None
+
+    def update(self, chisquare: float, dof: int = None) -> None:
+        """Update the fit status, i.e., set the chisquare and calculate the
+        corresponding p-value.
+
+        Arguments
+        ---------
+        chisquare : float
+            The chisquare of the fit.
+
+        dof : int, optional
+            The number of degrees of freedom of the fit.
+        """
+        self.chisquare = chisquare
+        if dof is not None:
+            self.dof = dof
+        self.pvalue = chi2.sf(self.chisquare, self.dof)
+        # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
+        # function is > 0.5, we flip it around, so that we always report the smallest
+        # tail, and the pvalue is the probability of obtaining a chisquare value more
+        # `extreme` of the one we got.
+        if self.pvalue > 0.5:
+            self.pvalue = 1. - self.pvalue
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -479,7 +506,7 @@ class AbstractFitModelBase(ABC):
             parameter.value = value
             parameter.error = error
 
-    def calculate_chisqure(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
+    def calculate_chisquare(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
         """Calculate the chisquare of the fit to some input data with the current
         model parameters.
 
@@ -614,7 +641,7 @@ class AbstractFitModelBase(ABC):
         # Also, filter out any points with non-positive uncertainties.
         mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
-        self.status.dof = int(mask.sum() - len(self))
+        self.status.dof = int(mask.sum() - len(self.free_parameters()))
         if self.status.dof < 0:
             raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
@@ -637,7 +664,7 @@ class AbstractFitModelBase(ABC):
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
-        self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
+        self.status.update(self.calculate_chisquare(xdata, ydata, sigma))
         return self.status
 
     def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:
@@ -942,13 +969,27 @@ class Gaussian(AbstractFitModel):
 
     prefactor = FitParameter(1.)
     mean = FitParameter(0.)
-    sigma = FitParameter(1.)
+    sigma = FitParameter(1., minimum=0.)
+
+    _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
+    _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * np.exp(-0.5 * ((x - mean) / sigma) ** 2.)
+        z = (x - mean) / sigma
+        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
         mean, half_width = self.mean.value, num_sigma * self.sigma.value
         return (mean - half_width, mean + half_width)
+
+    def fwhm(self) -> uncertainties.ufloat:
+        """Return the full-width at half-maximum (FWHM) of the gaussian.
+
+        Returns
+        -------
+        fwhm : uncertainties.ufloat
+            The FWHM of the gaussian.
+        """
+        return self.sigma.ufloat() * self._SIGMA_TO_FWHM

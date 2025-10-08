@@ -8,11 +8,17 @@ Release notes
 * Refactored class hierarchy with new abstract base classes
 * Enhanced parameter compatibility checking methods
 * Improved histogram integration for fitting
+* Adds sphinx-gallery integration with 5 example scripts demonstrating histogram
+  and fitting functionality
+* Improves statistical analysis by adding p-value calculations and fixing degrees
+  of freedom calculations
+* Updates test assertions to include p-value validation
 
 * Pull requests merged:
 
   - https://github.com/lucabaldini/aptapy/pull/3
   - https://github.com/lucabaldini/aptapy/pull/4
+  - https://github.com/lucabaldini/aptapy/pull/5
 
 
 Version 0.2.0 (2025-10-06)

@@ -211,6 +211,19 @@ class Histogram1d(AbstractHistogram):
         """
         super().__init__((xedges, ), label, [xlabel, ylabel])
 
+    def area(self) -> float:
+        """Return the total area under the histogram.
+
+        This is potentially useful when fitting a model to the histogram, e.g.,
+        to freeze the prefactor of a gaussian to the histogram normalization.
+
+        Returns
+        -------
+        area : float
+            The total area under the histogram.
+        """
+        return (self.content * self.bin_widths()).sum()
+
     def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
         """Overloaded make_plot() method.
         """

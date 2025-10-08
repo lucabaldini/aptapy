@@ -1,0 +1,4 @@
+:orphan:
+
+Example gallery
+===============

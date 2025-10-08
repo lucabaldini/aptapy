@@ -95,7 +95,7 @@ def configure(*args) -> None:
        configuration is consistent across all examples and is not reset each time.
        This is the reason why the function signature includes unused arguments.
     """
-    # pylint:disable=too-many-statements
+    # pylint:disable=too-many-statements, unused-argument
 
     # Backends
     _set("interactive", False)

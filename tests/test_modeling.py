@@ -92,6 +92,7 @@ def test_gaussian_fit():
     model.plot()
     assert model.mean.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
+    assert model.status.pvalue > 0.001
     plt.legend()
 
 
@@ -105,6 +106,7 @@ def test_gaussian_fit_subrange():
     model.plot()
     assert model.mean.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
+    assert model.status.pvalue > 0.001
     plt.legend()
 
 
@@ -127,13 +129,15 @@ def test_gaussian_fit_frozen():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    model.mean.freeze(0.)
-    model.sigma.freeze(1.)
+    # Calculate the normalization from the histogram.
+    norm = (TEST_HISTOGRAM.content * TEST_HISTOGRAM.bin_widths()).sum() / np.sqrt(2. * np.pi)
+    model.prefactor.freeze(norm)
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot()
-    assert model.mean.value == 0.
-    assert model.sigma.value == 1.
+    assert model.mean.compatible_with(0., NUM_SIGMA)
+    assert model.sigma.compatible_with(1., NUM_SIGMA)
+    assert model.status.pvalue > 0.001
     plt.legend()
 
 

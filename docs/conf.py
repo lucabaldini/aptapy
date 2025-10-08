@@ -28,6 +28,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_gallery.gen_gallery",
 ]
 autodoc_default_options = {
     "members": True,
@@ -36,6 +37,17 @@ autodoc_default_options = {
     "private-members": True
 }
 todo_include_todos = True
+sphinx_gallery_conf = {
+    "examples_dirs": ["examples"],      # source example scripts (relative to conf.py)
+    "gallery_dirs": ["auto_examples"],  # generated output (reST + images)
+    "filename_pattern": r".*",          # build all files in examples/
+    # Optional niceties:
+    # "download_all_examples": True,
+    # "remove_config_comments": True,
+    # "backreferences_dir": "gen_modules/backreferences",
+    # "doc_module": ("yourpkg",),       # populate backrefs for your package API
+    # "thumbnail_size": (320, 240),
+}
 
 # Options for syntax highlighting.
 pygments_style = "default"

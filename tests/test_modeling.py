@@ -21,7 +21,7 @@ import inspect
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import FitParameter, Gaussian, Line
+from aptapy.modeling import FitParameter, Constant, Gaussian, Line
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -168,6 +168,15 @@ def test_sum_gauss_line():
     plt.legend()
 
 
+def test_multiple_sum():
+    """Test the sum of multiple models.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Gaussian() + Line() + Constant()
+    model.plot(-5., 5.)
+    plt.legend()
+
+
 if __name__ == '__main__':
     test_gaussian_fit()
     test_gaussian_fit_subrange()
@@ -175,4 +184,5 @@ if __name__ == '__main__':
     test_gaussian_fit_frozen()
     test_gaussian_fit_frozen_and_bound()
     test_sum_gauss_line()
+    test_multiple_sum()
     plt.show()

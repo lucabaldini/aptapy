@@ -21,14 +21,16 @@ import functools
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from itertools import chain
 from numbers import Number
-from typing import Iterator, Tuple
+from typing import Callable, Iterator, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
 from scipy.optimize import curve_fit
 
+from .hist import Histogram1d
 from .typing_ import ArrayLike
 
 
@@ -63,6 +65,11 @@ class FitParameter:
 
         We are wrapping this into a property because, arguably, the parameter name is
         the only thing we never, ever want to change after the fact.
+
+        Returns
+        -------
+        name : str
+            The parameter name.
         """
         return self._name
 
@@ -72,11 +79,21 @@ class FitParameter:
 
         We are wrapping this into a property because we interact with this member
         via the freeze() and thaw() methods.
+
+        Returns
+        -------
+        frozen : bool
+            True if the parameter is frozen.
         """
         return self._frozen
 
     def is_bound(self) -> bool:
         """Return True if the parameter is bounded.
+
+        Returns
+        -------
+        bounded : bool
+            True if the parameter is bounded.
         """
         return not np.isinf(self.minimum) or not np.isinf(self.maximum)
 
@@ -94,7 +111,12 @@ class FitParameter:
         Arguments
         ---------
         name : str
-            The name for the new FitParameter object.
+            The name for the new :class:`FitParameter` object.
+
+        Returns
+        -------
+        parameter : FitParameter
+            The new :class:`FitParameter` object.
         """
         return self.__class__(self.value, name, minimum=self.minimum, maximum=self.maximum)
 
@@ -132,11 +154,70 @@ class FitParameter:
 
     def ufloat(self) -> uncertainties.ufloat:
         """Return the parameter value and error as a ufloat object.
+
+        Returns
+        -------
+        ufloat : uncertainties.ufloat
+            The parameter value and error as a ufloat object.
         """
         return uncertainties.ufloat(self.value, self.error)
 
+    def pull(self, expected: float) -> float:
+        """Calculate the pull of the parameter with respect to a given expected value.
+
+        Arguments
+        ---------
+        expected : float
+            The expected value for the parameter.
+
+        Returns
+        -------
+        pull : float
+            The pull of the parameter with respect to the expected value, defined as
+            (value - expected) / error.
+
+        Raises
+        ------
+        RuntimeError
+            If the parameter has no error associated to it.
+        """
+        if self.error is None or self.error <= 0.:
+            raise RuntimeError(f"Cannot calculate pull for parameter {self.name} "
+                               "with no error")
+        return (self.value - expected) / self.error
+
+    def compatible_with(self, expected: float, num_sigma: float = 3.) -> bool:
+        """Check if the parameter is compatible with an expected value within
+        n_sigma.
+
+        Arguments
+        ---------
+        expected : float
+            The expected value for the parameter.
+
+        num_sigma : float, optional
+            The number of sigmas to use for the compatibility check (default 3).
+
+        Returns
+        -------
+        compatible : bool
+            True if the parameter is compatible with the expected value within
+            num_sigma.
+        """
+        return abs(self.pull(expected)) <= num_sigma
+
     def __format__(self, spec: str) -> str:
         """String formatting.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
         """
         # Keep in mind Python passes an empty string explicitly when you call
         # f"{parameter}", so we can't really assign a default value to spec.
@@ -165,6 +246,11 @@ class FitParameter:
         This is meant to provide a more human-readable version of the parameter formatting
         than the default ``__repr__`` implementation from the dataclass decorator, and it
         is what is used in the actual printout of the fit parameters from a fit.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
         """
         return format(self, Format.PRETTY)
 
@@ -189,6 +275,16 @@ class FitStatus:
 
     def __format__(self, spec: str) -> str:
         """String formatting.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
         """
         if self.chisquare is None:
             return "N/A"
@@ -200,119 +296,227 @@ class FitStatus:
 
     def __str__(self) -> str:
         """String formatting.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
         """
         return format(self, Format.PRETTY)
 
 
-class AbstractFitModel(ABC):
+class AbstractFitModelBase(ABC):
 
-    """Abstract base class for a fit model.
+    """Abstract base class for all the fit classes.
+
+    This is a acting a base class for both simple fit models and for composite models
+    (e.g., sums of simple ones).
     """
 
     def __init__(self) -> None:
         """Constructor.
-
-        Here we loop over the FitParameter objects defined at the class level, and
-        create copies that are attached to the instance, so that the latter has its
-        own state.
         """
-        self._parameters = []
-        for name, value in self.__class__.__dict__.items():
-            if isinstance(value, FitParameter):
-                parameter = value.copy(name)
-                # Note we also set one instance attribute for each parameter so
-                # that we can use the notation model.parameter
-                setattr(self, name, parameter)
-                self._parameters.append(parameter)
-        # Fit status object holding all the additional information from the fit.
         self.status = FitStatus()
 
-    def name(self) -> str:
-        """Return the model name.
-        """
-        return self.__class__.__name__
-
+    @abstractmethod
     def __len__(self) -> int:
-        """Overloaded method.
-        """
-        return len(self._parameters)
+        """Delegated to concrete classes: this should return the `total` number of
+        fit parameters (not only the free ones) in the model.
 
+        .. note::
+
+           I still have mixed feelings about this method, as it is not clear whether
+           we are returning the number of parameters, or the number of free parameters,
+           but I think it is fine, as long as we document it. Also note that, while
+           the number of parameters is fixed once and for all for simple models,
+           it can change at runtime for composite models.
+
+        Returns
+        -------
+        n : int
+            The total number of fit parameters in the model.
+        """
+
+    @abstractmethod
     def __iter__(self) -> Iterator[FitParameter]:
-        """Iteration protocol.
-        """
-        return iter(self._parameters)
+        """Delegated to concrete classes: this should return an iterator over `all`
+        the fit parameters in the model.
 
-    def parameter_values(self) -> Tuple[float]:
-        """Return the current parameter values.
+        Returns
+        -------
+        iterator : Iterator[FitParameter]
+            An iterator over all the fit parameters in the model.
         """
-        return tuple(parameter.value for parameter in self)
-
-    def free_parameters(self) -> Tuple[FitParameter]:
-        """Return the list of free parameters.
-        """
-        return tuple(parameter for parameter in self if not parameter.frozen)
-
-    def free_parameter_values(self) -> Tuple[float]:
-        """Return the current parameter values.
-        """
-        return tuple(parameter.value for parameter in self.free_parameters())
 
     @staticmethod
     @abstractmethod
-    def evaluate(x: ArrayLike, *parameter_values: Tuple[float]) -> ArrayLike:
-        """Evaluate the model at a given value (or set of values) of the independent variable,
-        for a given set of model parameters.
+    def evaluate(x: ArrayLike, *parameter_values: Sequence[float]) -> ArrayLike:
+        """Evaluate the model at a given set of parameter values.
 
         Arguments
         ---------
         x : array_like
             The value(s) of the independent variable.
 
-        params : tuple of float
+        parameter_values : sequence of float
             The value of the model parameters.
+
+        Returns
+        -------
+        y : array_like
+            The value(s) of the model at the given value(s) of the independent variable
+            for a given set of parameter values.
         """
+
+    def name(self) -> str:
+        """Return the model name, e.g., for legends.
+
+        Note this can be reimplemented in concrete subclasses, but it should provide
+        a sensible default value in most circumstances.
+
+        Returns
+        -------
+        name : str
+            The model name.
+        """
+        return self.__class__.__name__
 
     def __call__(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the model at the current value of the parameters.
+
+        Arguments
+        ---------
+        x : array_like
+            The value(s) of the independent variable.
+
+        Returns
+        -------
+        y : array_like
+            The value(s) of the model at the given value(s) of the independent variable
+            for the current set of parameter values.
         """
         return self.evaluate(x, *self.parameter_values())
 
-    def set_parameters(self, *values: float) -> None:
-        """Set the values for all the parameters.
-        """
-        for parameter, value in zip(self, values):
-            parameter.value = value
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike) -> None:
+        """Optional hook to change the current parameter values of the model, prior
+        to a fit, based on the input data.
 
-    def init_parameters(self, x: ArrayLike, y: ArrayLike, sigma: ArrayLike) -> None:
-        """Optional: override in subclasses if needed.
+        Arguments
+        ---------
+        xdata : array_like
+            The input values of the independent variable.
+
+        ydata : array_like
+            The input values of the dependent variable.
+
+        sigma : array_like
+            The input uncertainties on the dependent variable.
         """
         # pylint: disable=unused-argument
         return
 
-    def _update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
-        """Update the model parameters based on the output of the ``curve_fit()`` call.
+    def parameter_values(self) -> Tuple[float]:
+        """Return the current parameter values.
+
+        Note this only relies on the __iter__() method, so it works both for simple
+        and composite models.
+
+        Returns
+        -------
+        values : tuple of float
+            The current parameter values.
         """
-        for parameter, value, error in zip(self.free_parameters(), popt, np.sqrt(pcov.diagonal())):
-            parameter.value = value
-            parameter.error = error
+        return tuple(parameter.value for parameter in self)
+
+    def free_parameters(self) -> Tuple[FitParameter]:
+        """Return the list of free parameters.
+
+        Note this only relies on the __iter__() method, so it works both for simple
+        and composite models.
+
+        Returns
+        -------
+        parameters : tuple of FitParameter
+            The list of free parameters.
+        """
+        return tuple(parameter for parameter in self if not parameter.frozen)
+
+    def free_parameter_values(self) -> Tuple[float]:
+        """Return the current parameter values.
+
+        Returns
+        -------
+        values : tuple of float
+            The current parameter values.
+        """
+        return tuple(parameter.value for parameter in self.free_parameters())
 
     def bounds(self) -> Tuple[ArrayLike, ArrayLike]:
         """Return the bounds on the fit parameters in a form that can be use by the
         fitting method.
+
+        Returns
+        -------
+        bounds : 2-tuple of array_like
+            The lower and upper bounds on the (free) fit parameters.
         """
         free_parameters = self.free_parameters()
         return (tuple(parameter.minimum for parameter in free_parameters),
                 tuple(parameter.maximum for parameter in free_parameters))
 
+    def update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
+        """Update the model parameters based on the output of the ``curve_fit()`` call.
+
+        Arguments
+        ---------
+        popt : array_like
+            The optimal values for the fit parameters.
+
+        pcov : array_like
+            The covariance matrix for the fit parameters.
+        """
+        for parameter, value, error in zip(self.free_parameters(), popt, np.sqrt(pcov.diagonal())):
+            parameter.value = value
+            parameter.error = error
+
     def calculate_chisqure(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
         """Calculate the chisquare of the fit to some input data with the current
         model parameters.
+
+        Arguments
+        ---------
+        xdata : array_like
+            The input values of the independent variable.
+
+        ydata : array_like
+            The input values of the dependent variable.
+
+        sigma : array_like
+            The input uncertainties on the dependent variable.
+
+        Returns
+        -------
+        chisquare : float
+            The chisquare of the fit.
         """
         return float((((ydata - self(xdata)) / sigma)**2.).sum())
 
     @staticmethod
-    def freeze(model_function, **constraints):
+    def freeze(model_function, **constraints) -> Callable:
         """Freeze a subset of the model parameters.
+
+        Arguments
+        ---------
+        model_function : callable
+            The model function to freeze parameters for.
+
+        constraints : dict
+            The parameters to freeze, as keyword arguments.
+
+        Returns
+        -------
+        wrapper : callable
+            A wrapper around the model function with the given parameters frozen.
         """
         if not constraints:
             return model_function
@@ -363,8 +567,36 @@ class AbstractFitModel(ABC):
 
     def fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
             sigma: ArrayLike = 1., absolute_sigma: bool = False, xmin: float = -np.inf,
-            xmax: float = np.inf, **kwargs) -> None:
+            xmax: float = np.inf, **kwargs) -> FitStatus:
         """Fit a series of points.
+
+        Arguments
+        ---------
+        xdata : array_like
+            The input values of the independent variable.
+
+        ydata : array_like
+            The input values of the dependent variable.
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        sigma : array_like
+            The input uncertainties on the dependent variable.
+
+        absolute_sigma : bool, optional (default False)
+            See the `curve_fit()` documentation for details.
+
+        xmin : float, optional (default -inf)
+            The minimum value of the independent variable to fit.
+
+        xmax : float, optional (default inf)
+            The maximum value of the independent variable to fit.
+
+        Returns
+        -------
+        status : FitStatus
+            The status of the fit.
         """
         # Reset the fit status.
         self.status.reset()
@@ -374,16 +606,21 @@ class AbstractFitModel(ABC):
         # the broadcast facilities.
         xdata = np.asarray(xdata)
         ydata = np.asarray(ydata)
+        if isinstance(sigma, Number):
+            sigma = np.full(ydata.shape, sigma)
+        sigma = np.asarray(sigma)
         # If we are fitting over a subrange, filter the input data.
         mask = np.logical_and(xdata >= xmin, xdata <= xmax)
+        # Also, filter out any points with non-positive uncertainties.
+        mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
         self.status.dof = int(mask.sum() - len(self))
         if self.status.dof < 0:
             raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
         ydata = ydata[mask]
-        if not isinstance(sigma, Number):
-            sigma = np.asarray(sigma)[mask]
+        sigma = sigma[mask]
+
         # Cache the fit range for later use.
         self.status.fit_range = (xdata.min(), xdata.max())
 
@@ -399,16 +636,38 @@ class AbstractFitModel(ABC):
         model = self.freeze(self.evaluate, **constraints)
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = curve_fit(*args, **kwargs)
-        self._update_parameters(popt, pcov)
+        self.update_parameters(popt, pcov)
         self.status.chisquare = self.calculate_chisqure(xdata, ydata, sigma)
         return self.status
+
+    def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:
+        """Convenience function for fitting a 1-dimensional histogram.
+
+        Arguments
+        ---------
+        histogram : Histogram1d
+            The histogram to fit.
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+        """
+        args = histogram.bin_centers(), histogram.content, p0, histogram.errors
+        return self.fit(*args, **kwargs)
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Return the default plotting range for the model.
 
-        This can be reimplemnted in concrete models, and can be parameter-dependent
+        This can be reimplemented in concrete models, and can be parameter-dependent
         (e.g., for a gaussian we might want to plot within 5 sigma from the mean by
-        dafeault).
+        default).
+
+        Returns
+        -------
+        Tuple[float, float]
+            The default plotting range for the model.
         """
         return (0., 1.)
 
@@ -416,6 +675,22 @@ class AbstractFitModel(ABC):
                         fit_padding: float = 0.) -> Tuple[float, float]:
         """Convenience function trying to come up with the most sensible plot range
         for the model.
+
+        Arguments
+        ---------
+        xmin : float, optional
+            The minimum value of the independent variable to plot.
+
+        xmax : float, optional
+            The maximum value of the independent variable to plot.
+
+        fit_padding : float, optional
+            The amount of padding to add to the fit range.
+
+        Returns
+        -------
+        Tuple[float, float]
+            The plotting range for the model.
         """
         # If we have fitted the model to some data, we take the fit range and pad it
         # a little bit.
@@ -434,25 +709,189 @@ class AbstractFitModel(ABC):
             _xmax = xmax
         return (_xmin, _xmax)
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> np.ndarray:
         """Plot the model.
+
+        Arguments
+        ---------
+        xmin : float, optional
+            The minimum value of the independent variable to plot.
+
+        xmax : float, optional
+            The maximum value of the independent variable to plot.
+
+        num_points : int, optional
+            The number of points to use for the plot.
+
+        Returns
+        -------
+        x : np.ndarray
+            The x values used for the plot, that can be used downstream to add
+            artists on the plot itself (e.g., composite models can use the same
+            grid to draw the components).
         """
         x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
         y = self(x)
         plt.plot(x, y, label=format(self, Format.LATEX))
+        return x
 
     def __format__(self, spec: str) -> str:
         """String formatting.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
         """
-        text = f"{self.__class__.__name__} ({format(self.status, spec)})\n"
-        for parameter in self._parameters:
+        text = f"{self.name()}\n"
+        if self.status is not None:
+            text = f"{text}{format(self.status, spec)}\n"
+        for parameter in self:
             text = f"{text}{format(parameter, spec)}\n"
         return text.strip("\n")
 
     def __str__(self):
         """String formatting.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
         """
         return format(self, Format.PRETTY)
+
+
+class AbstractFitModel(AbstractFitModelBase):
+
+    """Abstract base class for a fit model.
+    """
+
+    def __init__(self) -> None:
+        """Constructor.
+
+        Here we loop over the FitParameter objects defined at the class level, and
+        create copies that are attached to the instance, so that the latter has its
+        own state.
+        """
+        super().__init__()
+        self._parameters = []
+        for name, value in self.__class__.__dict__.items():
+            if isinstance(value, FitParameter):
+                parameter = value.copy(name)
+                # Note we also set one instance attribute for each parameter so
+                # that we can use the notation model.parameter
+                setattr(self, name, parameter)
+                self._parameters.append(parameter)
+
+    def __len__(self) -> int:
+        """Return the `total` number of fit parameters in the model.
+        """
+        return len(self._parameters)
+
+    def __iter__(self) -> Iterator[FitParameter]:
+        """Iterate over `all` the model parameters.
+        """
+        return iter(self._parameters)
+
+    def __add__(self, other):
+        """Model sum.
+        """
+        if not isinstance(other, AbstractFitModel):
+            raise TypeError(f"{other} is not a fit model")
+        return FitModelSum(self, other)
+
+
+class FitModelSum(AbstractFitModelBase):
+
+    """Composite model representing the sum of an arbitrary number of simple models.
+
+    Arguments
+    ---------
+    components : sequence of AbstractFitModel
+        The components of the composite model.
+    """
+
+    def __init__(self, *components: AbstractFitModel) -> None:
+        """Constructor.
+        """
+        super().__init__()
+        self._components = components
+
+    def name(self) -> str:
+        """Return the model name.
+        """
+        return " + ".join(component.name() for component in self._components)
+
+    def __len__(self) -> int:
+        """Return the sum of `all` the fit parameters in the underlying models.
+        """
+        return sum(len(component) for component in self._components)
+
+    def __iter__(self) -> Iterator[FitParameter]:
+        """Iterate over `all` the parameters of the underlying components.
+        """
+        return chain(*self._components)
+
+    def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
+        """Overloaded method for evaluating the model.
+
+        Note this is not a static method, as we need to access the list of components
+        to sum over.
+        """
+        # pylint: disable=arguments-differ
+        cursor = 0
+        value = np.zeros(x.shape)
+        for component in self._components:
+            value += component.evaluate(x, *parameter_values[cursor:cursor + len(component)])
+            cursor += len(component)
+        return value
+
+    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+        """Overloaded method for plotting the model.
+        """
+        x = super().plot(xmin, xmax, num_points)
+        color = plt.gca().lines[-1].get_color()
+        for component in self._components:
+            y = component(x)
+            plt.plot(x, y, label=None, ls="--", color=color)
+
+    def __format__(self, spec: str) -> str:
+        """String formatting.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
+        """
+        text = f"{self.name()}\n"
+        if self.status is not None:
+            text = f"{text}{format(self.status, spec)}\n"
+        for component in self._components:
+            text = f"{text}[{component.name()}]\n"
+            for parameter in component:
+                text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
+
+    def __add__(self, other: AbstractFitModel) -> "FitModelSum":
+        """Implementation of the model sum (i.e., using the `+` operator).
+
+        Note that, in the spirit of keeping the interfaces as simple as possible,
+        we are not implementing in-place addition (i.e., `+=`), and we only
+        allow ``AbstractFitModel`` objects (not ``FitModelSum``) on the right
+        hand side, which is all is needed to support the sum of an arbitrary
+        number of models.
+        """
+        return self.__class__(*self._components, other)
 
 
 class Constant(AbstractFitModel):
@@ -465,7 +904,7 @@ class Constant(AbstractFitModel):
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return np.full(value, x.shape)
+        return np.full(x.shape, value)
 
 
 class Line(AbstractFitModel):

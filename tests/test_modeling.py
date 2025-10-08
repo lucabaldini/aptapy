@@ -16,10 +16,19 @@
 """Unit tests for the modeling module.
 """
 
+import inspect
+
 import numpy as np
 
-from aptapy.modeling import FitParameter, Gaussian
+from aptapy.hist import Histogram1d
+from aptapy.modeling import Constant, FitParameter, Gaussian, Line
 from aptapy.plotting import plt
+
+_RNG = np.random.default_rng(313)
+
+TEST_HISTOGRAM = Histogram1d(np.linspace(-5., 5., 100), label="Test data")
+TEST_HISTOGRAM.fill(_RNG.normal(size=100000))
+NUM_SIGMA = 4.
 
 
 def test_fit_parameter():
@@ -73,84 +82,98 @@ def test_model_parameters():
     assert id(p1) != id(p2)
 
 
-def _test_data_set(model, xmin, xmax, num_points=25, relative_error=0.05, min_error=0.01):
-    """
-    """
-    rng = np.random.default_rng(seed=313)
-    xdata = np.linspace(xmin, xmax, num_points)
-    ydata = model(xdata)
-    sigma = ydata * relative_error + min_error
-    ydata += rng.normal(0., sigma)
-    return xdata, ydata, sigma
-
-
 def test_gaussian_fit():
-    """Test the Gaussian model.
+    """Simple Gaussian fit.
     """
+    plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-    plt.figure('Gaussian fit')
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Data')
-    model.fit(xdata, ydata, sigma=sigma)
-    print(model)
+    TEST_HISTOGRAM.plot()
+    model.fit_histogram(TEST_HISTOGRAM)
     model.plot()
+    assert model.mean.compatible_with(0., NUM_SIGMA)
+    assert model.sigma.compatible_with(1., NUM_SIGMA)
     plt.legend()
 
 
 def test_gaussian_fit_subrange():
-    """Test fit in a subrange.
+    """Gaussian fit in a subrange.
     """
+    plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-    plt.figure('Gaussian fit in subrange')
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Data')
-    model.fit(xdata, ydata, sigma=sigma, xmin=-2., xmax=2.)
-    print(model)
+    TEST_HISTOGRAM.plot()
+    model.fit_histogram(TEST_HISTOGRAM, xmin=-2., xmax=2.)
     model.plot()
+    assert model.mean.compatible_with(0., NUM_SIGMA)
+    assert model.sigma.compatible_with(1., NUM_SIGMA)
     plt.legend()
 
 
 def test_gaussian_fit_bound():
     """Test a bounded fit.
     """
+    plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-    model.mean.minimum = 0.1
-    model.mean.value = 0.2
-    plt.figure('Gaussian fit bound')
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Data')
-    model.fit(xdata, ydata, sigma=sigma)
-    print(model)
+    model.mean.minimum = 0.05
+    model.mean.value = 0.1
+    TEST_HISTOGRAM.plot()
+    model.fit_histogram(TEST_HISTOGRAM)
     model.plot()
+    assert model.mean.value >= model.mean.minimum
     plt.legend()
 
 
 def test_gaussian_fit_frozen():
-    """Fit with a frozen parameter.
+    """Gaussian fit with frozen parameters.
     """
+    plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
-    model.prefactor.freeze(1.)
-    plt.figure('Gaussian fit frozen')
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Data')
-    model.fit(xdata, ydata, sigma=sigma)
-    print(model)
+    model.mean.freeze(0.)
+    model.sigma.freeze(1.)
+    TEST_HISTOGRAM.plot()
+    model.fit_histogram(TEST_HISTOGRAM)
     model.plot()
+    assert model.mean.value == 0.
+    assert model.sigma.value == 1.
     plt.legend()
 
 
 def test_gaussian_fit_frozen_and_bound():
-    """And yet more complex: frozen and bound.
+    """And yet more complex: Gaussian fit with frozen and bound parameters.
     """
+    plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    xdata, ydata, sigma = _test_data_set(model, -4., 4.)
     model.sigma.freeze(1.1)
-    model.sigma.minimum = 0.
-    plt.figure('Gaussian fit frozen and bound')
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Data')
-    model.fit(xdata, ydata, sigma=sigma)
-    print(model)
+    model.mean.minimum = 0.05
+    model.mean.value = 0.1
+    TEST_HISTOGRAM.plot()
+    model.fit_histogram(TEST_HISTOGRAM)
     model.plot()
+    assert model.mean.value >= model.mean.minimum
+    assert model.sigma.value == 1.1
+    plt.legend()
+
+
+def test_sum_gauss_line():
+    """Test the sum of of two models.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    hist = TEST_HISTOGRAM.copy()
+    u = _RNG.random(100000)
+    x = 5. - 10. * np.sqrt(1 - u)
+    hist.fill(x)
+    model = Gaussian() + Line()
+    hist.plot()
+    model.fit_histogram(hist)
+    model.plot()
+    plt.legend()
+
+
+def test_multiple_sum():
+    """Test the sum of multiple models.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Gaussian() + Line() + Constant()
+    model.plot(-5., 5.)
     plt.legend()
 
 
@@ -160,4 +183,6 @@ if __name__ == '__main__':
     test_gaussian_fit_bound()
     test_gaussian_fit_frozen()
     test_gaussian_fit_frozen_and_bound()
+    test_sum_gauss_line()
+    test_multiple_sum()
     plt.show()

@@ -816,7 +816,7 @@ class FitModelSum(AbstractFitModelBase):
         The components of the composite model.
     """
 
-    def __init__(self, *components: Sequence[AbstractFitModel]) -> None:
+    def __init__(self, *components: AbstractFitModel) -> None:
         """Constructor.
         """
         super().__init__()
@@ -882,16 +882,14 @@ class FitModelSum(AbstractFitModelBase):
                 text = f"{text}{format(parameter, spec)}\n"
         return text.strip("\n")
 
-    def __iadd__(self, other: AbstractFitModel) -> "FitModelSum":
-        """Implementation of the in-place model sum (i.e., using the `+=` operator).
-        """
-        if not isinstance(other, AbstractFitModel):
-            raise TypeError(f"{other} is not a fit model")
-        self._components.append(other)
-        return self
-
     def __add__(self, other: AbstractFitModel) -> "FitModelSum":
         """Implementation of the model sum (i.e., using the `+` operator).
+
+        Note that, in the spirit of keeping the interfaces as simple as possible,
+        we are not implementing in-place addition (i.e., `+=`), and we only
+        allow ``AbstractFitModel`` objects (not ``FitModelSum``) on the right
+        hand side, which is all is needed to support the sum of an arbitrary
+        number of models.
         """
         return self.__class__(*self._components, other)
 

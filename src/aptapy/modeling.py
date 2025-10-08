@@ -228,7 +228,7 @@ class FitParameter:
                 param = f"${param}$"
         else:
             spec = spec.rstrip(Format.PRETTY).rstrip(Format.LATEX)
-            param = format(self.value, spec)
+            param = format(self.value, "g")
         text = f"{self._name.title()}: {param}"
         info = []
         if self._frozen:

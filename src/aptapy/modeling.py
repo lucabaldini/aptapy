@@ -275,6 +275,29 @@ class FitStatus:
         self.pvalue = None
         self.fit_range = None
 
+    def update(self, chisquare: float, dof: int = None) -> None:
+        """Update the fit status, i.e., set the chisquare and calculate the
+        corresponding p-value.
+
+        Arguments
+        ---------
+        chisquare : float
+            The chisquare of the fit.
+
+        dof : int, optional
+            The number of degrees of freedom of the fit.
+        """
+        self.chisquare = chisquare
+        if dof is not None:
+            self.dof = dof
+        self.pvalue = chi2.sf(self.chisquare, self.dof)
+        # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
+        # function is > 0.5, we flip it around, so that we always report the smallest
+        # tail, and the pvalue is the probability of obtaining a chisquare value more
+        # `extreme` of the one we got.
+        if self.pvalue > 0.5:
+            self.pvalue = 1. - self.pvalue
+
     def __format__(self, spec: str) -> str:
         """String formatting.
 
@@ -639,11 +662,7 @@ class AbstractFitModelBase(ABC):
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
-        # Consider moving this to the FitStatus class?
-        self.status.chisquare = self.calculate_chisquare(xdata, ydata, sigma)
-        self.status.pvalue = chi2.sf(self.status.chisquare, self.status.dof)
-        if self.status.pvalue > 0.5:
-            self.status.pvalue = 1. - self.status.pvalue
+        self.status.update(self.calculate_chisquare(xdata, ydata, sigma))
         return self.status
 
     def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:

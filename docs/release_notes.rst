@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.3.2 (2025-10-09)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Adding binned_statistics method in AbstractHistogram base class to calculate
   statistics from histogram bins
 * Adds extensive test coverage in both 1D and 2D histogram test functions with

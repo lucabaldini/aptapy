@@ -16,7 +16,7 @@ and analysis of experimental data, with a focus on histogramming, time series, a
 fitting. It is designed to be lightweight and easy to use, making it suitable for
 integration into existing data processing pipelines.
 
-The :doc:`examples Gallery <auto_examples/index>` is probably the best place to start.
+The :doc:`example gallery <auto_examples/index>` is probably the best place to start.
 Have fun!
 
 

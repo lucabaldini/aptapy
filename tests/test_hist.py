@@ -109,7 +109,7 @@ def test_plotting1d(size: int = 100000):
     m, s = hist1.binned_statistics()
     # Rough checks on the binned statistics---we want the mean to be within 10
     # sigma/sqrt(N) and the stddev to be within 2% of the true value.
-    # (Note the binning haves an effect on the actual values, so we cannot
+    # (Note the binning has an effect on the actual values, so we cannot
     # expect perfect agreement.)
     assert abs((m - mean) / sigma * np.sqrt(size)) < 10.
     assert abs(s / sigma - 1.) < 0.02

@@ -13,6 +13,16 @@ description = "Statistical tools for online monitoring and analysis"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Science/Research",
+]
 authors = [
   { name = "Luca Baldini", email = "luca.baldini@unipi.it" }
   ]

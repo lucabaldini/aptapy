@@ -3,9 +3,20 @@
 Release notes
 =============
 
+* Adding binned_statistics method in AbstractHistogram base class to calculate
+  statistics from histogram bins
+* Adds extensive test coverage in both 1D and 2D histogram test functions with
+  statistical validation
+
+* Pull requests merged:
+
+  - https://github.com/lucabaldini/aptapy/pull/6
+
 
 Version 0.3.1 (2025-10-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Minor changes.
 
 
 Version 0.3.0 (2025-10-08)

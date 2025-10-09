@@ -137,7 +137,7 @@ def test_plotting1d(size: int = 100000):
     plt.legend()
 
 
-def test_plotting2d(size: int = 100000):
+def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     """Test plotting.
     """
     plt.figure(inspect.currentframe().f_code.co_name)
@@ -145,25 +145,15 @@ def test_plotting2d(size: int = 100000):
     hist = Histogram2d(edges, edges, 'x', 'y')
     # Note we are adding different offsets to x and y so that we can see
     # the effect on the plot.
-    hist.fill(_RNG.normal(size=size) + 1., _RNG.normal(size=size) - 1.)
+    hist.fill(_RNG.normal(size=size, loc=x0), _RNG.normal(size=size, loc=y0))
     hist.plot()
+    mx, sx = hist.binned_statistics(0)
+    my, sy = hist.binned_statistics(1)
+    assert abs((mx - x0) * np.sqrt(size)) < 10.
+    assert abs((my - y0) * np.sqrt(size)) < 10.
+    assert abs(sx - 1.) < 0.02
+    assert abs(sy - 1.) < 0.02
     plt.gca().set_aspect('equal')
-
-
-# def test_binned_statistics(mean: float = 10., sigma: float = 2.):
-#     """Test the binned statistics methods.
-#     """
-#     edges = np.linspace(mean -5. * sigma, mean + 5. * sigma, 100)
-#     hist = Histogram1d(edges)
-#     hist.fill(_RNG.normal(loc=mean, scale=sigma, size=100000))
-#     print(hist.binned_statistics())
-
-#     hist.plot()
-#     plt.show()
-
-#     #mean, std = hist.binned_mean_std()
-#     #assert np.isclose(mean, 0.5, atol=0.01)
-#     #assert np.isclose(std, 1/np.sqrt(12), atol=0.01)
 
 
 if __name__ == '__main__':

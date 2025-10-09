@@ -94,10 +94,38 @@ class AbstractHistogram(ABC):
         return np.diff(self._edges[axis])
 
     def binned_statistics(self, axis: int = 0) -> Tuple[float, float]:
+        """Return the mean and standard deviation along a specific axis, based
+        on the binned data.
+
+        .. note::
+
+           This is a crude estimate of the underlying statistics that might be
+           useful for monitoring purposes, but should not be relied upon for
+           quantitative analysis.
+
+           This is not the same as computing the mean and standard deviation of
+           the unbinned data that filled the histogram, as some information is
+           lost in the binning process.
+
+           In addition, note that we are not applying any bias correction to
+           the standard deviation, as we are assuming that the histogram is
+           filled with a sufficiently large number of entries. (In most circumstances
+           the effect should be smaller than that of the binning itself.)
+
+        Arguments
+        ---------
+        axis : int
+            the axis along which to compute the statistics.
+
+        Returns
+        -------
+        mean : float
+            the mean value along the specified axis.
+        stddev : float
+            the standard deviation along the specified axis.
         """
-        """
-        weights = self.content.sum(axis=tuple(i for i in range(self.content.ndim) if i != axis))
         values = self.bin_centers(axis)
+        weights = self.content.sum(axis=tuple(i for i in range(self.content.ndim) if i != axis))
         mean = np.average(values, weights=weights)
         variance = np.average((values - mean)**2, weights=weights)
         return mean, np.sqrt(variance)

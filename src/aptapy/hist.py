@@ -17,7 +17,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Sequence
+from typing import List, Sequence, Tuple
 
 import numpy as np
 
@@ -92,6 +92,15 @@ class AbstractHistogram(ABC):
         """Return the bin widths for a specific axis.
         """
         return np.diff(self._edges[axis])
+
+    def binned_statistics(self, axis: int = 0) -> Tuple[float, float]:
+        """
+        """
+        weights = self.content.sum(axis=tuple(i for i in range(self.content.ndim) if i != axis))
+        values = self.bin_centers(axis)
+        mean = np.average(values, weights=weights)
+        variance = np.average((values - mean)**2, weights=weights)
+        return mean, np.sqrt(variance)
 
     def fill(self, *values: ArrayLike, weights: ArrayLike = None) -> "AbstractHistogram":
         """Fill the histogram from unbinned data.

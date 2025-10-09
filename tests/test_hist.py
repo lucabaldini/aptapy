@@ -101,18 +101,39 @@ def test_plotting1d(size: int = 100000):
     plt.figure(inspect.currentframe().f_code.co_name)
     # Create the first histogram. This has no label attached, so we will have to
     # provide one at plotting time, if we want to have a corresponding legend entry.
+    mean = 0.
+    sigma = 1.
     hist1 = Histogram1d(np.linspace(-5., 5., 100), xlabel='x')
-    hist1.fill(_RNG.normal(size=size))
+    hist1.fill(_RNG.normal(size=size, loc=mean, scale=sigma))
     hist1.plot(label='Standard histogram')
+    m, s = hist1.binned_statistics()
+    # Rough checks on the binned statistics---we want the mean to be within 10
+    # sigma/sqrt(N) and the stddev to be within 2% of the true value.
+    # (Note the binning haves an effect on the actual values, so we cannot
+    # expect perfect agreement.)
+    assert abs((m - mean) / sigma * np.sqrt(size)) < 10.
+    assert abs(s / sigma - 1.) < 0.02
+
     # Create a second histogram, this time with a label---this should have a
     # proper entry in the legend automatically.
+    mean = 1.
+    sigma = 1.5
     hist2 = Histogram1d(np.linspace(-5., 5., 100), label='Offset histogram')
-    hist2.fill(_RNG.normal(size=size, loc=1.))
+    hist2.fill(_RNG.normal(size=size, loc=mean, scale=sigma))
     hist2.plot()
+    m, s = hist2.binned_statistics()
+    assert abs((m - mean) / sigma * np.sqrt(size)) < 10.
+    assert abs(s / sigma - 1.) < 0.02
+
     # And this one should end up with no legend entry, as it has no label
+    mean = -1.
+    sigma = 0.5
     hist3 = Histogram1d(np.linspace(-5., 5., 100))
-    hist3.fill(_RNG.normal(size=size // 2, loc=-1.))
+    hist3.fill(_RNG.normal(size=size, loc=mean, scale=sigma))
     hist3.plot()
+    m, s = hist3.binned_statistics()
+    assert abs((m - mean) / sigma * np.sqrt(size)) < 10.
+    assert abs(s / sigma - 1.) < 0.02
     plt.legend()
 
 
@@ -127,6 +148,22 @@ def test_plotting2d(size: int = 100000):
     hist.fill(_RNG.normal(size=size) + 1., _RNG.normal(size=size) - 1.)
     hist.plot()
     plt.gca().set_aspect('equal')
+
+
+# def test_binned_statistics(mean: float = 10., sigma: float = 2.):
+#     """Test the binned statistics methods.
+#     """
+#     edges = np.linspace(mean -5. * sigma, mean + 5. * sigma, 100)
+#     hist = Histogram1d(edges)
+#     hist.fill(_RNG.normal(loc=mean, scale=sigma, size=100000))
+#     print(hist.binned_statistics())
+
+#     hist.plot()
+#     plt.show()
+
+#     #mean, std = hist.binned_mean_std()
+#     #assert np.isclose(mean, 0.5, atol=0.01)
+#     #assert np.isclose(std, 1/np.sqrt(12), atol=0.01)
 
 
 if __name__ == '__main__':

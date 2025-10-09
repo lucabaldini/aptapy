@@ -261,20 +261,22 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
-    def legend_label(self) -> str:
-        """Return a label suitable for use in a legend, if any.
-        """
-        mean, rms = self.binned_statistics()
-        return f"{self.label}\nMean: {mean:g}\nRMS: {rms:g}" if self.label is not None else None
-
     def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
         """Overloaded make_plot() method.
         """
         # If we are not explicitly providing a label at plotting time, use
         # the one attached to the histogram, if any.
-        kwargs.setdefault("label", self.legend_label())
+        kwargs.setdefault("label", f"{self}")
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
         setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])
+
+    def __str__(self) -> str:
+        """String formatting.
+        """
+        mean, rms = self.binned_statistics()
+        text = self.label or self.__class__.__name__
+        text = f"{text}\nMean: {mean:g}\nRMS: {rms:g}"
+        return text
 
 
 class Histogram2d(AbstractHistogram):

@@ -316,10 +316,10 @@ class FitStatus:
         if self.chisquare is None:
             return "N/A"
         if spec.endswith(Format.LATEX):
-            return f"$\\chi^2$ = {self.chisquare:.2f} / {self.dof} dof"
+            return f"$\\chi^2$: {self.chisquare:.2f} / {self.dof} dof"
         if spec.endswith(Format.PRETTY):
-            return f"χ² = {self.chisquare:.2f} / {self.dof} dof"
-        return f"chisquare = {self.chisquare:.2f} / {self.dof} dof"
+            return f"χ²: {self.chisquare:.2f} / {self.dof} dof"
+        return f"chisquare: {self.chisquare:.2f} / {self.dof} dof"
 
     def __str__(self) -> str:
         """String formatting.

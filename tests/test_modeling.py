@@ -26,7 +26,7 @@ from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
 
-TEST_HISTOGRAM = Histogram1d(np.linspace(-5., 5., 100), label="Test data")
+TEST_HISTOGRAM = Histogram1d(np.linspace(-5., 5., 100), label="Random data")
 TEST_HISTOGRAM.fill(_RNG.normal(size=100000))
 NUM_SIGMA = 4.
 

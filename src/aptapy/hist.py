@@ -128,7 +128,7 @@ class AbstractHistogram(ABC):
         weights = self.content.sum(axis=tuple(i for i in range(self.content.ndim) if i != axis))
         mean = np.average(values, weights=weights)
         variance = np.average((values - mean)**2, weights=weights)
-        return mean, np.sqrt(variance)
+        return float(mean), float(np.sqrt(variance))
 
     def fill(self, *values: ArrayLike, weights: ArrayLike = None) -> "AbstractHistogram":
         """Fill the histogram from unbinned data.
@@ -261,12 +261,18 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
+    def legend_label(self) -> str:
+        """Return a label suitable for use in a legend, if any.
+        """
+        mean, rms = self.binned_statistics()
+        return f"{self.label}\nMean: {mean:g}\nRMS: {rms:g}" if self.label is not None else None
+
     def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
         """Overloaded make_plot() method.
         """
         # If we are not explicitly providing a label at plotting time, use
         # the one attached to the histogram, if any.
-        kwargs.setdefault('label', self.label)
+        kwargs.setdefault("label", self.legend_label())
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
         setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])
 
@@ -296,10 +302,10 @@ class Histogram2d(AbstractHistogram):
         the text label for the z axis (default: "Entries/bin").
     """
 
-    DEFAULT_PLOT_OPTIONS = dict(cmap=plt.get_cmap('hot'))
+    DEFAULT_PLOT_OPTIONS = dict(cmap=plt.get_cmap("hot"))
 
     def __init__(self, xedges, yedges, label: str = None, xlabel: str = None,
-                 ylabel: str = None, zlabel: str = 'Entries/bin') -> None:
+                 ylabel: str = None, zlabel: str = "Entries/bin") -> None:
         """Constructor.
         """
         super().__init__((xedges, yedges), label, [xlabel, ylabel, zlabel])
@@ -309,9 +315,9 @@ class Histogram2d(AbstractHistogram):
         """
         # pylint: disable=arguments-differ
         if logz:
-            vmin = kwargs.pop('vmin', None)
-            vmax = kwargs.pop('vmax', None)
-            kwargs.setdefault('norm', matplotlib.colors.LogNorm(vmin, vmax))
+            vmin = kwargs.pop("vmin", None)
+            vmax = kwargs.pop("vmax", None)
+            kwargs.setdefault("norm", matplotlib.colors.LogNorm(vmin, vmax))
         mappable = axes.pcolormesh(*self._edges, self.content.T, **kwargs)
         plt.colorbar(mappable, ax=axes, label=self.axis_labels[2])
         setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])

@@ -23,7 +23,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number
-from typing import Callable, Iterator, Sequence, Tuple
+from typing import Callable, Dict, Iterator, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -832,13 +832,47 @@ class AbstractFitModel(AbstractFitModelBase):
         """
         super().__init__()
         self._parameters = []
-        for name, value in self.__class__.__dict__.items():
-            if isinstance(value, FitParameter):
-                parameter = value.copy(name)
-                # Note we also set one instance attribute for each parameter so
-                # that we can use the notation model.parameter
-                setattr(self, name, parameter)
-                self._parameters.append(parameter)
+        # Note we cannot loop over self.__dict__.items() here, as that would
+        # only return the members defined in the actual class, and not the
+        # inherited ones.
+        for name, value in self.__class__._parameter_dict().items():
+            parameter = value.copy(name)
+            # Note we also set one instance attribute for each parameter so
+            # that we can use the notation model.parameter
+            setattr(self, name, parameter)
+            self._parameters.append(parameter)
+
+    @classmethod
+    def _parameter_dict(cls) -> Dict[str, FitParameter]:
+        """Return a dictionary of all the FitParameter objects defined in the class
+        and its base classes.
+
+        This is a subtle one, as what we really want, here, is all members of a class
+        (including inherited ones) that are of a specific type (FitParameter), in the
+        order they were defined. All of these thing are instrumental to make the
+        fit model work, so we need to be careful.
+
+        Also note the we are looping over the MRO in reverse order, so that we
+        preserve the order of definition of the parameters, even when they are
+        inherited from base classes. If a parameter is re-defined in a derived class,
+        the derived class definition takes precedence, as we are using a dictionary
+        to collect the parameters.
+
+        Arguments
+        ---------
+        cls : type
+            The class to inspect.
+
+        Returns
+        -------
+        param_dict : dict
+            A dictionary mapping parameter names to their FitParameter objects.
+        """
+        param_dict = {}
+        for base in reversed(cls.__mro__):
+            param_dict.update({name: value for name, value in base.__dict__.items() if
+                               isinstance(value, FitParameter)})
+        return param_dict
 
     def __len__(self) -> int:
         """Return the `total` number of fit parameters in the model.
@@ -1110,7 +1144,7 @@ class Exponential(AbstractFitModel):
         return (0., scale_factor * self.scale.value)
 
 
-class _GaussianBase:
+class _GaussianBase(AbstractFitModel):
 
     """Common base class for Gaussian-like models.
 
@@ -1119,7 +1153,14 @@ class _GaussianBase:
     and its inverse). Note that, for the right method to be picked up,
     subclasses should derive from this class *before* deriving from
     AbstractFitModel, so that the method resolution order (MRO) works as expected.
+
+    Note the evaluate() method is not implemented here, which means that the class
+    cannot be instantiated directly.
     """
+
+    prefactor = FitParameter(1.)
+    mean = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
 
     # A couple of useful constants.
     _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
@@ -1156,29 +1197,22 @@ class _GaussianBase:
         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
 
 
-class Gaussian(_GaussianBase, AbstractFitModel):
+class Gaussian(_GaussianBase):
 
     """Gaussian model.
     """
 
-    prefactor = FitParameter(1.)
-    mean = FitParameter(0.)
-    sigma = FitParameter(1., minimum=0.)
-
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * ((x - mean) / sigma)**2.)
+        z = (x - mean) / sigma
+        return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
 
-class Erf(_GaussianBase, AbstractFitModel):
+class Erf(_GaussianBase):
 
     """Error function model.
     """
-
-    prefactor = FitParameter(1.)
-    mean = FitParameter(0.)
-    sigma = FitParameter(1., minimum=0.)
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
@@ -1186,14 +1220,10 @@ class Erf(_GaussianBase, AbstractFitModel):
         return prefactor * 0.5 * (1. + erf((x - mean) / sigma / np.sqrt(2.)))
 
 
-class ErfInverse(_GaussianBase, AbstractFitModel):
+class ErfInverse(_GaussianBase):
 
     """Inverse error function model.
     """
-
-    prefactor = FitParameter(1.)
-    mean = FitParameter(0.)
-    sigma = FitParameter(1., minimum=0.)
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:

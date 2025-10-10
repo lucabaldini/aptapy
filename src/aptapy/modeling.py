@@ -1162,7 +1162,8 @@ class _GaussianBase(AbstractFitModel):
     mean = FitParameter(0.)
     sigma = FitParameter(1., minimum=0.)
 
-    # A couple of useful constants.
+    # A few useful constants.
+    _SQRT2 = np.sqrt(2.)
     _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
     _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
 
@@ -1208,6 +1209,12 @@ class Gaussian(_GaussianBase):
         z = (x - mean) / sigma
         return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
+    def integral(self, xmin: float, xmax: float) -> float:
+        prefactor, mean, sigma = self.parameter_values()
+        zmin = (xmin - mean) / (sigma * self._SQRT2)
+        zmax = (xmax - mean) / (sigma * self._SQRT2)
+        return prefactor * 0.5 * (erf(zmax) - erf(zmin))
+
 
 class Erf(_GaussianBase):
 
@@ -1217,7 +1224,8 @@ class Erf(_GaussianBase):
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * 0.5 * (1. + erf((x - mean) / sigma / np.sqrt(2.)))
+        z = (x - mean) / sigma
+        return prefactor * 0.5 * (1. + erf(z / _GaussianBase._SQRT2))
 
 
 class ErfInverse(_GaussianBase):

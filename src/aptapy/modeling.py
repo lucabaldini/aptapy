@@ -28,6 +28,7 @@ from typing import Callable, Iterator, Sequence, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
+from scipy.integrate import quad
 from scipy.optimize import curve_fit
 from scipy.stats import chi2
 
@@ -832,6 +833,29 @@ class AbstractFitModel(AbstractFitModelBase):
             raise TypeError(f"{other} is not a fit model")
         return FitModelSum(self, other)
 
+    def integral(self, xmin: float, xmax: float) -> float:
+        """Calculate the integral of the model between xmin and xmax using
+        numerical integration.
+
+        Note that subclasses can (and are encouraged to) overload this method
+        with an analytical implementation, when available.
+
+        Arguments
+        ---------
+        xmin : float
+            The minimum value of the independent variable to integrate over.
+
+        xmax : float
+            The maximum value of the independent variable to integrate over.
+
+        Returns
+        -------
+        integral : float
+            The integral of the model between xmin and xmax.
+        """
+        value, _ = quad(self, xmin, xmax)
+        return value
+
 
 class FitModelSum(AbstractFitModelBase):
 
@@ -877,6 +901,26 @@ class FitModelSum(AbstractFitModelBase):
             value += component.evaluate(x, *parameter_values[cursor:cursor + len(component)])
             cursor += len(component)
         return value
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        """Calculate the integral of the model between xmin and xmax.
+
+        This is implemented as the sum of the integrals of the components.
+
+        Arguments
+        ---------
+        xmin : float
+            The minimum value of the independent variable to integrate over.
+
+        xmax : float
+            The maximum value of the independent variable to integrate over.
+
+        Returns
+        -------
+        integral : float
+            The integral of the model between xmin and xmax.
+        """
+        return sum(component.integral(xmin, xmax) for component in self._components)
 
     def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
         """Overloaded method for plotting the model.
@@ -948,6 +992,27 @@ class Line(AbstractFitModel):
         return slope * x + intercept
 
 
+class Quadratic(AbstractFitModel):
+
+    """Quadratic model.
+    """
+
+    a = FitParameter(1.)
+    b = FitParameter(0.)
+    c = FitParameter(0.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, a: float, b: float, c: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return a * x**2 + b * x + c
+
+
+class Polynomial(AbstractFitModel):
+
+    """Polynomial model.
+    """
+
+
 class PowerLaw(AbstractFitModel):
 
     """Power-law model.
@@ -960,6 +1025,20 @@ class PowerLaw(AbstractFitModel):
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         return prefactor * x**index
+
+
+class Exponential(AbstractFitModel):
+
+    """Exponential model.
+    """
+
+    prefactor = FitParameter(1.)
+    exponent = FitParameter(-1.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, exponent: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return prefactor * np.exp(exponent * x)
 
 
 class Gaussian(AbstractFitModel):
@@ -993,3 +1072,79 @@ class Gaussian(AbstractFitModel):
             The FWHM of the gaussian.
         """
         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
+
+
+class Erf(AbstractFitModel):
+
+    """Error function model.
+    """
+
+    prefactor = FitParameter(1.)
+    mean = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
+
+    _NORM_CONSTANT = 0.5 * np.sqrt(np.pi)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        z = (x - mean) / (sigma * np.sqrt(2.))
+        return prefactor * 0.5 * (1. + erf(z))
+
+    def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
+        mean, half_width = self.mean.value, num_sigma * self.sigma.value
+        return (mean - half_width, mean + half_width)
+
+
+class ErfInverse(AbstractFitModel):
+
+    """Inverse error function model.
+    """
+
+    prefactor = FitParameter(1.)
+    mean = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
+
+    _NORM_CONSTANT = 0.5 * np.sqrt(np.pi)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        z = (x - mean) / (sigma * np.sqrt(2.))
+        return prefactor * 0.5 * (1. - erf(z))
+
+    def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
+        mean, half_width = self.mean.value, num_sigma * self.sigma.value
+        return (mean - half_width, mean + half_width)
+
+
+class Lorentzian(AbstractFitModel):
+
+    """Lorentzian model.
+    """
+
+    prefactor = FitParameter(1.)
+    mean = FitParameter(0.)
+    gamma = FitParameter(1., minimum=0.)
+
+    _NORM_CONSTANT = 1. / np.pi
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, gamma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        z = (x - mean) / gamma
+        return prefactor * Lorentzian._NORM_CONSTANT * gamma / (1. + z**2.)
+
+    def default_plotting_range(self, num_gamma: int = 5) -> Tuple[float, float]:
+        mean, half_width = self.mean.value, num_gamma * self.gamma.value
+        return (mean - half_width, mean + half_width)
+
+    def fwhm(self) -> uncertainties.ufloat:
+        """Return the full-width at half-maximum (FWHM) of the lorentzian.
+
+        Returns
+        -------
+        fwhm : uncertainties.ufloat
+            The FWHM of the lorentzian.
+        """
+        return self.gamma.ufloat() * 2.

@@ -3,7 +3,7 @@
 Release notes
 =============
 
-* Added 2-diemnsional histogram example.
+* Added 2-dimensional histogram example.
 
 
 Version 0.3.2 (2025-10-09)

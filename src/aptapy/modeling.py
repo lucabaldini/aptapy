@@ -1038,8 +1038,8 @@ class Line(AbstractFitModel):
         return slope * x + intercept
 
     def integral(self, xmin: float, xmax: float) -> float:
-        return 0.5 * self.slope.value * (xmax**2 - xmin**2) + \
-            self.intercept.value * (xmax - xmin)
+        slope, intercept = self.parameter_values()
+        return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
 
 
 class Quadratic(AbstractFitModel):
@@ -1057,9 +1057,8 @@ class Quadratic(AbstractFitModel):
         return a * x**2 + b * x + c
 
     def integral(self, xmin: float, xmax: float) -> float:
-        return self.a.value * (xmax**3 - xmin**3) / 3. + \
-               self.b.value * (xmax**2 - xmin**2) / 2. + \
-               self.c.value * (xmax - xmin)
+        a, b, c = self.parameter_values()
+        return a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
 
 
 class PowerLaw(AbstractFitModel):
@@ -1076,10 +1075,10 @@ class PowerLaw(AbstractFitModel):
         return prefactor * x**index
 
     def integral(self, xmin: float, xmax: float) -> float:
-        if self.index.value == -1.:
-            return self.prefactor.value * np.log(xmax / xmin)
-        return self.prefactor.value / (self.index.value + 1.) * \
-            (xmax**(self.index.value + 1.) - xmin**(self.index.value + 1.))
+        prefactor, index = self.parameter_values()
+        if index == -1.:
+            return prefactor * np.log(xmax / xmin)
+        return prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         return (0.1, 10.)
@@ -1104,32 +1103,44 @@ class Exponential(AbstractFitModel):
         return prefactor * np.exp(-x / scale)
 
     def integral(self, xmin: float, xmax: float) -> float:
-        return self.prefactor.value * self.scale.value * \
-            (np.exp(-xmin / self.scale.value) - np.exp(-xmax / self.scale.value))
+        prefactor, scale = self.parameter_values()
+        return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
         return (0., scale_factor * self.scale.value)
 
 
-class Gaussian(AbstractFitModel):
+class _GaussianBase:
 
-    """Gaussian model.
+    """Common base class for Gaussian-like models.
+
+    This provides a couple of convenience methods that are useful for all the
+    models derived from a gaussian (e.g., the gaussian itself, the error function,
+    and its inverse). Note that, for the right method to be picked up,
+    subclasses should derive from this class *before* deriving from
+    AbstractFitModel, so that the method resolution order (MRO) works as expected.
     """
 
-    prefactor = FitParameter(1.)
-    mean = FitParameter(0.)
-    sigma = FitParameter(1., minimum=0.)
-
+    # A couple of useful constants.
     _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
     _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-        # pylint: disable=arguments-differ
-        z = (x - mean) / sigma
-        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
-
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
+        """Convenience function to return a default plotting range for all the
+        models derived from a gaussian (e.g., the gaussian itself, the error
+        function, and its inverse).
+
+        Arguments
+        ---------
+        num_sigma : int, optional
+            The number of sigmas to use for the plotting range (default 5).
+
+        Returns
+        -------
+        Tuple[float, float]
+            The default plotting range for the model.
+        """
+        # pylint: disable=no-member
         mean, half_width = self.mean.value, num_sigma * self.sigma.value
         return (mean - half_width, mean + half_width)
 
@@ -1141,10 +1152,26 @@ class Gaussian(AbstractFitModel):
         fwhm : uncertainties.ufloat
             The FWHM of the gaussian.
         """
+        # pylint: disable=no-member
         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
 
 
-class Erf(AbstractFitModel):
+class Gaussian(_GaussianBase, AbstractFitModel):
+
+    """Gaussian model.
+    """
+
+    prefactor = FitParameter(1.)
+    mean = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * ((x - mean) / sigma)**2.)
+
+
+class Erf(_GaussianBase, AbstractFitModel):
 
     """Error function model.
     """
@@ -1153,20 +1180,13 @@ class Erf(AbstractFitModel):
     mean = FitParameter(0.)
     sigma = FitParameter(1., minimum=0.)
 
-    _NORM_CONSTANT = 0.5 * np.sqrt(np.pi)
-
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        z = (x - mean) / (sigma * np.sqrt(2.))
-        return prefactor * 0.5 * (1. + erf(z))
-
-    def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
-        mean, half_width = self.mean.value, num_sigma * self.sigma.value
-        return (mean - half_width, mean + half_width)
+        return prefactor * 0.5 * (1. + erf((x - mean) / sigma / np.sqrt(2.)))
 
 
-class ErfInverse(AbstractFitModel):
+class ErfInverse(_GaussianBase, AbstractFitModel):
 
     """Inverse error function model.
     """
@@ -1175,46 +1195,7 @@ class ErfInverse(AbstractFitModel):
     mean = FitParameter(0.)
     sigma = FitParameter(1., minimum=0.)
 
-    _NORM_CONSTANT = 0.5 * np.sqrt(np.pi)
-
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        z = (x - mean) / (sigma * np.sqrt(2.))
-        return prefactor * 0.5 * (1. - erf(z))
-
-    def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
-        mean, half_width = self.mean.value, num_sigma * self.sigma.value
-        return (mean - half_width, mean + half_width)
-
-
-class Lorentzian(AbstractFitModel):
-
-    """Lorentzian model.
-    """
-
-    prefactor = FitParameter(1.)
-    mean = FitParameter(0.)
-    gamma = FitParameter(1., minimum=0.)
-
-    _NORM_CONSTANT = 1. / np.pi
-
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, mean: float, gamma: float) -> ArrayLike:
-        # pylint: disable=arguments-differ
-        z = (x - mean) / gamma
-        return prefactor * Lorentzian._NORM_CONSTANT * gamma / (1. + z**2.)
-
-    def default_plotting_range(self, num_gamma: int = 5) -> Tuple[float, float]:
-        mean, half_width = self.mean.value, num_gamma * self.gamma.value
-        return (mean - half_width, mean + half_width)
-
-    def fwhm(self) -> uncertainties.ufloat:
-        """Return the full-width at half-maximum (FWHM) of the lorentzian.
-
-        Returns
-        -------
-        fwhm : uncertainties.ufloat
-            The FWHM of the lorentzian.
-        """
-        return self.gamma.ufloat() * 2.
+        return prefactor - Erf.evaluate(x, prefactor, mean, sigma)

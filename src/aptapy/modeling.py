@@ -833,12 +833,9 @@ class AbstractFitModel(AbstractFitModelBase):
             raise TypeError(f"{other} is not a fit model")
         return FitModelSum(self, other)
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def quadrature(self, xmin: float, xmax: float) -> float:
         """Calculate the integral of the model between xmin and xmax using
         numerical integration.
-
-        Note that subclasses can (and are encouraged to) overload this method
-        with an analytical implementation, when available.
 
         Arguments
         ---------
@@ -855,6 +852,26 @@ class AbstractFitModel(AbstractFitModelBase):
         """
         value, _ = quad(self, xmin, xmax)
         return value
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        """Default implementation of the integral of the model between xmin and xmax.
+        Subclasses can (and are encouraged to) overload this method with an
+        analytical implementation, when available.
+
+        Arguments
+        ---------
+        xmin : float
+            The minimum value of the independent variable to integrate over.
+
+        xmax : float
+            The maximum value of the independent variable to integrate over.
+
+        Returns
+        -------
+        integral : float
+            The integral of the model between xmin and xmax.
+        """
+        return self.quadrature(xmin, xmax)
 
 
 class FitModelSum(AbstractFitModelBase):

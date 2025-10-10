@@ -22,8 +22,8 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Constant, Exponential, FitParameter, Gaussian, Line, \
-    PowerLaw, Quadratic
+from aptapy.modeling import Constant, Erf, ErfInverse, Exponential, FitParameter, \
+    Gaussian, Line, PowerLaw, Quadratic
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -87,7 +87,8 @@ def test_model_parameters():
 def test_plot():
     """Test the plot method of the models.
     """
-    for model in (Constant(), Line(), Quadratic(), PowerLaw(), Exponential()):
+    for model in (Constant(), Line(), Quadratic(), PowerLaw(), Exponential(),
+                  Gaussian(), Erf(), ErfInverse()):
         plt.figure(f"{inspect.currentframe().f_code.co_name}_{model.__class__.__name__}")
         model.plot()
         plt.legend()
@@ -148,6 +149,19 @@ def test_integral():
     model = Exponential()
     model.prefactor.freeze(prefactor)
     model.scale.freeze(scale)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Gaussian.
+    xmin = -5.
+    xmax = 5.
+    prefactor = 1.
+    mean = 0.
+    sigma = 1.
+    target = 1.
+    model = Gaussian()
+    model.prefactor.freeze(prefactor)
+    model.mean.freeze(mean)
+    model.sigma.freeze(sigma)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
 

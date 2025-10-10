@@ -30,6 +30,7 @@ import numpy as np
 import uncertainties
 from scipy.integrate import quad
 from scipy.optimize import curve_fit
+from scipy.special import erf
 from scipy.stats import chi2
 
 from .hist import Histogram1d

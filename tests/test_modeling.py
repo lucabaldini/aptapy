@@ -144,7 +144,7 @@ def test_integral():
         if index == -1.:
             target = prefactor * np.log(xmax / xmin)
         else:
-            target = prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index +  1.))
+            target = prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
         model = PowerLaw()
         model.prefactor.freeze(prefactor)
         model.index.freeze(index)

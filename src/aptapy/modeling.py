@@ -1079,7 +1079,7 @@ class PowerLaw(AbstractFitModel):
         if self.index.value == -1.:
             return self.prefactor.value * np.log(xmax / xmin)
         return self.prefactor.value / (self.index.value + 1.) * \
-            (xmax**(self.index.value + 1.) - xmin**(self.index.value +  1.))
+            (xmax**(self.index.value + 1.) - xmin**(self.index.value + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         return (0.1, 10.)

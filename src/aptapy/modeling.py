@@ -36,6 +36,18 @@ from scipy.stats import chi2
 from .hist import Histogram1d
 from .typing_ import ArrayLike
 
+__all__ = [
+    "Constant",
+    "Line",
+    "Quadratic",
+    "PowerLaw",
+    "Exponential",
+    "Gaussian",
+    "Erf",
+    "ErfInverse",
+]
+
+# pylint: disable=too-many-lines
 
 class Format(str, enum.Enum):
 

@@ -22,8 +22,17 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Constant, Erf, ErfInverse, Exponential, FitParameter, \
-    Gaussian, Line, PowerLaw, Quadratic
+from aptapy.modeling import (
+    Constant,
+    Erf,
+    ErfInverse,
+    Exponential,
+    FitParameter,
+    Gaussian,
+    Line,
+    PowerLaw,
+    Quadratic,
+)
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -97,6 +106,7 @@ def test_plot():
 def test_integral():
     """Test the integral method of the models.
     """
+    # pylint: disable=too-many-statements
     # Constant.
     xmin = 0.
     xmax = 1.

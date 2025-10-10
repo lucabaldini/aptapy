@@ -278,6 +278,17 @@ class FitStatus:
         self.pvalue = None
         self.fit_range = None
 
+    def complete(self) -> bool:
+        """Return True if the fit status is complete, i.e., if the chisquare,
+        dof, and pvalue are all set.
+
+        Returns
+        -------
+        complete : bool
+            True if the fit status is complete.
+        """
+        return self.chisquare is not None and self.dof is not None and self.pvalue is not None
+
     def update(self, chisquare: float, dof: int = None) -> None:
         """Update the fit status, i.e., set the chisquare and calculate the
         corresponding p-value.
@@ -777,7 +788,7 @@ class AbstractFitModelBase(ABC):
             The formatted string.
         """
         text = f"{self.name()}\n"
-        if self.status is not None:
+        if self.status.complete():
             text = f"{text}{format(self.status, spec)}\n"
         for parameter in self:
             text = f"{text}{format(parameter, spec)}\n"
@@ -992,7 +1003,12 @@ class Constant(AbstractFitModel):
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
         # pylint: disable=arguments-differ
+        if isinstance(x, Number):
+            return value
         return np.full(x.shape, value)
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        return self.value.value * (xmax - xmin)
 
 
 class Line(AbstractFitModel):
@@ -1008,6 +1024,10 @@ class Line(AbstractFitModel):
         # pylint: disable=arguments-differ
         return slope * x + intercept
 
+    def integral(self, xmin: float, xmax: float) -> float:
+        return 0.5 * self.slope.value * (xmax**2 - xmin**2) + \
+            self.intercept.value * (xmax - xmin)
+
 
 class Quadratic(AbstractFitModel):
 
@@ -1015,7 +1035,7 @@ class Quadratic(AbstractFitModel):
     """
 
     a = FitParameter(1.)
-    b = FitParameter(0.)
+    b = FitParameter(1.)
     c = FitParameter(0.)
 
     @staticmethod
@@ -1023,11 +1043,10 @@ class Quadratic(AbstractFitModel):
         # pylint: disable=arguments-differ
         return a * x**2 + b * x + c
 
-
-class Polynomial(AbstractFitModel):
-
-    """Polynomial model.
-    """
+    def integral(self, xmin: float, xmax: float) -> float:
+        return self.a.value * (xmax**3 - xmin**3) / 3. + \
+               self.b.value * (xmax**2 - xmin**2) / 2. + \
+               self.c.value * (xmax - xmin)
 
 
 class PowerLaw(AbstractFitModel):
@@ -1036,12 +1055,26 @@ class PowerLaw(AbstractFitModel):
     """
 
     prefactor = FitParameter(1.)
-    index = FitParameter(-1.)
+    index = FitParameter(-2.)
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         return prefactor * x**index
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        if self.index.value == -1.:
+            return self.prefactor.value * np.log(xmax / xmin)
+        return self.prefactor.value / (self.index.value + 1.) * \
+            (xmax**(self.index.value + 1.) - xmin**(self.index.value +  1.))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        return (0.1, 10.)
+
+    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+        super().plot(xmin, xmax, num_points)
+        plt.xscale("log")
+        plt.yscale("log")
 
 
 class Exponential(AbstractFitModel):
@@ -1050,12 +1083,19 @@ class Exponential(AbstractFitModel):
     """
 
     prefactor = FitParameter(1.)
-    exponent = FitParameter(-1.)
+    scale = FitParameter(1.)
 
     @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, exponent: float) -> ArrayLike:
+    def evaluate(x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * np.exp(exponent * x)
+        return prefactor * np.exp(-x / scale)
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        return self.prefactor.value * self.scale.value * \
+            (np.exp(-xmin / self.scale.value) - np.exp(-xmax / self.scale.value))
+
+    def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
+        return (0., scale_factor * self.scale.value)
 
 
 class Gaussian(AbstractFitModel):

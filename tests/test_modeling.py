@@ -276,11 +276,11 @@ def test_multiple_sum():
 
 if __name__ == '__main__':
     test_plot()
-    #test_gaussian_fit()
-    #test_gaussian_fit_subrange()
-    #test_gaussian_fit_bound()
-    #test_gaussian_fit_frozen()
-    #test_gaussian_fit_frozen_and_bound()
-    #test_sum_gauss_line()
-    #test_multiple_sum()
+    test_gaussian_fit()
+    test_gaussian_fit_subrange()
+    test_gaussian_fit_bound()
+    test_gaussian_fit_frozen()
+    test_gaussian_fit_frozen_and_bound()
+    test_sum_gauss_line()
+    test_multiple_sum()
     plt.show()

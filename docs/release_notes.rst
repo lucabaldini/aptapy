@@ -5,7 +5,8 @@ Release notes
 
 * Added 2-dimensional histogram example.
 * Adds several new model classes (Quadratic, PowerLaw, Exponential, Erf, ErfInverse).
-* Implements analytical integration methods for models where possible.
+* Implements analytical integration methods for models where possible, with a fallback
+  to numerical integration in the base class.
 * Updates the FitStatus class with a completion check method.
 
 * Pull requests merged:

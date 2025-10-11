@@ -291,14 +291,14 @@ class FitStatus:
         self.pvalue = None
         self.fit_range = None
 
-    def complete(self) -> bool:
-        """Return True if the fit status is complete, i.e., if the chisquare,
+    def valid(self) -> bool:
+        """Return True if the fit status is valid, i.e., if the chisquare,
         dof, and pvalue are all set.
 
         Returns
         -------
-        complete : bool
-            True if the fit status is complete.
+        valid : bool
+            True if the fit status is valid.
         """
         return self.chisquare is not None and self.dof is not None and self.pvalue is not None
 
@@ -801,7 +801,7 @@ class AbstractFitModelBase(ABC):
             The formatted string.
         """
         text = f"{self.name()}\n"
-        if self.status.complete():
+        if self.status.valid():
             text = f"{text}{format(self.status, spec)}\n"
         for parameter in self:
             text = f"{text}{format(parameter, spec)}\n"

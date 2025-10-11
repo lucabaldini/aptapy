@@ -3,10 +3,8 @@
 Release notes
 =============
 
-
 Version 0.4.0 (2025-10-11)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 * Added 2-dimensional histogram example.
 * Adds several new model classes (Quadratic, PowerLaw, Exponential, Erf, ErfInverse).

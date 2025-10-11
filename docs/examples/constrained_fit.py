@@ -19,9 +19,9 @@ hist.fill(np.random.default_rng().normal(size=100000))
 hist.plot()
 
 model = Gaussian()
-# Fix the prefactor to the histogram area---note this only works because the
-# Gaussian model is normalized to 1 over the full range when the prefactor is 1.
-model.prefactor.freeze(hist.area())
+# Fix the prefactor. This is a generally useful technique, as you should
+# never fit the normalization of a histogram.
+model.prefactor.freeze(hist.area() / model.integral(-5., 5.))
 model.fit_histogram(hist)
 print(model)
 model.plot()

@@ -19,9 +19,20 @@
 import inspect
 
 import numpy as np
+import pytest
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Constant, FitParameter, Gaussian, Line
+from aptapy.modeling import (
+    Constant,
+    Erf,
+    ErfInverse,
+    Exponential,
+    FitParameter,
+    Gaussian,
+    Line,
+    PowerLaw,
+    Quadratic,
+)
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -80,6 +91,89 @@ def test_model_parameters():
     print(p2, id(p2))
     assert p1 == p2
     assert id(p1) != id(p2)
+
+
+def test_plot():
+    """Test the plot method of the models.
+    """
+    for model in (Constant(), Line(), Quadratic(), PowerLaw(), Exponential(),
+                  Gaussian(), Erf(), ErfInverse()):
+        plt.figure(f"{inspect.currentframe().f_code.co_name}_{model.__class__.__name__}")
+        model.plot()
+        plt.legend()
+
+
+def test_integral():
+    """Test the integral method of the models.
+    """
+    # pylint: disable=too-many-statements
+    # Constant.
+    xmin = 0.
+    xmax = 1.
+    value = 1.
+    target = value * (xmax - xmin)
+    model = Constant()
+    model.value.freeze(1.)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Line.
+    slope = 1.
+    intercept = 1.
+    target = 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
+    model = Line()
+    model.slope.freeze(slope)
+    model.intercept.freeze(intercept)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Quadratic.
+    a = 1.
+    b = 1.
+    c = 1.
+    target = a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
+    model = Quadratic()
+    model.a.freeze(a)
+    model.b.freeze(b)
+    model.c.freeze(c)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # PowerLaw.
+    xmin = 1.
+    xmax = 10.
+    prefactor = 1.
+    for index in (-2., -1.):
+        if index == -1.:
+            target = prefactor * np.log(xmax / xmin)
+        else:
+            target = prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
+        model = PowerLaw()
+        model.prefactor.freeze(prefactor)
+        model.index.freeze(index)
+        assert model.quadrature(xmin, xmax) == pytest.approx(target)
+        assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Exponential.
+    xmin = 0.
+    xmax = 10.
+    prefactor = 1.
+    scale = 1.
+    target = prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
+    model = Exponential()
+    model.prefactor.freeze(prefactor)
+    model.scale.freeze(scale)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Gaussian.
+    xmin = -5.
+    xmax = 5.
+    prefactor = 1.
+    mean = 0.
+    sigma = 1.
+    target = 1.
+    model = Gaussian()
+    model.prefactor.freeze(prefactor)
+    model.mean.freeze(mean)
+    model.sigma.freeze(sigma)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
 
 
 def test_gaussian_fit():
@@ -181,6 +275,7 @@ def test_multiple_sum():
 
 
 if __name__ == '__main__':
+    test_plot()
     test_gaussian_fit()
     test_gaussian_fit_subrange()
     test_gaussian_fit_bound()

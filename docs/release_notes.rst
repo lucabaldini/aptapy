@@ -8,6 +8,14 @@ Version 0.4.0 (2025-10-11)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Added 2-dimensional histogram example.
+* Adds several new model classes (Quadratic, PowerLaw, Exponential, Erf, ErfInverse).
+* Implements analytical integration methods for models where possible, with a fallback
+  to numerical integration in the base class.
+* Updates the FitStatus class with a completion check method.
+
+* Pull requests merged:
+
+  - https://github.com/lucabaldini/aptapy/pull/7
 
 
 Version 0.3.2 (2025-10-09)

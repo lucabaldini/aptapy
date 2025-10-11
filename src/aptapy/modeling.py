@@ -23,17 +23,31 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number
-from typing import Callable, Iterator, Sequence, Tuple
+from typing import Callable, Dict, Iterator, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
+from scipy.integrate import quad
 from scipy.optimize import curve_fit
+from scipy.special import erf
 from scipy.stats import chi2
 
 from .hist import Histogram1d
 from .typing_ import ArrayLike
 
+__all__ = [
+    "Constant",
+    "Line",
+    "Quadratic",
+    "PowerLaw",
+    "Exponential",
+    "Gaussian",
+    "Erf",
+    "ErfInverse",
+]
+
+# pylint: disable=too-many-lines
 
 class Format(str, enum.Enum):
 
@@ -276,6 +290,17 @@ class FitStatus:
         self.dof = None
         self.pvalue = None
         self.fit_range = None
+
+    def valid(self) -> bool:
+        """Return True if the fit status is valid, i.e., if the chisquare,
+        dof, and pvalue are all set.
+
+        Returns
+        -------
+        valid : bool
+            True if the fit status is valid.
+        """
+        return self.chisquare is not None and self.dof is not None and self.pvalue is not None
 
     def update(self, chisquare: float, dof: int = None) -> None:
         """Update the fit status, i.e., set the chisquare and calculate the
@@ -776,7 +801,7 @@ class AbstractFitModelBase(ABC):
             The formatted string.
         """
         text = f"{self.name()}\n"
-        if self.status is not None:
+        if self.status.valid():
             text = f"{text}{format(self.status, spec)}\n"
         for parameter in self:
             text = f"{text}{format(parameter, spec)}\n"
@@ -807,13 +832,47 @@ class AbstractFitModel(AbstractFitModelBase):
         """
         super().__init__()
         self._parameters = []
-        for name, value in self.__class__.__dict__.items():
-            if isinstance(value, FitParameter):
-                parameter = value.copy(name)
-                # Note we also set one instance attribute for each parameter so
-                # that we can use the notation model.parameter
-                setattr(self, name, parameter)
-                self._parameters.append(parameter)
+        # Note we cannot loop over self.__dict__.items() here, as that would
+        # only return the members defined in the actual class, and not the
+        # inherited ones.
+        for name, value in self.__class__._parameter_dict().items():
+            parameter = value.copy(name)
+            # Note we also set one instance attribute for each parameter so
+            # that we can use the notation model.parameter
+            setattr(self, name, parameter)
+            self._parameters.append(parameter)
+
+    @classmethod
+    def _parameter_dict(cls) -> Dict[str, FitParameter]:
+        """Return a dictionary of all the FitParameter objects defined in the class
+        and its base classes.
+
+        This is a subtle one, as what we really want, here, is all members of a class
+        (including inherited ones) that are of a specific type (FitParameter), in the
+        order they were defined. All of these thing are instrumental to make the
+        fit model work, so we need to be careful.
+
+        Also note the we are looping over the MRO in reverse order, so that we
+        preserve the order of definition of the parameters, even when they are
+        inherited from base classes. If a parameter is re-defined in a derived class,
+        the derived class definition takes precedence, as we are using a dictionary
+        to collect the parameters.
+
+        Arguments
+        ---------
+        cls : type
+            The class to inspect.
+
+        Returns
+        -------
+        param_dict : dict
+            A dictionary mapping parameter names to their FitParameter objects.
+        """
+        param_dict = {}
+        for base in reversed(cls.__mro__):
+            param_dict.update({name: value for name, value in base.__dict__.items() if
+                               isinstance(value, FitParameter)})
+        return param_dict
 
     def __len__(self) -> int:
         """Return the `total` number of fit parameters in the model.
@@ -831,6 +890,46 @@ class AbstractFitModel(AbstractFitModelBase):
         if not isinstance(other, AbstractFitModel):
             raise TypeError(f"{other} is not a fit model")
         return FitModelSum(self, other)
+
+    def quadrature(self, xmin: float, xmax: float) -> float:
+        """Calculate the integral of the model between xmin and xmax using
+        numerical integration.
+
+        Arguments
+        ---------
+        xmin : float
+            The minimum value of the independent variable to integrate over.
+
+        xmax : float
+            The maximum value of the independent variable to integrate over.
+
+        Returns
+        -------
+        integral : float
+            The integral of the model between xmin and xmax.
+        """
+        value, _ = quad(self, xmin, xmax)
+        return value
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        """Default implementation of the integral of the model between xmin and xmax.
+        Subclasses can (and are encouraged to) overload this method with an
+        analytical implementation, when available.
+
+        Arguments
+        ---------
+        xmin : float
+            The minimum value of the independent variable to integrate over.
+
+        xmax : float
+            The maximum value of the independent variable to integrate over.
+
+        Returns
+        -------
+        integral : float
+            The integral of the model between xmin and xmax.
+        """
+        return self.quadrature(xmin, xmax)
 
 
 class FitModelSum(AbstractFitModelBase):
@@ -877,6 +976,26 @@ class FitModelSum(AbstractFitModelBase):
             value += component.evaluate(x, *parameter_values[cursor:cursor + len(component)])
             cursor += len(component)
         return value
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        """Calculate the integral of the model between xmin and xmax.
+
+        This is implemented as the sum of the integrals of the components.
+
+        Arguments
+        ---------
+        xmin : float
+            The minimum value of the independent variable to integrate over.
+
+        xmax : float
+            The maximum value of the independent variable to integrate over.
+
+        Returns
+        -------
+        integral : float
+            The integral of the model between xmin and xmax.
+        """
+        return sum(component.integral(xmin, xmax) for component in self._components)
 
     def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
         """Overloaded method for plotting the model.
@@ -931,7 +1050,12 @@ class Constant(AbstractFitModel):
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
         # pylint: disable=arguments-differ
+        if isinstance(x, Number):
+            return value
         return np.full(x.shape, value)
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        return self.value.value * (xmax - xmin)
 
 
 class Line(AbstractFitModel):
@@ -947,6 +1071,29 @@ class Line(AbstractFitModel):
         # pylint: disable=arguments-differ
         return slope * x + intercept
 
+    def integral(self, xmin: float, xmax: float) -> float:
+        slope, intercept = self.parameter_values()
+        return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
+
+
+class Quadratic(AbstractFitModel):
+
+    """Quadratic model.
+    """
+
+    a = FitParameter(1.)
+    b = FitParameter(1.)
+    c = FitParameter(0.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, a: float, b: float, c: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return a * x**2 + b * x + c
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        a, b, c = self.parameter_values()
+        return a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
+
 
 class PowerLaw(AbstractFitModel):
 
@@ -954,33 +1101,88 @@ class PowerLaw(AbstractFitModel):
     """
 
     prefactor = FitParameter(1.)
-    index = FitParameter(-1.)
+    index = FitParameter(-2.)
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         return prefactor * x**index
 
+    def integral(self, xmin: float, xmax: float) -> float:
+        prefactor, index = self.parameter_values()
+        if index == -1.:
+            return prefactor * np.log(xmax / xmin)
+        return prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
 
-class Gaussian(AbstractFitModel):
+    def default_plotting_range(self) -> Tuple[float, float]:
+        return (0.1, 10.)
 
-    """Gaussian model.
+    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+        super().plot(xmin, xmax, num_points)
+        plt.xscale("log")
+        plt.yscale("log")
+
+
+class Exponential(AbstractFitModel):
+
+    """Exponential model.
+    """
+
+    prefactor = FitParameter(1.)
+    scale = FitParameter(1.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return prefactor * np.exp(-x / scale)
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        prefactor, scale = self.parameter_values()
+        return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
+
+    def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
+        return (0., scale_factor * self.scale.value)
+
+
+class _GaussianBase(AbstractFitModel):
+
+    """Common base class for Gaussian-like models.
+
+    This provides a couple of convenience methods that are useful for all the
+    models derived from a gaussian (e.g., the gaussian itself, the error function,
+    and its inverse). Note that, for the right method to be picked up,
+    subclasses should derive from this class *before* deriving from
+    AbstractFitModel, so that the method resolution order (MRO) works as expected.
+
+    Note the evaluate() method is not implemented here, which means that the class
+    cannot be instantiated directly.
     """
 
     prefactor = FitParameter(1.)
     mean = FitParameter(0.)
     sigma = FitParameter(1., minimum=0.)
 
+    # A few useful constants.
+    _SQRT2 = np.sqrt(2.)
     _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
     _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-        # pylint: disable=arguments-differ
-        z = (x - mean) / sigma
-        return prefactor * Gaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
-
     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
+        """Convenience function to return a default plotting range for all the
+        models derived from a gaussian (e.g., the gaussian itself, the error
+        function, and its inverse).
+
+        Arguments
+        ---------
+        num_sigma : int, optional
+            The number of sigmas to use for the plotting range (default 5).
+
+        Returns
+        -------
+        Tuple[float, float]
+            The default plotting range for the model.
+        """
+        # pylint: disable=no-member
         mean, half_width = self.mean.value, num_sigma * self.sigma.value
         return (mean - half_width, mean + half_width)
 
@@ -992,4 +1194,46 @@ class Gaussian(AbstractFitModel):
         fwhm : uncertainties.ufloat
             The FWHM of the gaussian.
         """
+        # pylint: disable=no-member
         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
+
+
+class Gaussian(_GaussianBase):
+
+    """Gaussian model.
+    """
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        z = (x - mean) / sigma
+        return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
+
+    def integral(self, xmin: float, xmax: float) -> float:
+        prefactor, mean, sigma = self.parameter_values()
+        zmin = (xmin - mean) / (sigma * self._SQRT2)
+        zmax = (xmax - mean) / (sigma * self._SQRT2)
+        return prefactor * 0.5 * (erf(zmax) - erf(zmin))
+
+
+class Erf(_GaussianBase):
+
+    """Error function model.
+    """
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        z = (x - mean) / sigma
+        return prefactor * 0.5 * (1. + erf(z / _GaussianBase._SQRT2))
+
+
+class ErfInverse(_GaussianBase):
+
+    """Inverse error function model.
+    """
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return prefactor - Erf.evaluate(x, prefactor, mean, sigma)

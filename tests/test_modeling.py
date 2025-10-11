@@ -176,6 +176,36 @@ def test_integral():
     assert model.integral(xmin, xmax) == pytest.approx(target)
 
 
+def test_init_parameters():
+    """Test the init_parameters method of the models.
+    """
+    # Constant.
+    value = 0.1
+    error = 0.1
+    xdata = np.linspace(0., 10., 11)
+    ydata = np.full(xdata.shape, value) + _RNG.normal(scale=error, size=xdata.shape)
+    sigma = np.full(xdata.shape, error)
+    model = Constant()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_value = model.value.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.value.compatible_with(initial_value)
+    # Line.
+    slope = 5.
+    intercept = 3.
+    error = 0.1
+    xdata = np.linspace(0., 10., 11)
+    ydata = slope * xdata + intercept + _RNG.normal(scale=error, size=xdata.shape)
+    sigma = np.full(xdata.shape, error)
+    model = Line()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_slope = model.slope.value
+    initial_intercept = model.intercept.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.slope.compatible_with(initial_slope)
+    assert model.intercept.compatible_with(initial_intercept)
+
+
 def test_gaussian_fit():
     """Simple Gaussian fit.
     """

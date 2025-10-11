@@ -1054,7 +1054,17 @@ class Constant(AbstractFitModel):
             return value
         return np.full(x.shape, value)
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is simply using the weighted average of the y data, using the inverse
+        of the squares of the errors as weights.
+        """
+        self.value.set(np.average(ydata, weights=1. / sigma**2.))
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         return self.value.value * (xmax - xmin)
 
 
@@ -1071,7 +1081,25 @@ class Line(AbstractFitModel):
         # pylint: disable=arguments-differ
         return slope * x + intercept
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is simply using a weighted linear regression.
+        """
+        w = 1. / sigma**2.
+        S0x = (w).sum()
+        S1x = (w * xdata).sum()
+        S2x = (w * xdata**2.).sum()
+        S0xy = (w * ydata).sum()
+        S1xy = (w * xdata * ydata).sum()
+        D = S0x * S2x - S1x**2.
+        if D != 0.:
+            self.slope.set((S0x * S1xy - S1x * S0xy) / D)
+            self.intercept.set((S2x * S0xy - S1x * S1xy) / D)
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         slope, intercept = self.parameter_values()
         return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
 

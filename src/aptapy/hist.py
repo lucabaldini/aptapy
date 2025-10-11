@@ -24,6 +24,10 @@ import numpy as np
 from .plotting import matplotlib, plt, setup_axes
 from .typing_ import ArrayLike
 
+__all__ = [
+    "Histogram1d",
+    "Histogram2d",
+]
 
 class AbstractHistogram(ABC):
 

@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.5.0 (2025-10-12)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Added init_parameters method to most model classes.
 * Updated import structure to use scipy.special module directly instead of importing erf.
 * Added comprehensive test coverage for the new parameter initialization functionality.

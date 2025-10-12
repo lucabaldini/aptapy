@@ -116,6 +116,7 @@ def test_integral():
     model.value.freeze(1.)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Line.
     slope = 1.
     intercept = 1.
@@ -125,6 +126,7 @@ def test_integral():
     model.intercept.freeze(intercept)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Quadratic.
     a = 1.
     b = 1.
@@ -136,6 +138,7 @@ def test_integral():
     model.c.freeze(c)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # PowerLaw.
     xmin = 1.
     xmax = 10.
@@ -150,6 +153,7 @@ def test_integral():
         model.index.freeze(index)
         assert model.quadrature(xmin, xmax) == pytest.approx(target)
         assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Exponential.
     xmin = 0.
     xmax = 10.
@@ -161,6 +165,7 @@ def test_integral():
     model.scale.freeze(scale)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Gaussian.
     xmin = -5.
     xmax = 5.
@@ -190,6 +195,9 @@ def test_init_parameters():
     initial_value = model.value.value
     model.fit(xdata, ydata, sigma=sigma)
     assert model.value.compatible_with(initial_value)
+    # In this case the initial value should be identical to the fitted one.
+    assert model.value.value == pytest.approx(initial_value)
+
     # Line.
     slope = 5.
     intercept = 3.
@@ -204,6 +212,24 @@ def test_init_parameters():
     model.fit(xdata, ydata, sigma=sigma)
     assert model.slope.compatible_with(initial_slope)
     assert model.intercept.compatible_with(initial_intercept)
+    # In this case the initial values should be identical to the fitted ones.
+    assert model.slope.value == pytest.approx(initial_slope)
+    assert model.intercept.value == pytest.approx(initial_intercept)
+
+    # PowerLaw.
+    prefactor = 10.
+    index = -2.
+    xdata = np.linspace(1., 10., 10)
+    ydata = prefactor * xdata**index
+    sigma = 0.05 * ydata
+    ydata += _RNG.normal(scale=sigma)
+    model = PowerLaw()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_prefactor = model.prefactor.value
+    initial_index = model.index.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.prefactor.compatible_with(initial_prefactor)
+    assert model.index.compatible_with(initial_index)
 
 
 def test_gaussian_fit():

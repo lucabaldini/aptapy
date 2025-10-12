@@ -1086,12 +1086,12 @@ class Line(AbstractFitModel):
 
         This is simply using a weighted linear regression.
         """
-        w = 1. / sigma**2.
-        S0x = (w).sum()
-        S1x = (w * xdata).sum()
-        S2x = (w * xdata**2.).sum()
-        S0xy = (w * ydata).sum()
-        S1xy = (w * xdata * ydata).sum()
+        weights = 1. / sigma**2.
+        S0x = weights.sum()
+        S1x = (weights * xdata).sum()
+        S2x = (weights * xdata**2.).sum()
+        S0xy = (weights * ydata).sum()
+        S1xy = (weights * xdata * ydata).sum()
         D = S0x * S2x - S1x**2.
         if D != 0.:
             self.slope.set((S0x * S1xy - S1x * S0xy) / D)
@@ -1119,6 +1119,8 @@ class Quadratic(AbstractFitModel):
         return a * x**2 + b * x + c
 
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         a, b, c = self.parameter_values()
         return a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
 
@@ -1136,7 +1138,30 @@ class PowerLaw(AbstractFitModel):
         # pylint: disable=arguments-differ
         return prefactor * x**index
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is using a weighted linear regression in log-log space. Note this is
+        not an exact solution in the original space, for which a numerical optimization
+        using non-linear least squares would be needed.
+        """
+        X = np.log(xdata)
+        Y = np.log(ydata)
+        # Propagate the errors to log space.
+        weights = ydata**2. / sigma**2.
+        S = weights.sum()
+        X0 = (weights * X).sum() / S
+        Y0 = (weights * Y).sum() / S
+        Sxx = (weights * (X - X0)**2.).sum()
+        Sxy = (weights * (X - X0) * (Y - Y0)).sum()
+        if Sxx != 0.:
+            self.index.set(Sxy / Sxx)
+            self.prefactor.set(np.exp(Y0 - self.index.value * X0))
+
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         prefactor, index = self.parameter_values()
         if index == -1.:
             return prefactor * np.log(xmax / xmin)

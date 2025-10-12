@@ -89,8 +89,12 @@ disable = [
   "too-many-positional-arguments",
   "too-many-instance-attributes",
   "too-many-locals",
+  "too-many-lines",
   "use-dict-literal",
   ]
+[tool.pylint.TYPECHECK]
+# Treat this module as “special”; skip strict import/member checks there.
+ignored-modules = ["scipy.special"]
 [tool.pylint.'BASIC']
 good-names = ["i", "j", "k", "x", "y", "z"]
 [tool.pylint.'FORMAT']

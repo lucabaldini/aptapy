@@ -27,10 +27,10 @@ from typing import Callable, Dict, Iterator, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.special
 import uncertainties
 from scipy.integrate import quad
 from scipy.optimize import curve_fit
-from scipy.special import erf
 from scipy.stats import chi2
 
 from .hist import Histogram1d
@@ -47,7 +47,6 @@ __all__ = [
     "ErfInverse",
 ]
 
-# pylint: disable=too-many-lines
 
 class Format(str, enum.Enum):
 
@@ -146,8 +145,36 @@ class FitParameter:
         error : float, optional
             The new error for the parameter (default None).
         """
+        if self._frozen:
+            raise RuntimeError(f"Cannot set value for frozen parameter {self.name}")
+        if value < self.minimum or value > self.maximum:
+            raise ValueError(f"Cannot set value {value} for parameter {self.name}, "
+                             f"out of bounds [{self.minimum}, {self.maximum}]")
         self.value = value
         self.error = error
+
+    def init(self, value: float) -> None:
+        """Initialize the fit parameter to a given value, unless it is frozen, or
+        the value is out of bounds.
+
+        .. warning::
+
+           Note this silently does nothing if the parameter is frozen, or if the value
+           is out of bounds, so its behavior is inconsistent with that of set(), which
+           raises an exception in both cases. This is intentional, and this method should
+           only be used to initialize the parameter prior to a fit.
+
+        Arguments
+        ---------
+        value : float
+            The new value for the parameter.
+
+        """
+        if self._frozen:
+            return
+        if value < self.minimum or value > self.maximum:
+            return
+        self.set(value)
 
     def freeze(self, value: float) -> None:
         """Freeze the fit parameter to a given value.
@@ -1054,7 +1081,24 @@ class Constant(AbstractFitModel):
             return value
         return np.full(x.shape, value)
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is simply using the weighted average of the y data, using the inverse
+        of the squares of the errors as weights.
+
+        .. note::
+
+           This should provide the exact result in most cases, but, in the spirit of
+           providing a common interface across all models, we are not overloading the
+           fit() method. (Everything will continue working as expected, e.g., when
+           one uses bounds on parameters.)
+        """
+        self.value.init(np.average(ydata, weights=1. / sigma**2.))
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         return self.value.value * (xmax - xmin)
 
 
@@ -1071,7 +1115,33 @@ class Line(AbstractFitModel):
         # pylint: disable=arguments-differ
         return slope * x + intercept
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is simply using a weighted linear regression.
+
+        .. note::
+
+           This should provide the exact result in most cases, but, in the spirit of
+           providing a common interface across all models, we are not overloading the
+           fit() method. (Everything will continue working as expected, e.g., when
+           one uses bounds on parameters.)
+        """
+        # pylint: disable=invalid-name
+        weights = 1. / sigma**2.
+        S0x = weights.sum()
+        S1x = (weights * xdata).sum()
+        S2x = (weights * xdata**2.).sum()
+        S0xy = (weights * ydata).sum()
+        S1xy = (weights * xdata * ydata).sum()
+        D = S0x * S2x - S1x**2.
+        if D != 0.:
+            self.slope.init((S0x * S1xy - S1x * S0xy) / D)
+            self.intercept.init((S2x * S0xy - S1x * S1xy) / D)
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         slope, intercept = self.parameter_values()
         return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
 
@@ -1091,6 +1161,8 @@ class Quadratic(AbstractFitModel):
         return a * x**2 + b * x + c
 
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         a, b, c = self.parameter_values()
         return a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
 
@@ -1108,16 +1180,50 @@ class PowerLaw(AbstractFitModel):
         # pylint: disable=arguments-differ
         return prefactor * x**index
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is using a weighted linear regression in log-log space. Note this is
+        not an exact solution in the original space, for which a numerical optimization
+        using non-linear least squares would be needed.
+        """
+        # pylint: disable=invalid-name
+        X = np.log(xdata)
+        Y = np.log(ydata)
+        # Propagate the errors to log space.
+        weights = ydata**2. / sigma**2.
+        S = weights.sum()
+        X0 = (weights * X).sum() / S
+        Y0 = (weights * Y).sum() / S
+        Sxx = (weights * (X - X0)**2.).sum()
+        Sxy = (weights * (X - X0) * (Y - Y0)).sum()
+        if Sxx != 0.:
+            self.index.init(Sxy / Sxx)
+            self.prefactor.init(np.exp(Y0 - self.index.value * X0))
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         prefactor, index = self.parameter_values()
         if index == -1.:
             return prefactor * np.log(xmax / xmin)
         return prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        We might be smarter here, but for now we just return a fixed range that is
+        not bogus when the index is negative, which should cover the most common
+        use cases.
+        """
         return (0.1, 10.)
 
     def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+        """Overloaded method.
+
+        In addition to the base class implementation, this also sets log scales
+        on both axes.
+        """
         super().plot(xmin, xmax, num_points)
         plt.xscale("log")
         plt.yscale("log")
@@ -1136,11 +1242,38 @@ class Exponential(AbstractFitModel):
         # pylint: disable=arguments-differ
         return prefactor * np.exp(-x / scale)
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is using a weighted linear regression in lin-log space. Note this is
+        not an exact solution in the original space, for which a numerical optimization
+        using non-linear least squares would be needed.
+        """
+        # pylint: disable=invalid-name
+        X = xdata
+        Y = np.log(ydata)
+        # Propagate the errors to log space.
+        weights = ydata**2. / sigma**2.
+        S = weights.sum()
+        X0 = (weights * X).sum() / S
+        Y0 = (weights * Y).sum() / S
+        Sxx = (weights * (X - X0)**2.).sum()
+        Sxy = (weights * (X - X0) * (Y - Y0)).sum()
+        if Sxx != 0.:
+            b = -Sxy / Sxx
+            self.prefactor.init(np.exp(Y0 + b * X0))
+            if not np.isclose(b, 0.):
+                self.scale.init(1. / b)
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         prefactor, scale = self.parameter_values()
         return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
+        """Overloaded method.
+        """
         return (0., scale_factor * self.scale.value)
 
 
@@ -1209,11 +1342,25 @@ class Gaussian(_GaussianBase):
         z = (x - mean) / sigma
         return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        delta = np.diff(xdata)
+        delta = np.append(delta, delta[-1])
+        prefactor = (delta * ydata).sum()
+        mean = np.average(xdata, weights=ydata)
+        variance = np.average((xdata - mean)**2., weights=ydata)
+        self.prefactor.init(prefactor)
+        self.mean.init(mean)
+        self.sigma.init(np.sqrt(variance))
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         prefactor, mean, sigma = self.parameter_values()
         zmin = (xmin - mean) / (sigma * self._SQRT2)
         zmax = (xmax - mean) / (sigma * self._SQRT2)
-        return prefactor * 0.5 * (erf(zmax) - erf(zmin))
+        return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
 
 
 class Erf(_GaussianBase):
@@ -1225,7 +1372,7 @@ class Erf(_GaussianBase):
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
-        return prefactor * 0.5 * (1. + erf(z / _GaussianBase._SQRT2))
+        return prefactor * 0.5 * (1. + scipy.special.erf(z / _GaussianBase._SQRT2))
 
 
 class ErfInverse(_GaussianBase):

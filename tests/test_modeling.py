@@ -105,6 +105,10 @@ def test_plot():
 
 def test_integral():
     """Test the integral method of the models.
+
+    Here we basically run through the models one by one and check that the analytical
+    integrals, where provided, give the same answer as the numerical quadrature
+    defined in the base class---which is an indication that both are sensible.
     """
     # pylint: disable=too-many-statements
     # Constant.
@@ -116,6 +120,7 @@ def test_integral():
     model.value.freeze(1.)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Line.
     slope = 1.
     intercept = 1.
@@ -125,6 +130,7 @@ def test_integral():
     model.intercept.freeze(intercept)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Quadratic.
     a = 1.
     b = 1.
@@ -136,6 +142,7 @@ def test_integral():
     model.c.freeze(c)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # PowerLaw.
     xmin = 1.
     xmax = 10.
@@ -150,6 +157,7 @@ def test_integral():
         model.index.freeze(index)
         assert model.quadrature(xmin, xmax) == pytest.approx(target)
         assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Exponential.
     xmin = 0.
     xmax = 10.
@@ -161,6 +169,7 @@ def test_integral():
     model.scale.freeze(scale)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
     # Gaussian.
     xmin = -5.
     xmax = 5.
@@ -174,6 +183,101 @@ def test_integral():
     model.sigma.freeze(sigma)
     assert model.quadrature(xmin, xmax) == pytest.approx(target)
     assert model.integral(xmin, xmax) == pytest.approx(target)
+
+
+def test_init_parameters():
+    """Test the init_parameters method of the models.
+
+    Here we basically run through the models one by one and check that the estimate
+    of the initial parameters, where available, is consistent with the results of a
+    full least-squares fit.
+    """
+    # pylint: disable=too-many-statements
+    # Constant.
+    value = 0.1
+    error = 0.1
+    xdata = np.linspace(0., 10., 11)
+    ydata = np.full(xdata.shape, value) + _RNG.normal(scale=error, size=xdata.shape)
+    sigma = np.full(xdata.shape, error)
+    model = Constant()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_value = model.value.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.value.compatible_with(initial_value)
+    # In this case the initial value should be identical to the fitted one.
+    assert model.value.value == pytest.approx(initial_value)
+
+    # Line.
+    slope = 5.
+    intercept = 3.
+    error = 0.1
+    xdata = np.linspace(0., 10., 11)
+    ydata = slope * xdata + intercept + _RNG.normal(scale=error, size=xdata.shape)
+    sigma = np.full(xdata.shape, error)
+    model = Line()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_slope = model.slope.value
+    initial_intercept = model.intercept.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.slope.compatible_with(initial_slope)
+    assert model.intercept.compatible_with(initial_intercept)
+    # In this case the initial values should be identical to the fitted ones.
+    assert model.slope.value == pytest.approx(initial_slope)
+    assert model.intercept.value == pytest.approx(initial_intercept)
+
+    # PowerLaw.
+    prefactor = 10.
+    index = -2.
+    xdata = np.linspace(1., 10., 10)
+    ydata = prefactor * xdata**index
+    sigma = 0.05 * ydata
+    ydata += _RNG.normal(scale=sigma)
+    model = PowerLaw()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_prefactor = model.prefactor.value
+    initial_index = model.index.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.prefactor.compatible_with(initial_prefactor)
+    assert model.index.compatible_with(initial_index)
+
+    # Exponential.
+    prefactor = 10.
+    scale = 2.
+    xdata = np.linspace(0., 10., 11)
+    ydata = prefactor * np.exp(-xdata / scale)
+    sigma = 0.05 * ydata
+    ydata += _RNG.normal(scale=sigma)
+    model = Exponential()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_prefactor = model.prefactor.value
+    initial_scale = model.scale.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.prefactor.compatible_with(initial_prefactor)
+    assert model.scale.compatible_with(initial_scale)
+
+    # Gaussian.
+    prefactor = 10.
+    mean = 3.
+    sigma = 2.
+    xdata = np.linspace(-5., 10., 100)
+    model = Gaussian()
+    model.prefactor.set(prefactor)
+    model.mean.set(mean)
+    model.sigma.set(sigma)
+    ydata = model(xdata)
+    sigma = 0.05 * ydata
+    ydata += _RNG.normal(scale=sigma)
+    model = Gaussian()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_prefactor = model.prefactor.value
+    initial_mean = model.mean.value
+    initial_sigma = model.sigma.value
+    model.fit(xdata, ydata, sigma=sigma)
+    # Here we are a bit more lenient, as the initial estimates are not expected to be
+    # very accurate.
+    assert model.prefactor.compatible_with(initial_prefactor, 15.)
+    assert model.mean.compatible_with(initial_mean, 15.)
+    assert model.sigma.compatible_with(initial_sigma, 15.)
 
 
 def test_gaussian_fit():

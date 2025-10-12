@@ -255,6 +255,30 @@ def test_init_parameters():
     assert model.prefactor.compatible_with(initial_prefactor)
     assert model.scale.compatible_with(initial_scale)
 
+    # Gaussian.
+    prefactor = 10.
+    mean = 3.
+    sigma = 2.
+    xdata = np.linspace(-5., 10., 100)
+    model = Gaussian()
+    model.prefactor.set(prefactor)
+    model.mean.set(mean)
+    model.sigma.set(sigma)
+    ydata = model(xdata)
+    sigma = 0.05 * ydata
+    ydata += _RNG.normal(scale=sigma)
+    model = Gaussian()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_prefactor = model.prefactor.value
+    initial_mean = model.mean.value
+    initial_sigma = model.sigma.value
+    model.fit(xdata, ydata, sigma=sigma)
+    # Here we are a bit more lenient, as the initial estimates are not expected to be
+    # very accurate.
+    assert model.prefactor.compatible_with(initial_prefactor, 15.)
+    assert model.mean.compatible_with(initial_mean, 15.)
+    assert model.sigma.compatible_with(initial_sigma, 15.)
+
 
 def test_gaussian_fit():
     """Simple Gaussian fit.

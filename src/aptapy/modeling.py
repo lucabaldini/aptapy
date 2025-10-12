@@ -145,8 +145,29 @@ class FitParameter:
         error : float, optional
             The new error for the parameter (default None).
         """
+        if self._frozen:
+            raise RuntimeError(f"Cannot set value for frozen parameter {self.name}")
+        if value < self.minimum or value > self.maximum:
+            raise ValueError(f"Cannot set value {value} for parameter {self.name}, "
+                             f"out of bounds [{self.minimum}, {self.maximum}]")
         self.value = value
         self.error = error
+
+    def init(self, value: float) -> None:
+        """Initialize the fit parameter to a given value, unless it is frozen, or
+        the value is out of bounds.
+
+        Arguments
+        ---------
+        value : float
+            The new value for the parameter.
+
+        """
+        if self._frozen:
+            return
+        if value < self.minimum or value > self.maximum:
+            return
+        self.set(value)
 
     def freeze(self, value: float) -> None:
         """Freeze the fit parameter to a given value.
@@ -1066,7 +1087,7 @@ class Constant(AbstractFitModel):
            fit() method. (Everything will continue working as expected, e.g., when
            one uses bounds on parameters.)
         """
-        self.value.set(np.average(ydata, weights=1. / sigma**2.))
+        self.value.init(np.average(ydata, weights=1. / sigma**2.))
 
     def integral(self, xmin: float, xmax: float) -> float:
         """Overloaded method with the analytical integral.
@@ -1108,8 +1129,8 @@ class Line(AbstractFitModel):
         S1xy = (weights * xdata * ydata).sum()
         D = S0x * S2x - S1x**2.
         if D != 0.:
-            self.slope.set((S0x * S1xy - S1x * S0xy) / D)
-            self.intercept.set((S2x * S0xy - S1x * S1xy) / D)
+            self.slope.init((S0x * S1xy - S1x * S0xy) / D)
+            self.intercept.init((S2x * S0xy - S1x * S1xy) / D)
 
     def integral(self, xmin: float, xmax: float) -> float:
         """Overloaded method with the analytical integral.
@@ -1170,8 +1191,8 @@ class PowerLaw(AbstractFitModel):
         Sxx = (weights * (X - X0)**2.).sum()
         Sxy = (weights * (X - X0) * (Y - Y0)).sum()
         if Sxx != 0.:
-            self.index.set(Sxy / Sxx)
-            self.prefactor.set(np.exp(Y0 - self.index.value * X0))
+            self.index.init(Sxy / Sxx)
+            self.prefactor.init(np.exp(Y0 - self.index.value * X0))
 
     def integral(self, xmin: float, xmax: float) -> float:
         """Overloaded method with the analytical integral.
@@ -1233,9 +1254,9 @@ class Exponential(AbstractFitModel):
         Sxy = (weights * (X - X0) * (Y - Y0)).sum()
         if Sxx != 0.:
             b = -Sxy / Sxx
-            self.prefactor.set(np.exp(Y0 + b * X0))
+            self.prefactor.init(np.exp(Y0 + b * X0))
             if not np.isclose(b, 0.):
-                self.scale.set(1. / b)
+                self.scale.init(1. / b)
 
     def integral(self, xmin: float, xmax: float) -> float:
         """Overloaded method with the analytical integral.
@@ -1314,7 +1335,21 @@ class Gaussian(_GaussianBase):
         z = (x - mean) / sigma
         return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: float) -> None:
+        """Overloaded method.
+        """
+        delta = np.diff(xdata)
+        delta = np.append(delta, delta[-1])
+        prefactor = (delta * ydata).sum()
+        mean = np.average(xdata, weights=ydata)
+        variance = np.average((xdata - mean)**2., weights=ydata)
+        self.prefactor.init(prefactor)
+        self.mean.init(mean)
+        self.sigma.init(np.sqrt(variance))
+
     def integral(self, xmin: float, xmax: float) -> float:
+        """Overloaded method with the analytical integral.
+        """
         prefactor, mean, sigma = self.parameter_values()
         zmin = (xmin - mean) / (sigma * self._SQRT2)
         zmax = (xmax - mean) / (sigma * self._SQRT2)

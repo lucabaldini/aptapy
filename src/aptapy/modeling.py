@@ -157,6 +157,13 @@ class FitParameter:
         """Initialize the fit parameter to a given value, unless it is frozen, or
         the value is out of bounds.
 
+        .. warning::
+
+           Note this silently does nothing if the parameter is frozen, or if the value
+           is out of bounds, so its behavior is inconsistent with that of set(), which
+           raises an exception in both cases. This is intentional, and this method should
+           only be used to initialize the parameter prior to a fit.
+
         Arguments
         ---------
         value : float

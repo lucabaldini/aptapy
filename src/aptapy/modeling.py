@@ -1335,7 +1335,7 @@ class Gaussian(_GaussianBase):
         z = (x - mean) / sigma
         return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: float) -> None:
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
         delta = np.diff(xdata)

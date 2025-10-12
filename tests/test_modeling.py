@@ -108,7 +108,7 @@ def test_integral():
 
     Here we basically run through the models one by one and check that the analytical
     integrals, where provided, give the same answer as the numerical quadrature
-    defined in the base class---which is an indications that both are sensible.
+    defined in the base class---which is an indication that both are sensible.
     """
     # pylint: disable=too-many-statements
     # Constant.

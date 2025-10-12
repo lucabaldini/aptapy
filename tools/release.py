@@ -117,6 +117,8 @@ def release(mode: BumpMode, target_branch: str = "main") -> None:
     current_branch = _cmd("git", "branch", "--show-current").stdout.strip("\n")
     if current_branch != target_branch:
         raise RuntimeError(f"You are on the {current_branch} branch, not {target_branch}")
+    # Pull the latest changes.
+    _cmd("git", "pull")
     # Bump the version.
     version = bump_version(read_version_file(), mode)
     # Update the necessary files.

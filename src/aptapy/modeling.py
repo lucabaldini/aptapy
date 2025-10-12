@@ -47,7 +47,6 @@ __all__ = [
     "ErfInverse",
 ]
 
-# pylint: disable=too-many-lines
 
 class Format(str, enum.Enum):
 

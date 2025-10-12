@@ -27,10 +27,10 @@ from typing import Callable, Dict, Iterator, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.special
 import uncertainties
 from scipy.integrate import quad
 from scipy.optimize import curve_fit
-from scipy.special import erf
 from scipy.stats import chi2
 
 from .hist import Histogram1d
@@ -1086,6 +1086,7 @@ class Line(AbstractFitModel):
 
         This is simply using a weighted linear regression.
         """
+        # pylint: disable=invalid-name
         weights = 1. / sigma**2.
         S0x = weights.sum()
         S1x = (weights * xdata).sum()
@@ -1145,6 +1146,7 @@ class PowerLaw(AbstractFitModel):
         not an exact solution in the original space, for which a numerical optimization
         using non-linear least squares would be needed.
         """
+        # pylint: disable=invalid-name
         X = np.log(xdata)
         Y = np.log(ydata)
         # Propagate the errors to log space.
@@ -1266,7 +1268,7 @@ class Gaussian(_GaussianBase):
         prefactor, mean, sigma = self.parameter_values()
         zmin = (xmin - mean) / (sigma * self._SQRT2)
         zmax = (xmax - mean) / (sigma * self._SQRT2)
-        return prefactor * 0.5 * (erf(zmax) - erf(zmin))
+        return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
 
 
 class Erf(_GaussianBase):
@@ -1278,7 +1280,7 @@ class Erf(_GaussianBase):
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
-        return prefactor * 0.5 * (1. + erf(z / _GaussianBase._SQRT2))
+        return prefactor * 0.5 * (1. + scipy.special.erf(z / _GaussianBase._SQRT2))
 
 
 class ErfInverse(_GaussianBase):

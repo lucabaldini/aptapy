@@ -105,6 +105,10 @@ def test_plot():
 
 def test_integral():
     """Test the integral method of the models.
+
+    Here we basically run through the models one by one and check that the analytical
+    integrals, where provided, give the same answer as the numerical quadrature
+    defined in the base class---which is an indications that both are sensible.
     """
     # pylint: disable=too-many-statements
     # Constant.
@@ -183,7 +187,12 @@ def test_integral():
 
 def test_init_parameters():
     """Test the init_parameters method of the models.
+
+    Here we basically run through the models one by one and check that the estimate
+    of the initial parameters, where available, is consistent with the results of a
+    full least-squares fit.
     """
+    # pylint: disable=too-many-statements
     # Constant.
     value = 0.1
     error = 0.1
@@ -230,6 +239,21 @@ def test_init_parameters():
     model.fit(xdata, ydata, sigma=sigma)
     assert model.prefactor.compatible_with(initial_prefactor)
     assert model.index.compatible_with(initial_index)
+
+    # Exponential.
+    prefactor = 10.
+    scale = 2.
+    xdata = np.linspace(0., 10., 11)
+    ydata = prefactor * np.exp(-xdata / scale)
+    sigma = 0.05 * ydata
+    ydata += _RNG.normal(scale=sigma)
+    model = Exponential()
+    model.init_parameters(xdata, ydata, sigma)
+    initial_prefactor = model.prefactor.value
+    initial_scale = model.scale.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.prefactor.compatible_with(initial_prefactor)
+    assert model.scale.compatible_with(initial_scale)
 
 
 def test_gaussian_fit():

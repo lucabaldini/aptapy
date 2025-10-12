@@ -3,6 +3,19 @@
 Release notes
 =============
 
+* Added init_parameters method to most model classes.
+* Updated import structure to use scipy.special module directly instead of importing erf.
+* Added comprehensive test coverage for the new parameter initialization functionality.
+
+* Pull requests merged:
+
+  - https://github.com/lucabaldini/aptapy/pull/10
+
+* Closed issues:
+
+  - https://github.com/lucabaldini/aptapy/issues/9
+
+
 Version 0.4.0 (2025-10-11)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

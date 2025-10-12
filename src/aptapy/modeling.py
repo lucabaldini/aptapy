@@ -1233,8 +1233,9 @@ class Exponential(AbstractFitModel):
         Sxy = (weights * (X - X0) * (Y - Y0)).sum()
         if Sxx != 0.:
             b = -Sxy / Sxx
-            self.scale.set(1. / b)
             self.prefactor.set(np.exp(Y0 + b * X0))
+            if not np.isclose(b, 0.):
+                self.scale.set(1. / b)
 
     def integral(self, xmin: float, xmax: float) -> float:
         """Overloaded method with the analytical integral.

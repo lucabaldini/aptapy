@@ -31,6 +31,7 @@ Have fun!
    :maxdepth: 1
    :caption: API:
 
+   plotting
    hist
    modeling
    strip

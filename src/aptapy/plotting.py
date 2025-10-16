@@ -189,11 +189,11 @@ class VerticalCursor:
         """
         if not event.inaxes:
             if self.set_visible(False):
-                self._axes.figure.canvas.draw()
+                self._axes.figure.canvas.draw_idle()
         else:
             self.move(event.xdata)
             self.set_visible(True)
-            self._axes.figure.canvas.draw()
+            self._axes.figure.canvas.draw_idle()
 
 
 def setup_axes(axes, **kwargs):

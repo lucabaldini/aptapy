@@ -79,7 +79,7 @@ def test_strip_cursor():
 
 
 if __name__ == '__main__':
-    # Note we have to keep a reference to the cursor not to loose it.
+    # Note we have to keep a reference to the cursor not to lose it.
     cursor1 = test_cursor()
     cursor2 = test_strip_cursor()
     plt.show()

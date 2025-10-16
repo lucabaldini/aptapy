@@ -163,6 +163,7 @@ class VerticalCursor:
         self._initial_limits = None
         self._zoom_rectangle = patches.Rectangle((0,0), 0, 0, **kwargs)
         self._axes.add_patch(self._zoom_rectangle)
+        self.set_visible(False)
 
     @property
     def canvas(self) -> FigureCanvasBase:

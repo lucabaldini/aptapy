@@ -16,12 +16,15 @@
 """Plotting facilities.
 """
 
-from typing import Any, Callable
+from enum import IntEnum
+from typing import Any, Callable, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt  # noqa: F401 pylint: disable=unused-import
 from cycler import cycler
 from loguru import logger
+from matplotlib import patches
+from matplotlib.backend_bases import FigureCanvasBase
 
 DEFAULT_FIGURE_WIDTH = 8.
 DEFAULT_FIGURE_HEIGHT = 6.
@@ -101,9 +104,25 @@ class ConstrainedTextMarker:
         self._text.set_text(f"  y = {y:g}")
 
 
+class MouseButton(IntEnum):
+
+    """Small enum class representing the mouse buttons.
+
+    Interestingly enough, matplotlib does not seem to ship these constants, so
+    we have to start all over.
+    """
+
+    LEFT = 1
+    MIDDLE = 2
+    RIGHT = 3
+    SCROLL_UP = 4
+    SCROLL_DOWN = 5
+
+
 class VerticalCursor:
 
-    """Small class representing a vertical cursor.
+    """Class representing a zoomable vertical cursor attached to a matplotlib
+    Axes object.
 
     Arguments
     ---------
@@ -129,10 +148,35 @@ class VerticalCursor:
         text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="center", va="bottom",
                            transform=self._axes.get_xaxis_transform())
         self._text = self._axes.text(None, None, "", **text_kwargs)
+        # Empty placeholders for all the other elements.
         self._markers = []
+        self._last_press_position = None
+        self._initial_limits = None
+        self._zoom_rectangle = patches.Rectangle((0,0), 0, 0, **kwargs)
+        self._axes.add_patch(self._zoom_rectangle)
+
+    @property
+    def canvas(self) -> FigureCanvasBase:
+        """Return the underlying matplotlib canvas.
+        """
+        return self._axes.figure.canvas
+
+    def redraw_canvas(self) -> None:
+        """Trigger a re-draw of the underlying canvas.
+
+        This is factored into separate function, as which function, e.g.,
+        draw() or draw_idle(), has important performance implications, and
+        this approach allow for a transparent, class-wide switch between one
+        hook and the other.
+        """
+        self.canvas.draw_idle()
 
     def add_marker(self, trajectory: Callable[[float], float], **kwargs) -> None:
-        """Add a data set to the cursor.
+        """Add a new marker to the cursor.
+
+        Note the default color is taken from the last Line2D object that has
+        been drawn on the canvas, which makes convenient, e.g., to add a marker
+        right after you have plotted a strip chart.
 
         Arguments
         ---------
@@ -179,7 +223,80 @@ class VerticalCursor:
         for marker in self._markers:
             marker.move(x)
 
-    def on_mouse_move(self, event: matplotlib.backend_bases.MouseEvent) -> None:
+    def _rectangle_coords(self, event: matplotlib.backend_bases.MouseEvent) -> Tuple:
+        """Return the (x0, y0, x1, y1) coordinates of the rectangle defined
+        by the ``_last_press_position`` and the current event position.
+
+        The tuple is guaranteed to be in the right order, i.e., x1 >= x0 and
+        y1 >= y0, which simplifies the operations downstream.
+
+        Arguments
+        ---------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event we want to respond to.
+        """
+        x0, y0 = self._last_press_position
+        x1, y1 = event.xdata, event.ydata
+        # Make sure the numbers are in the right order.
+        if x1 < x0:
+            x0, x1 = x1, x0
+        if y1 < y0:
+            y0, y1 = y1, y0
+        return x0, y0, x1, y1
+
+    def on_button_press(self, event: matplotlib.backend_bases.MouseEvent) -> None:
+        """Function processing the mouse button press events.
+
+        Arguments
+        ---------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event we want to respond to.
+        """
+        # If we press the left mouse button we want to cache the initial
+        # position of the mouse event, and make the zoom rectangle visible,
+        # anchoring it to the position itself.
+        # Note we really have to zero the dimensions of ``zoom_rectangle``
+        # as we don't now how the last zoom operation left it.
+        if event.button == MouseButton.LEFT:
+            self._last_press_position = event.xdata, event.ydata
+            self._zoom_rectangle.set_visible(True)
+            self._zoom_rectangle.set_xy(self._last_press_position)
+            self._zoom_rectangle.set_width(0)
+            self._zoom_rectangle.set_height(0)
+        # If we presse the right mouse button, we want to restore the initial
+        # axes limits.
+        elif event.button == MouseButton.RIGHT:
+            xlim, ylim = self._initial_limits
+            self._axes.set_xlim(xlim)
+            self._axes.set_ylim(ylim)
+            self.redraw_canvas()
+
+    def on_button_release(self, event: matplotlib.backend_bases.MouseEvent) -> None:
+        """Function processing the mouse button release events.
+
+        Arguments
+        ---------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event we want to respond to.
+        """
+        if event.button == MouseButton.LEFT:
+            x0, y0, x1, y1 = self._rectangle_coords(event)
+            # Set the last press position to None, as this is important for
+            # ``motion_notify`` events to determine whether we are trying to
+            # zoom or not. Note it is important to do this immediately, as
+            # if we are just clicking withough moveing the mouse we would be
+            # implicitely defining a null rectangle that we cannot zoom upon,
+            # and in this case the function returns at the next line.
+            self._last_press_position = None
+            # If the rectangle is null, return.
+            if (x0, y0) == (x1, y1):
+                return
+            self._axes.set_xlim(x0, x1)
+            self._axes.set_ylim(y0, y1)
+            self._zoom_rectangle.set_visible(False)
+            self.redraw_canvas()
+
+    def on_motion_notify(self, event: matplotlib.backend_bases.MouseEvent) -> None:
         """Function processing the mouse events.
 
         Arguments
@@ -189,11 +306,34 @@ class VerticalCursor:
         """
         if not event.inaxes:
             if self.set_visible(False):
-                self._axes.figure.canvas.draw_idle()
+                self.redraw_canvas()
         else:
             self.move(event.xdata)
             self.set_visible(True)
-            self._axes.figure.canvas.draw_idle()
+            if self._last_press_position is not None:
+                x0, y0, x1, y1 = self._rectangle_coords(event)
+                self._zoom_rectangle.set_xy((x0, y0))
+                self._zoom_rectangle.set_width(x1 - x0)
+                self._zoom_rectangle.set_height(y1 - y0)
+            self.redraw_canvas()
+
+    def activate(self) -> None:
+        """Enable the cursor by connecting the mouse motion event to the
+        on_mouse_move() method.
+        """
+        # Cache the canvas limits in order to be able to restore the home
+        # configuration after a zoom.
+        self._initial_limits = (self._axes.get_xlim(), self._axes.get_ylim())
+        self.canvas.mpl_connect("button_press_event", self.on_button_press)
+        self.canvas.mpl_connect("button_release_event", self.on_button_release)
+        self.canvas.mpl_connect("motion_notify_event", self.on_motion_notify)
+
+    def deactivate(self) -> None:
+        """Disable the cursor by disconnecting the mouse motion event.
+        """
+        self.canvas.mpl_disconnect(self.on_button_press)
+        self.canvas.mpl_disconnect(self.on_button_release)
+        self.canvas.mpl_disconnect(self.on_motion_notify)
 
 
 def setup_axes(axes, **kwargs):

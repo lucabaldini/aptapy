@@ -26,6 +26,7 @@ from aptapy.plotting import ConstrainedTextMarker, VerticalCursor, plt, setup_gc
 def test_marker():
     """Test the ConstrainedTextMarker.
     """
+    # pylint: disable=protected-access
     plt.figure(inspect.currentframe().f_code.co_name)
     marker = ConstrainedTextMarker(np.sin)
     x, y = marker._marker.get_data()
@@ -55,7 +56,7 @@ def test_cursor():
     plt.plot(x, y2)
     cursor.add_marker(np.cos)
     setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25, grids=True)
-    plt.gcf().canvas.mpl_connect('motion_notify_event', cursor.on_mouse_move)
+    cursor.activate()
     return cursor
 
 

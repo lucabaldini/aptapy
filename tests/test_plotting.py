@@ -21,6 +21,7 @@ import inspect
 import numpy as np
 
 from aptapy.plotting import ConstrainedTextMarker, VerticalCursor, plt, setup_gca
+from aptapy.strip import StripChart
 
 
 def test_marker():
@@ -60,7 +61,25 @@ def test_cursor():
     return cursor
 
 
+def test_strip_cursor():
+    """Test a vertical cursor with a strip chart.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    x = np.linspace(0., 2. * np.pi, 100)
+    chart1 = StripChart().extend(x, np.sin(x))
+    chart2 = StripChart().extend(x, np.cos(x))
+    cursor = VerticalCursor()
+    chart1.plot()
+    cursor.add_marker(chart1.spline())
+    chart2.plot()
+    cursor.add_marker(chart2.spline())
+    setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25)
+    cursor.activate()
+    return cursor
+
+
 if __name__ == '__main__':
     # Note we have to keep a reference to the cursor not to loose it.
-    _cursor = test_cursor()
+    cursor1 = test_cursor()
+    cursor2 = test_strip_cursor()
     plt.show()

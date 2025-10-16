@@ -55,7 +55,7 @@ def test_cursor():
     cursor.add_marker(np.sin)
     plt.plot(x, y2)
     cursor.add_marker(np.cos)
-    setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25, grids=True)
+    setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25)
     cursor.activate()
     return cursor
 

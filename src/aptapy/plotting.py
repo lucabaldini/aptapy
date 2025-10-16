@@ -295,7 +295,7 @@ class VerticalCursor:
             # ``motion_notify`` events to determine whether we are trying to
             # zoom or not. Note it is important to do this immediately, as
             # if we are just clicking withough moveing the mouse we would be
-            # implicitely defining a null rectangle that we cannot zoom upon,
+            # implicitly defining a null rectangle that we cannot zoom upon,
             # and in this case the function returns at the next line.
             self._last_press_position = None
             # If the rectangle is null, return.

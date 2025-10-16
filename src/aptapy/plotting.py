@@ -165,6 +165,20 @@ class VerticalCursor:
             marker.set_visible(visible)
         return need_redraw
 
+    def move(self, x: float) -> None:
+        """Move the cursor to a given x position.
+
+        Arguments
+        ---------
+        x : float
+            The x position to move the cursor to.
+        """
+        self._line.set_xdata([x])
+        self._text.set_position((x, 1.01))
+        self._text.set_text(f"x = {x:g}")
+        for marker in self._markers:
+            marker.move(x)
+
     def on_mouse_move(self, event: matplotlib.backend_bases.MouseEvent) -> None:
         """Function processing the mouse events.
 
@@ -174,18 +188,12 @@ class VerticalCursor:
             The mouse event we want to respond to.
         """
         if not event.inaxes:
-            need_redraw = self.set_visible(False)
-            if need_redraw:
+            if self.set_visible(False):
                 self._axes.figure.canvas.draw()
         else:
-            x = event.xdata
-            self._line.set_xdata([x])
-            self._text.set_position((x, 1.01))
-            self._text.set_text(f"x = {x:g}")
-            self._axes.figure.canvas.draw()
-            for marker in self._markers:
-                marker.move(x)
+            self.move(event.xdata)
             self.set_visible(True)
+            self._axes.figure.canvas.draw()
 
 
 def setup_axes(axes, **kwargs):

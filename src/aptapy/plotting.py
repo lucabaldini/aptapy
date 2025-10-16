@@ -273,7 +273,7 @@ class VerticalCursor:
             self._zoom_rectangle.set_xy(self._last_press_position)
             self._zoom_rectangle.set_width(0)
             self._zoom_rectangle.set_height(0)
-        # If we presse the right mouse button, we want to restore the initial
+        # If we press the right mouse button, we want to restore the initial
         # axes limits.
         elif event.button == MouseButton.RIGHT:
             xlim, ylim = self._initial_limits

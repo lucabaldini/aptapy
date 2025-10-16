@@ -20,7 +20,7 @@ import inspect
 
 import numpy as np
 
-from aptapy.plotting import plt, ConstrainedTextMarker, VerticalCursor, setup_gca
+from aptapy.plotting import VerticalCursor, plt, setup_gca
 
 
 def test_cursor():
@@ -42,5 +42,5 @@ def test_cursor():
 
 if __name__ == '__main__':
     # Note we have to keep a reference to the cursor not to loose it.
-    cursor = test_cursor()
+    _cursor = test_cursor()
     plt.show()

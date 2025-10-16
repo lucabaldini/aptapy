@@ -16,14 +16,12 @@
 """Plotting facilities.
 """
 
-from typing import Any
+from typing import Any, Callable
 
 import matplotlib
 import matplotlib.pyplot as plt  # noqa: F401 pylint: disable=unused-import
-import numpy as np
 from cycler import cycler
 from loguru import logger
-from scipy.interpolate import InterpolatedUnivariateSpline
 
 DEFAULT_FIGURE_WIDTH = 8.
 DEFAULT_FIGURE_HEIGHT = 6.
@@ -45,11 +43,10 @@ class ConstrainedTextMarker:
 
     Arguments
     ---------
-    x : np.array
-        The x coordinates of the trajectory.
-
-    y : np.array
-        The y coordinates of the trajectory.
+    trajectory : Callable[[float], float]
+        A callable representing the trajectory of the marker. It must accept a
+        single float argument (the x coordinate) and return a single float value
+        (the y coordinate).
 
     axes : matplotlib.axes.Axes, optional
         The axes to draw the marker and associated text on. If None, the current
@@ -59,24 +56,23 @@ class ConstrainedTextMarker:
         Additional keyword arguments passed to the Line2D constructor.
     """
 
-    TEXT_SIZE = 'x-small'
+    TEXT_SIZE = "x-small"
 
-    def __init__(self, x: np.array, y: np.array, axes: matplotlib.axes.Axes = None,
-                 spline_order: int = 2, **kwargs) -> None:
+    def __init__(self, trajectory: Callable[[float], float], axes: matplotlib.axes.Axes = None,
+                 **kwargs) -> None:
         """Constructor.
         """
         if axes is None:
             axes = plt.gca()
-        # Setup the marker trajectory...
-        self._trajectory = InterpolatedUnivariateSpline(x, y, k=spline_order)
-        # ... the marker...
-        kwargs.setdefault('marker', 'o')
-        kwargs.setdefault('color', 'black')
-        self._marker = matplotlib.lines.Line2D([], [], **kwargs)
+        self._trajectory = trajectory
+        # Setup the marker...
+        kwargs.setdefault("marker", "o")
+        kwargs.setdefault("color", "black")
+        self._marker = matplotlib.lines.Line2D([None], [None], **kwargs)
         axes.add_line(self._marker)
         # ...and the text label.
-        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs['color'], ha='left', va='center')
-        self._text = axes.text(None, None, '', **text_kwargs)
+        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="left", va="center")
+        self._text = axes.text(None, None, "", **text_kwargs)
         self.set_visible(False)
 
     def set_visible(self, visible: bool = True) -> None:
@@ -102,7 +98,7 @@ class ConstrainedTextMarker:
         y = self._trajectory(x)
         self._marker.set_data([x], [y])
         self._text.set_position((x, y))
-        self._text.set_text(f'  y = {y:g}')
+        self._text.set_text(f"  y = {y:g}")
 
 
 class VerticalCursor:
@@ -125,32 +121,29 @@ class VerticalCursor:
         """
         self._axes = axes or plt.gca()
         # Setup the vertical line...
-        kwargs.setdefault('color', 'black')
-        kwargs.setdefault('lw', 0.8)
-        kwargs.setdefault('ls', '--')
+        kwargs.setdefault("color", "black")
+        kwargs.setdefault("lw", 0.8)
+        kwargs.setdefault("ls", "--")
         self._line = self._axes.axvline(**kwargs)
         # ... and the text label.
-        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs['color'], ha='center', va='bottom',
+        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="center", va="bottom",
                            transform=self._axes.get_xaxis_transform())
-        self._text = self._axes.text(None, None, '', **text_kwargs)
+        self._text = self._axes.text(None, None, "", **text_kwargs)
         self._markers = []
 
-    def add_data_set(self, x: np.array, y: np.array, **kwargs) -> None:
+    def add_marker(self, trajectory: Callable[[float], float], **kwargs) -> None:
         """Add a data set to the cursor.
 
         Arguments
         ---------
-        x : np.array
-            The x coordinates of the data points.
-
-        y : np.array
-            The y coordinates of the data points.
+        trajectory : Callable[[float], float]
+            A callable representing the trajectory of the data set.
 
         **kwargs : keyword arguments
             Additional keyword arguments passed to the ConstrainedTextMarker constructor.
         """
-        kwargs.setdefault('color', last_line_color())
-        self._markers.append(ConstrainedTextMarker(x, y, self._axes, **kwargs))
+        kwargs.setdefault("color", last_line_color())
+        self._markers.append(ConstrainedTextMarker(trajectory, self._axes, **kwargs))
 
     def set_visible(self, visible: bool) -> bool:
         """Set the visibility of the cursor elements.
@@ -185,44 +178,44 @@ class VerticalCursor:
             if need_redraw:
                 self._axes.figure.canvas.draw()
         else:
-            self.set_visible(True)
             x = event.xdata
             self._line.set_xdata([x])
             self._text.set_position((x, 1.01))
-            self._text.set_text(f'x = {x:g}')
+            self._text.set_text(f"x = {x:g}")
             self._axes.figure.canvas.draw()
             for marker in self._markers:
                 marker.move(x)
+            self.set_visible(True)
 
 
 def setup_axes(axes, **kwargs):
     """Setup a generic axes object.
     """
-    if kwargs.get('logx'):
-        axes.set_xscale('log')
-    if kwargs.get('logy'):
-        axes.set_yscale('log')
-    xticks = kwargs.get('xticks')
+    if kwargs.get("logx"):
+        axes.set_xscale("log")
+    if kwargs.get("logy"):
+        axes.set_yscale("log")
+    xticks = kwargs.get("xticks")
     if xticks is not None:
         axes.set_xticks(xticks)
-    yticks = kwargs.get('yticks')
+    yticks = kwargs.get("yticks")
     if yticks is not None:
         axes.set_yticks(yticks)
-    xlabel = kwargs.get('xlabel')
+    xlabel = kwargs.get("xlabel")
     if xlabel is not None:
         axes.set_xlabel(xlabel)
-    ylabel = kwargs.get('ylabel')
+    ylabel = kwargs.get("ylabel")
     if ylabel is not None:
         axes.set_ylabel(ylabel)
-    xmin, xmax, ymin, ymax = [kwargs.get(key) for key in ('xmin', 'xmax', 'ymin', 'ymax')]
+    xmin, xmax, ymin, ymax = [kwargs.get(key) for key in ("xmin", "xmax", "ymin", "ymax")]
     # Set axis limits individually to avoid passing None to axes.axis()
     if xmin is not None or xmax is not None:
         axes.set_xlim(left=xmin, right=xmax)
     if ymin is not None or ymax is not None:
         axes.set_ylim(bottom=ymin, top=ymax)
-    if kwargs.get('grids'):
-        axes.grid(which='both')
-    if kwargs.get('legend'):
+    if kwargs.get("grids"):
+        axes.grid(True, which="both")
+    if kwargs.get("legend"):
         axes.legend()
 
 
@@ -232,7 +225,7 @@ def setup_gca(**kwargs):
     setup_axes(plt.gca(), **kwargs)
 
 
-def last_line_color(default: str = 'black') -> str:
+def last_line_color(default: str = "black") -> str:
     """Return the color used to draw the last line
     """
     try:

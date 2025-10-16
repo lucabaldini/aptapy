@@ -20,7 +20,26 @@ import inspect
 
 import numpy as np
 
-from aptapy.plotting import VerticalCursor, plt, setup_gca
+from aptapy.plotting import ConstrainedTextMarker, VerticalCursor, plt, setup_gca
+
+
+def test_marker():
+    """Test the ConstrainedTextMarker.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    marker = ConstrainedTextMarker(np.sin)
+    x, y = marker._marker.get_data()
+    # Make sure the marker position is None, and the marker is not visible.
+    assert x[0] is None
+    assert y[0] is None
+    assert not marker._marker.get_visible()
+    assert not marker._text.get_visible()
+    # Move the marker, and make sure it is in the right place.
+    pos = 2.
+    marker.move(pos)
+    x, y = marker._marker.get_data()
+    assert x[0] == pos
+    assert y[0] == np.sin(pos)
 
 
 def test_cursor():
@@ -32,9 +51,9 @@ def test_cursor():
     y2 = np.cos(x)
     cursor = VerticalCursor()
     plt.plot(x, y1)
-    cursor.add_data_set(x, y1)
+    cursor.add_marker(np.sin)
     plt.plot(x, y2)
-    cursor.add_data_set(x, y2)
+    cursor.add_marker(np.cos)
     setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25, grids=True)
     plt.gcf().canvas.mpl_connect('motion_notify_event', cursor.on_mouse_move)
     return cursor

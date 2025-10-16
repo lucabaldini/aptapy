@@ -20,8 +20,10 @@ from typing import Any
 
 import matplotlib
 import matplotlib.pyplot as plt  # noqa: F401 pylint: disable=unused-import
+import numpy as np
 from cycler import cycler
 from loguru import logger
+from scipy.interpolate import InterpolatedUnivariateSpline
 
 DEFAULT_FIGURE_WIDTH = 8.
 DEFAULT_FIGURE_HEIGHT = 6.
@@ -30,6 +32,167 @@ DEFAULT_COLOR_CYCLE = [
     "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b",
     "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
 ]
+
+
+class ConstrainedTextMarker:
+
+    """Small class describing a marker constrained to move along a given path.
+
+    This is essentially the datum of a matplotlib marker and a text label that
+    is bound to move on a given trajectory (given as a series of discrete x-y
+    coordinates), with the label representing the y value of the curve at a
+    given position.
+
+    Arguments
+    ---------
+    x : np.array
+        The x coordinates of the trajectory.
+
+    y : np.array
+        The y coordinates of the trajectory.
+
+    axes : matplotlib.axes.Axes, optional
+        The axes to draw the marker and associated text on. If None, the current
+        axes are used.
+
+    **kwargs : keyword arguments
+        Additional keyword arguments passed to the Line2D constructor.
+    """
+
+    TEXT_SIZE = 'x-small'
+
+    def __init__(self, x: np.array, y: np.array, axes: matplotlib.axes.Axes = None,
+                 spline_order: int = 2, **kwargs) -> None:
+        """Constructor.
+        """
+        if axes is None:
+            axes = plt.gca()
+        # Setup the marker trajectory...
+        self._trajectory = InterpolatedUnivariateSpline(x, y, k=spline_order)
+        # ... the marker...
+        kwargs.setdefault('marker', 'o')
+        kwargs.setdefault('color', 'black')
+        self._marker = matplotlib.lines.Line2D([], [], **kwargs)
+        axes.add_line(self._marker)
+        # ...and the text label.
+        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs['color'], ha='left', va='center')
+        self._text = axes.text(None, None, '', **text_kwargs)
+        self.set_visible(False)
+
+    def set_visible(self, visible: bool = True) -> None:
+        """Set the visibility of the marker and associated text label.
+
+        Arguments
+        ---------
+        visible : bool
+            Flag indicating whether the marker and text label should be visible or not.
+        """
+        self._marker.set_visible(visible)
+        self._text.set_visible(visible)
+
+    def move(self, x: float) -> None:
+        """Move the marker to a given x position, with the corresponding y position
+        being calculated from the underlying spline.
+
+        Arguments
+        ---------
+        x : float
+            The x position to move the marker to.
+        """
+        y = self._trajectory(x)
+        self._marker.set_data([x], [y])
+        self._text.set_position((x, y))
+        self._text.set_text(f'  y = {y:g}')
+
+
+class VerticalCursor:
+
+    """Small class representing a vertical cursor.
+
+    Arguments
+    ---------
+    axes : matplotlib.axes.Axes, optional
+        The axes to draw the cursor on. If None, the current axes are used.
+
+    **kwargs : keyword arguments
+        Additional keyword arguments passed to axvline().
+    """
+
+    TEXT_SIZE = ConstrainedTextMarker.TEXT_SIZE
+
+    def __init__(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+        """Constructor.
+        """
+        self._axes = axes or plt.gca()
+        # Setup the vertical line...
+        kwargs.setdefault('color', 'black')
+        kwargs.setdefault('lw', 0.8)
+        kwargs.setdefault('ls', '--')
+        self._line = self._axes.axvline(**kwargs)
+        # ... and the text label.
+        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs['color'], ha='center', va='bottom',
+                           transform=self._axes.get_xaxis_transform())
+        self._text = self._axes.text(None, None, '', **text_kwargs)
+        self._markers = []
+
+    def add_data_set(self, x: np.array, y: np.array, **kwargs) -> None:
+        """Add a data set to the cursor.
+
+        Arguments
+        ---------
+        x : np.array
+            The x coordinates of the data points.
+
+        y : np.array
+            The y coordinates of the data points.
+
+        **kwargs : keyword arguments
+            Additional keyword arguments passed to the ConstrainedTextMarker constructor.
+        """
+        kwargs.setdefault('color', last_line_color())
+        self._markers.append(ConstrainedTextMarker(x, y, self._axes, **kwargs))
+
+    def set_visible(self, visible: bool) -> bool:
+        """Set the visibility of the cursor elements.
+
+        Arguments
+        ---------
+        visible : bool
+            Flag indicating whether the cursor elements should be visible or not.
+
+        Returns
+        -------
+        bool
+            True if a redraw is needed, False otherwise.
+        """
+        need_redraw = self._line.get_visible() != visible
+        self._line.set_visible(visible)
+        self._text.set_visible(visible)
+        for marker in self._markers:
+            marker.set_visible(visible)
+        return need_redraw
+
+    def on_mouse_move(self, event: matplotlib.backend_bases.MouseEvent) -> None:
+        """Function processing the mouse events.
+
+        Arguments
+        ---------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event we want to respond to.
+        """
+        if not event.inaxes:
+            need_redraw = self.set_visible(False)
+            if need_redraw:
+                self._axes.figure.canvas.draw()
+        else:
+            self.set_visible(True)
+            x = event.xdata
+            self._line.set_xdata([x])
+            self._text.set_position((x, 1.01))
+            self._text.set_text(f'x = {x:g}')
+            self._axes.figure.canvas.draw()
+            for marker in self._markers:
+                marker.move(x)
 
 
 def setup_axes(axes, **kwargs):
@@ -67,6 +230,15 @@ def setup_gca(**kwargs):
     """Setup the axes for the current plot.
     """
     setup_axes(plt.gca(), **kwargs)
+
+
+def last_line_color(default: str = 'black') -> str:
+    """Return the color used to draw the last line
+    """
+    try:
+        return plt.gca().get_lines()[-1].get_color()
+    except IndexError:
+        return default
 
 
 def _set(key: str, value: Any):

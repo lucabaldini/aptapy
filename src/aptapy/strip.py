@@ -17,9 +17,11 @@
 """
 
 import collections
+from numbers import Number
 from typing import Sequence
 
 import numpy as np
+from scipy.interpolate import InterpolatedUnivariateSpline
 
 from .plotting import plt, setup_axes
 
@@ -50,7 +52,7 @@ class StripChart:
         datetime objects for plotting purposes (default is False).
     """
 
-    def __init__(self, max_length: int = None, label: str = '', xlabel: str = None,
+    def __init__(self, max_length: int = None, label: str = "", xlabel: str = None,
                  ylabel: str = None, datetime: bool = False) -> None:
         """Constructor.
         """
@@ -67,19 +69,75 @@ class StripChart:
         self.x.clear()
         self.y.clear()
 
-    def append(self, x: float, y: float) -> None:
-        """Append a data point to the strip chart.
+    def append(self, x: float, y: float) -> "StripChart":
+        """Append a single data point to the strip chart.
+
+        Note this returns the strip chart itself in order to allow for
+        chaining operations.
+
+        Arguments
+        ---------
+        x : float
+            The x value to append to the strip chart.
+
+        y : float
+            The y value to append to the strip chart.
+
+        Returns
+        -------
+        StripChart
+            The strip chart itself
         """
+        if not isinstance(x, Number):
+            raise TypeError("x must be a number")
+        if not isinstance(y, Number):
+            raise TypeError("y must be a number")
         self.x.append(x)
         self.y.append(y)
+        return self
 
-    def extend(self, x: Sequence[float], y: Sequence[float]) -> None:
+    def extend(self, x: Sequence[float], y: Sequence[float]) -> "StripChart":
         """Append multiple data points to the strip chart.
+
+        Note this returns the strip chart itself in order to allow for
+        chaining operations.
+
+        Arguments
+        ---------
+        x : sequence[float]
+            The x values to append to the strip chart.
+
+        y : sequence[float]
+            The y values to append to the strip chart.
+
+        Returns
+        -------
+        StripChart
+            The strip chart itself
         """
         if len(x) != len(y):
             raise ValueError("x and y must have the same length")
         self.x.extend(x)
         self.y.extend(y)
+        return self
+
+    def spline(self, k: int = 1) -> InterpolatedUnivariateSpline:
+        """Return an in terpolating spline through all the underlying
+        data points.
+
+        This is useful, e.g., when adding a vertical cursor to the strip chart.
+
+        Arguments
+        ---------
+        k : int
+            The order of the spline (default 1).
+
+        Returns
+        -------
+        InterpolatedUnivariateSpline
+            The interpolating spline.
+        """
+        return InterpolatedUnivariateSpline(self.x, self.y, k=k)
 
     def plot(self, axes=None, **kwargs) -> None:
         """Plot the strip chart.
@@ -87,6 +145,6 @@ class StripChart:
         kwargs.setdefault("label", self.label)
         if axes is None:
             axes = plt.gca()
-        x = np.array(self.x).astype('datetime64[s]') if self._datetime else self.x
+        x = np.array(self.x).astype("datetime64[s]") if self._datetime else self.x
         axes.plot(x, self.y, **kwargs)
         setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)

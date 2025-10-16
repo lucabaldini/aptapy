@@ -122,7 +122,7 @@ class StripChart:
         return self
 
     def spline(self, k: int = 1) -> InterpolatedUnivariateSpline:
-        """Return an in terpolating spline through all the underlying
+        """Return an interpolating spline through all the underlying
         data points.
 
         This is useful, e.g., when adding a vertical cursor to the strip chart.

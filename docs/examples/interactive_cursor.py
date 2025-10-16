@@ -34,7 +34,7 @@ cursor.add_marker(chart2.spline())
 # Setup the plot.
 setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25)
 
-# Set the cursor visble and move it to a given x-position for the purpose
+# Set the cursor visible and move it to a given x-position for the purpose
 # of creating this plot...
 cursor.set_visible(True)
 cursor.move(2.3)

@@ -79,7 +79,7 @@ fit parameters.
 
    It goes without saying that the order of the fit parameters in the argument
    list of the :meth:`~aptapy.modeling.AbstractFitModel.evaluate` method must
-\   match the order in which they are defined as class attributes.
+   match the order in which they are defined as class attributes.
 
 In this particular case we are sayng that the ``Line`` model has two fit parameters,
 ``intercept`` and ``slope``, and, well, the model itself evaluates as a straight line

@@ -26,6 +26,15 @@ from loguru import logger
 from matplotlib import patches
 from matplotlib.backend_bases import FigureCanvasBase
 
+__all__ = [
+    "VerticalCursor",
+    "setup_axes",
+    "setup_gca",
+    "last_line_color",
+    "configure",
+]
+
+
 DEFAULT_FIGURE_WIDTH = 8.
 DEFAULT_FIGURE_HEIGHT = 6.
 DEFAULT_FIGURE_SIZE = (DEFAULT_FIGURE_WIDTH, DEFAULT_FIGURE_HEIGHT)
@@ -129,7 +138,7 @@ class VerticalCursor:
     axes : matplotlib.axes.Axes, optional
         The axes to draw the cursor on. If None, the current axes are used.
 
-    **kwargs : keyword arguments
+    kwargs : keyword arguments
         Additional keyword arguments passed to axvline().
     """
 
@@ -183,7 +192,7 @@ class VerticalCursor:
         trajectory : Callable[[float], float]
             A callable representing the trajectory of the data set.
 
-        **kwargs : keyword arguments
+        kwargs : keyword arguments
             Additional keyword arguments passed to the ConstrainedTextMarker constructor.
         """
         kwargs.setdefault("color", last_line_color())

@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.6.0 (2025-10-17)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Addition of VerticalCursor and ConstrainedTextMarker classes for interactive
   plotting.
 * Enhancement of StripChart with method chaining and spline interpolation \

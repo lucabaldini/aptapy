@@ -21,6 +21,7 @@ from numbers import Number
 from typing import Sequence
 
 import numpy as np
+from matplotlib import dates as mdates
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 from .plotting import plt, setup_axes
@@ -46,20 +47,15 @@ class StripChart:
 
     ylabel : str, optional
         the label for the y axis.
-
-    datetime : bool, optional
-        if True, the x values are treated as POSIX timestamps and converted to
-        datetime objects for plotting purposes (default is False).
     """
 
     def __init__(self, max_length: int = None, label: str = "", xlabel: str = None,
-                 ylabel: str = None, datetime: bool = False) -> None:
+                 ylabel: str = None) -> None:
         """Constructor.
         """
         self.label = label
         self.xlabel = xlabel
         self.ylabel = ylabel
-        self._datetime = datetime
         self.x = collections.deque(maxlen=max_length)
         self.y = collections.deque(maxlen=max_length)
 
@@ -145,6 +141,83 @@ class StripChart:
         kwargs.setdefault("label", self.label)
         if axes is None:
             axes = plt.gca()
-        x = np.array(self.x).astype("datetime64[s]") if self._datetime else self.x
+        axes.plot(self.x, self.y, **kwargs)
+        setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)
+
+
+class EpochStripChart(StripChart):
+
+    """Class describing a sliding strip chart with epoch time on the x axis.
+
+    Operationally, this assumes that the values on the x axis are seconds since the
+    Unix epoch (January 1st, 1970), e.g., from a time.time() call. These are then
+    converted into NumPy datetime64 values (with the desired resolution) at plot time.
+
+    Arguments
+    ---------
+    max_length : int, optional
+        the maximum number of points to keep in the strip chart. If None (the default),
+        the number of points is unlimited.
+
+    label : str, optional
+        a text label for the data series (default is None).
+
+    xlabel : str, optional
+        the label for the x axis.
+
+    ylabel : str, optional
+        the label for the y axis.
+
+    resolution : str, optional
+        the resolution for the x axis. Supported values are "s" (seconds),
+        "ms" (milliseconds), "us" (microseconds), and "ns" (nanoseconds). Default is "ms".
+    """
+
+    _RESOLUTION_MULTIPLIER_DICT = {
+        "s": 1,
+        "ms": 1_000,
+        "us": 1_000_000,
+        "ns": 1_000_000_000
+        }
+
+    def __init__(self, max_length: int = None, label: str = "", xlabel: str = "Date and Time (UTC)",
+                 ylabel: str = None, resolution: str = "ms") -> None:
+        """Constructor.
+        """
+        if resolution not in self._RESOLUTION_MULTIPLIER_DICT:
+            raise ValueError(f"Unsupported resolution '{resolution}'")
+        super().__init__(max_length, label, xlabel, ylabel)
+        # AutoDateLocator automatically chooses tick spacing (seconds,
+        # minutes, hours, days, etc.) depending on your data range.
+        self.locator = mdates.AutoDateLocator(minticks=3, maxticks=8)
+        # ConciseDateFormatter (introduced in Matplotlib 3.1) produces
+        # compact, readable labels
+        self.formatter = mdates.ConciseDateFormatter(self.locator)
+        # Cache the numpy datetime64 type...
+        self._type = f"datetime64[{resolution}]"
+        # ...and the associated multiplier to convert from seconds since epoch.
+        self._multiplier = self._RESOLUTION_MULTIPLIER_DICT[resolution]
+
+    def plot(self, axes=None, **kwargs) -> None:
+        """Plot the strip chart.
+
+        This is more tricky than one would expect, as NumPy's datetime64 type stores
+        timestamps as integer counts of a specific unit (like seconds, milliseconds,
+        or nanoseconds) from the epoch. Assuming that we are using seconds since the
+        epoch as input, we need to convert those into the appropriate integer counts.
+        This boils down to using a multiplier depending on the desired resolution.
+        """
+        kwargs.setdefault("label", self.label)
+        if axes is None:
+            axes = plt.gca()
+        # Convert seconds since epoch into appropriate datetime64 type.
+        # Now, this might be an overkill, but the series of numpy conversions is meant
+        # to turn the float seconds into the floating-point representation of the
+        # nearest integer, which is then cast into an actual integer, and finally into
+        # the desired datetime64 type.
+        x = np.rint(self._multiplier * np.asarray(self.x)).astype('int64').astype(self._type)
         axes.plot(x, self.y, **kwargs)
+        # Set up datetime x axis.
+        axes.xaxis.set_major_locator(self.locator)
+        axes.xaxis.set_major_formatter(self.formatter)
         setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)

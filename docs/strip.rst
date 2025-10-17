@@ -75,7 +75,7 @@ documentation.
    then casts to integer. This is all done internally to the
    :class:`~aptapy.strip.EpochStripChart` class. Good for you.
 
-The class makes it best at trying and formatting the x-axis labels in a human-friendly way,
+The class does its best to format the x-axis labels in a human-friendly way,
 so that the appearance is sensible regardless of the time span represented in the strip
 chart. Open an issue if you do run into an edge case!
 

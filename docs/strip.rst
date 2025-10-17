@@ -31,6 +31,15 @@ with :meth:`~aptapy.strip.StripChart.extend()`.
     # plot the current contents of the strip chart
     chart.plot()
 
+.. seealso::
+
+   Have a look at the :ref:`sphx_glr_auto_examples_strip_chart.py` and
+   :ref:`sphx_glr_auto_examples_interactive_cursor.py` examples.
+
+
+Time units
+----------
+
 Strip chart objects can operate in two fundamentally different modes: if the
 ``datetime`` flag is ``False``, the x-axis is treated as a simple numeric value
 (e.g., time in seconds since the start of the acquisition, or a simple numeric

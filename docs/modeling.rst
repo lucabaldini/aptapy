@@ -21,6 +21,13 @@ More complex models can be built by summing simple ones, e.g.,
 
 The main fitting engine supports bounded fits and/or fits with fixed parameters.
 
+.. seealso::
+
+   Have a look at the :ref:`sphx_glr_auto_examples_simple_fit.py`,
+   :ref:`sphx_glr_auto_examples_composite_fit.py` and
+   :ref:`sphx_glr_auto_examples_constrained_fit.py` examples.
+
+
 
 Parameters
 ----------

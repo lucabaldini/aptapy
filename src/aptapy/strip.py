@@ -21,6 +21,7 @@ from numbers import Number
 from typing import Sequence
 
 import numpy as np
+from matplotlib import dates as mdates
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 from .plotting import plt, setup_axes
@@ -147,4 +148,13 @@ class StripChart:
             axes = plt.gca()
         x = np.array(self.x).astype("datetime64[s]") if self._datetime else self.x
         axes.plot(x, self.y, **kwargs)
+        if self._datetime:
+            # AutoDateLocator automatically chooses tick spacing (seconds,
+            # minutes, hours, days, etc.) depending on your data range.
+            locator = mdates.AutoDateLocator(minticks=3, maxticks=8)
+            # ConciseDateFormatter (introduced in Matplotlib 3.1) produces
+            # compact, readable labels
+            formatter = mdates.ConciseDateFormatter(locator)
+            axes.xaxis.set_major_locator(locator)
+            axes.xaxis.set_major_formatter(formatter)
         setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)

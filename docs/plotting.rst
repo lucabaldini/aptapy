@@ -6,7 +6,7 @@
 This module provides all the plotting facilities that the other modules in the package
 make use of.
 
-At the very basic level, the module provides a complete matplotlib setup taylore
+At the very basic level, the module provides a complete matplotlib setup tailored
 for interactive use in a GUI environment. This is encapsulated in the
 :meth:`~aptapy.plotting.configure()` function, which is automatically called when
 importing the module.

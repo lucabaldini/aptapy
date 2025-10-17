@@ -63,6 +63,12 @@ class StripChart:
         self._datetime = datetime
         self.x = collections.deque(maxlen=max_length)
         self.y = collections.deque(maxlen=max_length)
+        # AutoDateLocator automatically chooses tick spacing (seconds,
+        # minutes, hours, days, etc.) depending on your data range.
+        self.locator = mdates.AutoDateLocator(minticks=3, maxticks=8)
+        # ConciseDateFormatter (introduced in Matplotlib 3.1) produces
+        # compact, readable labels
+        self.formatter = mdates.ConciseDateFormatter(self.locator)
 
     def clear(self) -> None:
         """Reset the strip chart.
@@ -149,12 +155,6 @@ class StripChart:
         x = np.array(self.x).astype("datetime64[s]") if self._datetime else self.x
         axes.plot(x, self.y, **kwargs)
         if self._datetime:
-            # AutoDateLocator automatically chooses tick spacing (seconds,
-            # minutes, hours, days, etc.) depending on your data range.
-            locator = mdates.AutoDateLocator(minticks=3, maxticks=8)
-            # ConciseDateFormatter (introduced in Matplotlib 3.1) produces
-            # compact, readable labels
-            formatter = mdates.ConciseDateFormatter(locator)
-            axes.xaxis.set_major_locator(locator)
-            axes.xaxis.set_major_formatter(formatter)
+            axes.xaxis.set_major_locator(self.locator)
+            axes.xaxis.set_major_formatter(self.formatter)
         setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)

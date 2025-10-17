@@ -24,6 +24,8 @@ import numpy as np
 from aptapy.plotting import plt
 from aptapy.strip import StripChart
 
+_RNG = np.random.default_rng(313)
+
 
 def test_strip_chart_seconds():
     """Test a strip chart with seconds on the x axis.
@@ -41,7 +43,7 @@ def test_strip_chart_datetime(num_points: int = 100):
     """Test a strip chart with datetime on the x axis.
     """
     t0 = time.time()
-    y = np.random.rand(num_points)
+    y = _RNG.random(num_points)
     for duration in (20, 100, 1000, 10000, 100000):
         plt.figure(f"{inspect.currentframe().f_code.co_name}_{duration}")
         chart = StripChart(datetime=True, xlabel='UTC time')

@@ -22,7 +22,7 @@ import time
 import numpy as np
 
 from aptapy.plotting import plt
-from aptapy.strip import StripChart
+from aptapy.strip import EpochStripChart, StripChart
 
 _RNG = np.random.default_rng(313)
 
@@ -44,9 +44,9 @@ def test_strip_chart_datetime(num_points: int = 100):
     """
     t0 = time.time()
     y = _RNG.random(num_points)
-    for duration in (20, 100, 1000, 10000, 100000):
+    for duration in (10, 100, 1000, 10000, 100000):
         plt.figure(f"{inspect.currentframe().f_code.co_name}_{duration}")
-        chart = StripChart(datetime=True, xlabel='UTC time')
+        chart = EpochStripChart(label="Random data")
         t = t0 + np.linspace(0., duration, num_points)
         chart.extend(t, y)
         chart.plot()

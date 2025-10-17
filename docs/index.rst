@@ -26,8 +26,9 @@ More specifically, the functionality provided by the package include:
   worth looking at);
 * interactive n-dimensional histograms, supporting weights, error propagation,
   basic arithmetics, and fitting interface;
-* strip charts for online monitoring of time series data, with support
-  for interactive cursors and zooming.
+* strip charts for online monitoring of series data, with support for interactive cursors
+  and zooming, and for time series where the x-axis values are POSIX timestamps
+  (seconds since January 1, 1970 0:00:00 UTC).
 
 The :doc:`example gallery <auto_examples/index>` is probably the best place to start.
 Have fun!

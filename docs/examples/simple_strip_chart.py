@@ -1,25 +1,21 @@
 """
-Strip chart
-===========
+Simple strip chart
+==================
 
-Simple strip chart with Unix time.
+Simple strip chart
 """
 
 # %%
-
-import time
 
 import numpy as np
 
 from aptapy.plotting import plt
 from aptapy.strip import StripChart
 
-t0 = time.time()
-t = np.linspace(t0, t0 + 3600., 100)
-y = np.random.normal(size=t.shape)
+x = np.linspace(0., 10., 100)
+y = np.random.normal(size=x.shape)
 
-chart = StripChart(label="Random data", datetime=True)
-chart.extend(t, y)
+chart = StripChart(label="Random data").extend(x, y)
 chart.plot()
 
 plt.legend()

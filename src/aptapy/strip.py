@@ -211,7 +211,7 @@ class EpochStripChart(StripChart):
         if axes is None:
             axes = plt.gca()
         # Convert seconds since epoch into appropriate datetime64 type.
-        x = (self._multiplier * np.array(self.x)).astype('int64').astype(self._type)
+        x = np.rint(self._multiplier * np.asarray(self.x)).astype('int64').astype(self._type)
         axes.plot(x, self.y, **kwargs)
         # Set up datetime x axis.
         axes.xaxis.set_major_locator(self.locator)

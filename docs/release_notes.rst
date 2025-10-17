@@ -3,7 +3,8 @@
 Release notes
 =============
 
-* strip chart formatting on the x-axis improved.
+* Strip chart formatting on the x-axis improved, and full refactoring of the
+  StripChart class, with the addition of the EpochStripChart subclass.
 * Pull requests merged:
 
   - https://github.com/lucabaldini/aptapy/pull/14

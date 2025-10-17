@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.7.0 (2025-10-17)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Strip chart formatting on the x-axis improved, and full refactoring of the
   StripChart class, with the addition of the EpochStripChart subclass.
 * Pull requests merged:

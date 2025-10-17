@@ -58,7 +58,7 @@ The cursor follows the mouse position when no button is clicked.
 .. warning::
 
    At this time the cursor code is not optimized for efficiency---keep this in mind
-   of the experience is not super fluid. There is undoubitably room for improvement,
+   of the experience is not super fluid. There is undoubtedly room for improvement,
    e.g., using blitting (see `issue #11 <https://github.com/lucabaldini/aptapy/issues/11>`_).
    but we would like to let the API settle before we venture into that.
 

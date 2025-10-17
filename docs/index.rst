@@ -16,6 +16,19 @@ and analysis of experimental data, with a focus on histogramming, time series, a
 fitting. It is designed to be lightweight and easy to use, making it suitable for
 integration into existing data processing pipelines.
 
+More specifically, the functionality provided by the package include:
+
+* one dimensional fitting models, providing a slick, object-oriented alternative
+  to `scipy.curve_fit <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html>`_,
+  supporting arbitrarily complex fits with bound and/or frozen parameters;
+  (this is somewhat similar in spirit to the beautiful, and much more mature,
+  `lmfit <https://lmfit.github.io/lmfit-py/>`_ package, which is definitely
+  worth looking at);
+* interactive n-dimensional histograms, supporting weights, error propagation,
+  basic arithmetics, and fitting interface;
+* strip charts for online monitoring of time series data, with support
+  for interactive cursors and zooming.
+
 The :doc:`example gallery <auto_examples/index>` is probably the best place to start.
 Have fun!
 

@@ -173,7 +173,7 @@ class EpochStripChart(StripChart):
         "ms" (milliseconds), "us" (microseconds), and "ns" (nanoseconds). Default is "ms".
     """
 
-    _RESOLUTION_MULTIPILIER_DICT = {
+    _RESOLUTION_MULTIPLIER_DICT = {
         "s": 1,
         "ms": 1_000,
         "us": 1_000_000,
@@ -184,7 +184,7 @@ class EpochStripChart(StripChart):
                  ylabel: str = None, resolution: str = "ms") -> None:
         """Constructor.
         """
-        if resolution not in self._RESOLUTION_MULTIPILIER_DICT:
+        if resolution not in self._RESOLUTION_MULTIPLIER_DICT:
             raise ValueError(f"Unsupported resolution '{resolution}'")
         super().__init__(max_length, label, xlabel, ylabel)
         # AutoDateLocator automatically chooses tick spacing (seconds,
@@ -196,7 +196,7 @@ class EpochStripChart(StripChart):
         # Cache the numpy datetime64 type...
         self._type = f"datetime64[{resolution}]"
         # ...and the associated multiplier to convert from seconds since epoch.
-        self._multiplier = self._RESOLUTION_MULTIPILIER_DICT[resolution]
+        self._multiplier = self._RESOLUTION_MULTIPLIER_DICT[resolution]
 
     def plot(self, axes=None, **kwargs) -> None:
         """Plot the strip chart.

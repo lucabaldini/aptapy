@@ -3,6 +3,15 @@
 Release notes
 =============
 
+* strip chart formatting on the x-axis improved.
+* Pull requests merged:
+
+  - https://github.com/lucabaldini/aptapy/pull/14
+
+* Closed issues:
+
+  - https://github.com/lucabaldini/aptapy/issues/13
+
 
 Version 0.6.0 (2025-10-17)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

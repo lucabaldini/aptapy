@@ -211,6 +211,10 @@ class EpochStripChart(StripChart):
         if axes is None:
             axes = plt.gca()
         # Convert seconds since epoch into appropriate datetime64 type.
+        # Now, this might be an overkill, but the series of numpy conversions is meant
+        # to turn the float seconds into the floating-point representation of the
+        # nearest integer, which is then cast into an actual integer, and finally into
+        # the desired datetime64 type.
         x = np.rint(self._multiplier * np.asarray(self.x)).astype('int64').astype(self._type)
         axes.plot(x, self.y, **kwargs)
         # Set up datetime x axis.

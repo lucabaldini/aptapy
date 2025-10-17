@@ -184,7 +184,7 @@ class EpochStripChart(StripChart):
                  ylabel: str = None, resolution: str = "ms") -> None:
         """Constructor.
         """
-        if not resolution in self._RESOLUTION_MULTIPILIER_DICT:
+        if resolution not in self._RESOLUTION_MULTIPILIER_DICT:
             raise ValueError(f"Unsupported resolution '{resolution}'")
         super().__init__(max_length, label, xlabel, ylabel)
         # AutoDateLocator automatically chooses tick spacing (seconds,

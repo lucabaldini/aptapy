@@ -51,7 +51,7 @@ The cursor follows the mouse position when no button is clicked.
 
 .. seealso::
 
-   Cursors interact seaminglessly with :class:`~aptapy.strip.StripChart` objects,
+   Cursors interact seamlessly with :class:`~aptapy.strip.StripChart` objects,
    as illustrated in the :ref:`sphx_glr_auto_examples_interactive_cursor.py`
    example.
 

@@ -38,6 +38,12 @@ and subtraction) between histograms with identical binning.
 
    Multiplication by a scalar is not yet supported.
 
+.. seealso::
+
+   Have a look at the :ref:`sphx_glr_auto_examples_simple_hist1d.py`,
+   :ref:`sphx_glr_auto_examples_simple_hist2d.py` and
+   :ref:`sphx_glr_auto_examples_weighted_hist1d.py` examples.
+
 
 Module documentation
 --------------------

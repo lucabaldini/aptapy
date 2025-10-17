@@ -3,6 +3,16 @@
 Release notes
 =============
 
+* Addition of VerticalCursor and ConstrainedTextMarker classes for interactive
+  plotting.
+* Enhancement of StripChart with method chaining and spline interpolation \
+  capabilities.
+* Comprehensive test coverage for the new cursor functionality.
+
+* Pull requests merged:
+
+  - https://github.com/lucabaldini/aptapy/pull/12
+
 
 Version 0.5.0 (2025-10-12)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

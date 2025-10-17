@@ -1,6 +1,6 @@
 """
-Constrained fit example
-=======================
+Constrained fit
+===============
 
 Gaussian fit to histogram data where the prefactor is frozen based on the
 histogram normalization.

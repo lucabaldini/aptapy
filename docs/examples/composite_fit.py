@@ -1,6 +1,6 @@
 """
-Composite fit example
-=====================
+Composite fit
+=============
 
 Composite fit with a Gaussian plus a straight line.
 """

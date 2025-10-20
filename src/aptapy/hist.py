@@ -101,6 +101,9 @@ class AbstractHistogram(ABC):
         """Return the mean and standard deviation along a specific axis, based
         on the binned data.
 
+        Note this returns nan for for both mean and stddev if the histogram is
+        empty (i.e., the sum of weights along the specified axis is zero).
+
         .. note::
 
            This is a crude estimate of the underlying statistics that might be

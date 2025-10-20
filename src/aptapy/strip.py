@@ -65,6 +65,16 @@ class StripChart:
         self.x.clear()
         self.y.clear()
 
+    def reset(self, max_length: int = None) -> None:
+        """Reset the strip chart.
+
+        Note this creates two new deque objects under the hood, and can be
+        used to change the maximum length of the strip chart without the need
+        to create a new instance. (Labels are preserved.)
+        """
+        self.x = collections.deque(maxlen=max_length)
+        self.y = collections.deque(maxlen=max_length)
+
     def append(self, x: float, y: float) -> "StripChart":
         """Append a single data point to the strip chart.
 

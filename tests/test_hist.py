@@ -52,6 +52,17 @@ def test_binning1d():
     assert np.allclose(hist.bin_widths(), 0.1)
 
 
+def test_empty1d():
+    """Test the empty histogram state.
+
+    See issue https://github.com/lucabaldini/aptapy/issues/15
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    hist = Histogram1d(np.linspace(0., 1., 11), label="Empty histogram")
+    hist.plot()
+    plt.legend()
+
+
 def test_filling1d():
     """Simple filling test with a 1-bin, 1-dimensional histogram.
     """
@@ -157,6 +168,7 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
 
 
 if __name__ == '__main__':
+    test_empty1d()
     test_plotting1d()
     test_plotting2d()
     plt.show()

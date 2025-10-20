@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.8.0 (2025-10-20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Public interface for the StripChart class improved: append() and extend() merged
   into put(), that should handle both single values and iterables.
 * Added __len__() method to support len() on StripChart objects.

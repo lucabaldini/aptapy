@@ -5,8 +5,8 @@ Release notes
 
 
 * Fix for issue #15 (traceback when plotting empty histograms).
-* reset() method added to strip charts to allow changing the max length of the
-  underlying deques.
+* set_max_length() method added to strip charts to allow changing the max length
+  of the underlying deques.
 * Avoid catching bare exception in __init__.py.
 * Pull requests merged and issues closed:
 

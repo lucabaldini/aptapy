@@ -18,7 +18,6 @@
 
 import collections
 from numbers import Number
-from typing import Sequence
 
 import numpy as np
 from matplotlib import dates as mdates

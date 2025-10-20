@@ -59,6 +59,20 @@ class StripChart:
         self.x = collections.deque(maxlen=max_length)
         self.y = collections.deque(maxlen=max_length)
 
+    def set_max_length(self, max_length: int) -> None:
+        """Set the maximum length of the strip chart.
+
+        Arguments
+        ---------
+        max_length : int
+            the new maximum number of points to keep in the strip chart.
+
+        Note this creates two new deque objects under the hood but labels are
+        preserved. There is no attempt to preserve existing data points.
+        """
+        self.x = collections.deque(maxlen=max_length)
+        self.y = collections.deque(maxlen=max_length)
+
     def clear(self) -> None:
         """Reset the strip chart.
         """

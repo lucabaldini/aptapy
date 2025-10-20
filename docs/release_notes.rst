@@ -5,10 +5,14 @@ Release notes
 
 
 * Fix for issue #15 (traceback when plotting empty histograms).
+* set_max_length() method added to strip charts to allow changing the max length
+  of the underlying deques.
 * Avoid catching bare exception in __init__.py.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/18
   - https://github.com/lucabaldini/aptapy/pull/17
+  - https://github.com/lucabaldini/aptapy/issues/16
   - https://github.com/lucabaldini/aptapy/issues/15
 
 

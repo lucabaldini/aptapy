@@ -58,7 +58,6 @@ def test_put():
     assert len(chart) == 15
 
 
-
 def test_strip_chart_seconds():
     """Test a strip chart with seconds on the x axis.
     """
@@ -66,7 +65,7 @@ def test_strip_chart_seconds():
     chart = StripChart(label='Strip chart', xlabel='Time [s]')
     t = np.linspace(0., 10., 100)
     y = np.sin(t)
-    chart.extend(t, y)
+    chart.put(t, y)
     chart.plot()
     plt.legend()
 
@@ -80,7 +79,7 @@ def test_strip_chart_datetime(num_points: int = 100):
         plt.figure(f"{inspect.currentframe().f_code.co_name}_{duration}")
         chart = EpochStripChart(label="Random data")
         t = t0 + np.linspace(0., duration, num_points)
-        chart.extend(t, y)
+        chart.put(t, y)
         chart.plot()
 
 

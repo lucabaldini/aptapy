@@ -3,10 +3,16 @@
 Release notes
 =============
 
+* Public interface for the StripChart class improved: append() and extend() merged
+  into put(), that should handle both single values and iterables.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/20
+  - https://github.com/lucabaldini/aptapy/issues/19
+
 
 Version 0.7.1 (2025-10-20)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 * Fix for issue #15 (traceback when plotting empty histograms).
 * set_max_length() method added to strip charts to allow changing the max length

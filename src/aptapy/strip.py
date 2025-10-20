@@ -25,6 +25,7 @@ from matplotlib import dates as mdates
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 from .plotting import plt, setup_axes
+from .typing_ import ArrayLike
 
 
 class StripChart:
@@ -59,6 +60,11 @@ class StripChart:
         self.x = collections.deque(maxlen=max_length)
         self.y = collections.deque(maxlen=max_length)
 
+    def __len__(self) -> int:
+        """Return the number of points in the strip chart.
+        """
+        return len(self.x)
+
     def set_max_length(self, max_length: int) -> None:
         """Set the maximum length of the strip chart.
 
@@ -79,31 +85,57 @@ class StripChart:
         self.x.clear()
         self.y.clear()
 
-    def append(self, x: float, y: float) -> "StripChart":
-        """Append a single data point to the strip chart.
+    @staticmethod
+    def _is_numerical_scalar(value) -> bool:
+        """Return whether the given value is a numerical scalar.
+
+        This is more tricky than one would expect as, while np.int32(1) and alike
+        are instances of Number, 0-dim numpy arrays, e.g., numpy.array(1), are not.
+        """
+        if isinstance(value, np.ndarray) and np.issubdtype(value.dtype, np.number) and \
+            np.ndim(value) == 0:
+            return True
+        return isinstance(value, Number)
+
+    def put(self, x: ArrayLike, y: ArrayLike) -> "StripChart":
+        """Append data points to the strip chart.
+
+        This is supposed to correctly interoperate with all the data types we
+        will be typically deal with: numbers, numpy scalars, and iterables,
+        including numpy arrays.
 
         Note this returns the strip chart itself in order to allow for
         chaining operations.
 
         Arguments
         ---------
-        x : float
-            The x value to append to the strip chart.
+        x : array-like
+            The x value(s) to append to the strip chart.
 
-        y : float
-            The y value to append to the strip chart.
+        y : array-like
+            The y value(s) to append to the strip chart.
 
         Returns
         -------
         StripChart
             The strip chart itself
         """
-        if not isinstance(x, Number):
-            raise TypeError("x must be a number")
-        if not isinstance(y, Number):
-            raise TypeError("y must be a number")
-        self.x.append(x)
-        self.y.append(y)
+        # Are x and y both scalars in the largest possible sense?
+        if self._is_numerical_scalar(x) and self._is_numerical_scalar(y):
+            self.x.append(x)
+            self.y.append(y)
+            return self
+        # At this point, since we are not dealing with two scalars, we
+        # are expecting two sequences of the same length, so we shall just
+        # assume that len() works on both x and y and raise an exception otherwise.
+        try:
+            if len(x) != len(y):
+                raise ValueError("x and y must have the same length")
+        except TypeError:
+            raise ValueError("x and y must be both scalars or both sequences")
+        # And if we made it all the way here, we are all set, and can extend the deques.
+        self.x.extend(x)
+        self.y.extend(y)
         return self
 
     def extend(self, x: Sequence[float], y: Sequence[float]) -> "StripChart":

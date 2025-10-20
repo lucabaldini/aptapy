@@ -20,11 +20,43 @@ import inspect
 import time
 
 import numpy as np
+import pytest
 
 from aptapy.plotting import plt
 from aptapy.strip import EpochStripChart, StripChart
 
 _RNG = np.random.default_rng(313)
+
+
+def test_put():
+    """Test the basic interaction with StripChart objects.
+    """
+    chart = StripChart(max_length=100)
+    chart.put(1, 2)
+    assert len(chart) == 1
+    chart.put(2., 3.)
+    assert len(chart) == 2
+    chart.put(3, 4.)
+    chart.put(4., 3)
+    chart.put(np.float32(5.), np.int32(6))
+    chart.put(np.array(5.), np.array(6))
+    assert len(chart) == 6
+    chart.put([6, 7, 8], [9, 10, 11])
+    assert len(chart) == 9
+    chart.put((6, 7, 8), (9, 10, 11))
+    assert len(chart) == 12
+    chart.put(np.array([1, 2, 3]), np.array([4, 5, 6]))
+    assert len(chart) == 15
+    with pytest.raises(ValueError):
+        chart.put(3., (1, 2))
+    assert len(chart) == 15
+    with pytest.raises(ValueError):
+        chart.put((1, 2), 3)
+    assert len(chart) == 15
+    with pytest.raises(ValueError):
+        chart.put((1, 2, 3), (1, 2))
+    assert len(chart) == 15
+
 
 
 def test_strip_chart_seconds():

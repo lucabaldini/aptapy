@@ -4,6 +4,10 @@ Release notes
 =============
 
 
+Version 0.7.1 (2025-10-20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 * Fix for issue #15 (traceback when plotting empty histograms).
 * set_max_length() method added to strip charts to allow changing the max length
   of the underlying deques.

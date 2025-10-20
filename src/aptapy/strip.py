@@ -138,31 +138,6 @@ class StripChart:
         self.y.extend(y)
         return self
 
-    def extend(self, x: Sequence[float], y: Sequence[float]) -> "StripChart":
-        """Append multiple data points to the strip chart.
-
-        Note this returns the strip chart itself in order to allow for
-        chaining operations.
-
-        Arguments
-        ---------
-        x : sequence[float]
-            The x values to append to the strip chart.
-
-        y : sequence[float]
-            The y values to append to the strip chart.
-
-        Returns
-        -------
-        StripChart
-            The strip chart itself
-        """
-        if len(x) != len(y):
-            raise ValueError("x and y must have the same length")
-        self.x.extend(x)
-        self.y.extend(y)
-        return self
-
     def spline(self, k: int = 1) -> InterpolatedUnivariateSpline:
         """Return an interpolating spline through all the underlying
         data points.

@@ -5,6 +5,8 @@ Release notes
 
 * Public interface for the StripChart class improved: append() and extend() merged
   into put(), that should handle both single values and iterables.
+* Added __len__() method to support len() on StripChart objects.
+* Comprehensive test coverage for various input types and error conditions.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/20

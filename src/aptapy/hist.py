@@ -101,6 +101,9 @@ class AbstractHistogram(ABC):
         """Return the mean and standard deviation along a specific axis, based
         on the binned data.
 
+        Note this returns nan for for both mean and stddev if the histogram is
+        empty (i.e., the sum of weights along the specified axis is zero).
+
         .. note::
 
            This is a crude estimate of the underlying statistics that might be
@@ -130,6 +133,10 @@ class AbstractHistogram(ABC):
         """
         values = self.bin_centers(axis)
         weights = self.content.sum(axis=tuple(i for i in range(self.content.ndim) if i != axis))
+        # Check the sum of weights---if zero, return NaN for both mean and stddev.
+        # See https://github.com/lucabaldini/aptapy/issues/15
+        if weights.sum() == 0.:
+            return float('nan'), float('nan')
         mean = np.average(values, weights=weights)
         variance = np.average((values - mean)**2, weights=weights)
         return float(mean), float(np.sqrt(variance))

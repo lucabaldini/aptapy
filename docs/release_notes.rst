@@ -4,17 +4,22 @@ Release notes
 =============
 
 
+* Fix for issue #15 (traceback when plotting empty histograms).
+* Avoid catching bare exception in __init__.py.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/17
+  - https://github.com/lucabaldini/aptapy/issues/15
+
+
 Version 0.7.0 (2025-10-17)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Strip chart formatting on the x-axis improved, and full refactoring of the
   StripChart class, with the addition of the EpochStripChart subclass.
-* Pull requests merged:
+* Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/14
-
-* Closed issues:
-
   - https://github.com/lucabaldini/aptapy/issues/13
 
 
@@ -26,8 +31,7 @@ Version 0.6.0 (2025-10-17)
 * Enhancement of StripChart with method chaining and spline interpolation \
   capabilities.
 * Comprehensive test coverage for the new cursor functionality.
-
-* Pull requests merged:
+* Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/12
 
@@ -38,13 +42,9 @@ Version 0.5.0 (2025-10-12)
 * Added init_parameters method to most model classes.
 * Updated import structure to use scipy.special module directly instead of importing erf.
 * Added comprehensive test coverage for the new parameter initialization functionality.
-
-* Pull requests merged:
+* Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/10
-
-* Closed issues:
-
   - https://github.com/lucabaldini/aptapy/issues/9
 
 
@@ -56,8 +56,7 @@ Version 0.4.0 (2025-10-11)
 * Implements analytical integration methods for models where possible, with a fallback
   to numerical integration in the base class.
 * Updates the FitStatus class with a completion check method.
-
-* Pull requests merged:
+* Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/7
 
@@ -69,8 +68,7 @@ Version 0.3.2 (2025-10-09)
   statistics from histogram bins
 * Adds extensive test coverage in both 1D and 2D histogram test functions with
   statistical validation
-
-* Pull requests merged:
+* Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/6
 
@@ -94,8 +92,7 @@ Version 0.3.0 (2025-10-08)
 * Improves statistical analysis by adding p-value calculations and fixing degrees
   of freedom calculations
 * Updates test assertions to include p-value validation
-
-* Pull requests merged:
+* Pull requests merged  and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/3
   - https://github.com/lucabaldini/aptapy/pull/4
@@ -106,8 +103,7 @@ Version 0.2.0 (2025-10-06)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * New histogram facilities added.
-
-* Pull requests merged:
+* Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/2
 

@@ -66,8 +66,8 @@ def test_strip_cursor():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     x = np.linspace(0., 2. * np.pi, 100)
-    chart1 = StripChart().extend(x, np.sin(x))
-    chart2 = StripChart().extend(x, np.cos(x))
+    chart1 = StripChart().put(x, np.sin(x))
+    chart2 = StripChart().put(x, np.cos(x))
     cursor = VerticalCursor()
     chart1.plot()
     cursor.add_marker(chart1.spline())

@@ -17,7 +17,7 @@ t0 = 1760717637
 t = np.linspace(t0, t0 + 3600., 100)
 y = np.random.normal(size=t.shape)
 
-chart = EpochStripChart(label="Random data").extend(t, y)
+chart = EpochStripChart(label="Random data").put(t, y)
 chart.plot()
 
 plt.legend()

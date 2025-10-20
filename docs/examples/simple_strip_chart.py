@@ -15,7 +15,7 @@ from aptapy.strip import StripChart
 x = np.linspace(0., 10., 100)
 y = np.random.normal(size=x.shape)
 
-chart = StripChart(label="Random data").extend(x, y)
+chart = StripChart(label="Random data").put(x, y)
 chart.plot()
 
 plt.legend()

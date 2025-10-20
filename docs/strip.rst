@@ -12,10 +12,14 @@ to try and plot on the screen millions of points, but the last segment of the
 acquisition is the most important part when we want to monitor what is happening.
 
 Internally the class uses two distinct :class:`collections.deque` objects to store
-the data points, and the public interface is modeled after that of deques: you add
-a single point with :meth:`~aptapy.strip.StripChart.append()`, add multiple points
-with :meth:`~aptapy.strip.StripChart.extend()`, and clear things up with
-:meth:`~aptapy.strip.StripChart.clear()`.
+the data points, and the public interface is fairly simple:
+
+* you use :meth:`~aptapy.strip.StripChart.put()` to add one or more data points
+  (x and y coordinates) to the strip chart;
+* you use :meth:`~aptapy.strip.StripChart.clear()` to clear the contents of the
+  strip chart;
+* you use :meth:`~aptapy.strip.StripChart.set_max_length()` to change the maximum
+  length of the strip chart.
 
 .. code-block:: python
 
@@ -24,10 +28,10 @@ with :meth:`~aptapy.strip.StripChart.extend()`, and clear things up with
     chart = StripChart(max_length=1000, label='Signal')
 
     # add a single point
-    chart.append(0., 0.)
+    chart.put(0., 0.)
 
     # add multiple points
-    chart.extend([1., 2., 3.], [4., 5., 6.])
+    chart.put([1., 2., 3.], [4., 5., 6.])
 
     # plot the current contents of the strip chart
     chart.plot()

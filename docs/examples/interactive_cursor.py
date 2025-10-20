@@ -19,7 +19,7 @@ x = np.linspace(0., 2. * np.pi, 100)
 cursor = VerticalCursor()
 
 # Create a strip chart and plot it...
-chart1 = StripChart(label="sin(x)").extend(x, np.sin(x))
+chart1 = StripChart(label="sin(x)").put(x, np.sin(x))
 chart1.plot()
 # ...and then add the corresponding marker to the cursor. Note that if you
 # plot first and then immediately add the cursor, then the color is picked
@@ -27,7 +27,7 @@ chart1.plot()
 cursor.add_marker(chart1.spline())
 
 # Same thing for the second strip chart.
-chart2 = StripChart(label="cos(x)").extend(x, np.cos(x))
+chart2 = StripChart(label="cos(x)").put(x, np.cos(x))
 chart2.plot()
 cursor.add_marker(chart2.spline())
 

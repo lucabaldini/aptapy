@@ -130,8 +130,8 @@ class StripChart:
         try:
             if len(x) != len(y):
                 raise ValueError("x and y must have the same length")
-        except TypeError:
-            raise ValueError("x and y must be both scalars or both sequences")
+        except TypeError as error:
+            raise ValueError("x and y must be both scalars or both sequences") from error
         # And if we made it all the way here, we are all set, and can extend the deques.
         self.x.extend(x)
         self.y.extend(y)

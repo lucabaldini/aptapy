@@ -3,11 +3,11 @@
 Release notes
 =============
 
-
-Version 0.9.0 (2025-10-21)
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 * Fixed package logo not appearing on PyPI by using absolute URL in README.md.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/22
+  - https://github.com/lucabaldini/aptapy/issues/21
 
 
 Version 0.8.0 (2025-10-20)

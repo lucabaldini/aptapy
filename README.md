@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/lucabaldini/aptapy/main/docs/_static/logo.png" alt="logo" width="175"/>
+<img src="https://raw.githubusercontent.com/lucabaldini/aptapy/main/docs/_static/logo.png" alt="aptapy logo" width="175"/>
 
 [![PyPI](https://img.shields.io/pypi/v/aptapy.svg)](https://pypi.org/project/aptapy/)
 ![Python versions](https://img.shields.io/badge/python-3.7--3.13-blue)

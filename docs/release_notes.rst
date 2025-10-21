@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.9.1 (2025-10-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Fixed package logo not appearing on PyPI by using absolute URL in README.md.
 * Pull requests merged and issues closed:
 

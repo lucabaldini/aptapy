@@ -153,7 +153,7 @@ class StripChart:
 
         ext : str
             The behavior when extrapolating outside the data range. Valid values
-            are  ``extrapolate`` (return the extrapolated value), ``zeros`` (return 0),
+            are: ``extrapolate`` (return the extrapolated value), ``zeros`` (return 0),
             ``raise`` (raise a ValueError), and ``const`` (return the boundary value).
 
         Returns

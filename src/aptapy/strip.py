@@ -137,23 +137,31 @@ class StripChart:
         self.y.extend(y)
         return self
 
-    def spline(self, k: int = 1) -> InterpolatedUnivariateSpline:
-        """Return an interpolating spline through all the underlying
-        data points.
-
+    def spline(self, k: int = 1, ext: str = "raise") -> InterpolatedUnivariateSpline:
+        """Return an interpolating spline through all the underlying data points.
         This is useful, e.g., when adding a vertical cursor to the strip chart.
+
+        Note that, by default, the spline will raise a ValueError exception
+        when asked to extrapolate outside the data range. (This plays well with
+        the VerticalCursor class, as in that case the marker and associated
+        text will be hidden.)
 
         Arguments
         ---------
         k : int
             The order of the spline (default 1).
 
+        ext : str
+            The behavior when extrapolating outside the data range. Valid values
+            are  ``extrapolate`` (return the extrapolated value), ``zeros`` (return 0),
+            ``raise`` (raise a ValueError), and ``const`` (return the boundary value).
+
         Returns
         -------
         InterpolatedUnivariateSpline
             The interpolating spline.
         """
-        return InterpolatedUnivariateSpline(self.x, self.y, k=k)
+        return InterpolatedUnivariateSpline(self.x, self.y, k=k, ext=ext)
 
     def plot(self, axes=None, **kwargs) -> None:
         """Plot the strip chart.

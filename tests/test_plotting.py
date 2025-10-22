@@ -73,7 +73,7 @@ def test_strip_cursor():
     cursor.add_marker(chart1.spline())
     chart2.plot()
     cursor.add_marker(chart2.spline())
-    setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25)
+    setup_gca(xmin=0., xmax=2.5 * np.pi, ymin=-1.25, ymax=1.25)
     cursor.activate()
     return cursor
 

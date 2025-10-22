@@ -100,14 +100,23 @@ class ConstrainedTextMarker:
 
     def move(self, x: float) -> None:
         """Move the marker to a given x position, with the corresponding y position
-        being calculated from the underlying spline.
+        being calculated from the underlying trajectory.
+
+        If the trajectory is not defined at the given x position, this can be signaled
+        by raising a ValueError exception from within the trajectory callable. In this
+        case, the marker and associated text will be hidden.
 
         Arguments
         ---------
         x : float
             The x position to move the marker to.
         """
-        y = self._trajectory(x)
+        try:
+            y = self._trajectory(x)
+        except ValueError:
+            self._marker.set_data([None], [None])
+            self._text.set_text("")
+            return
         self._marker.set_data([x], [y])
         self._text.set_position((x, y))
         self._text.set_text(f"  y = {y:g}")

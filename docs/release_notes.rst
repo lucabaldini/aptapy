@@ -3,6 +3,17 @@
 Release notes
 =============
 
+* Added error handling in ConstrainedTextMarker.move() to gracefully hide markers
+  when trajectory calculations fail (e.g., when extrapolating outside data range).
+* Enhanced StripChart.spline() to support configurable extrapolation behavior
+  via the ext parameter.
+* Refactored last_line_color() to accept an optional axes parameter, improving
+  reusability and eliminating redundant plt.gca() calls.
+* Updated unit tests.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/24
+
 
 Version 0.9.1 (2025-10-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

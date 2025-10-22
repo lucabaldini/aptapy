@@ -100,14 +100,23 @@ class ConstrainedTextMarker:
 
     def move(self, x: float) -> None:
         """Move the marker to a given x position, with the corresponding y position
-        being calculated from the underlying spline.
+        being calculated from the underlying trajectory.
+
+        If the trajectory is not defined at the given x position, this can be signaled
+        by raising a ValueError exception from within the trajectory callable. In this
+        case, the marker and associated text will be hidden.
 
         Arguments
         ---------
         x : float
             The x position to move the marker to.
         """
-        y = self._trajectory(x)
+        try:
+            y = self._trajectory(x)
+        except ValueError:
+            self._marker.set_data([None], [None])
+            self._text.set_text("")
+            return
         self._marker.set_data([x], [y])
         self._text.set_position((x, y))
         self._text.set_text(f"  y = {y:g}")
@@ -196,7 +205,7 @@ class VerticalCursor:
         kwargs : keyword arguments
             Additional keyword arguments passed to the ConstrainedTextMarker constructor.
         """
-        kwargs.setdefault("color", last_line_color())
+        kwargs.setdefault("color", last_line_color(self._axes))
         self._markers.append(ConstrainedTextMarker(trajectory, self._axes, **kwargs))
 
     def set_visible(self, visible: bool) -> bool:
@@ -383,11 +392,21 @@ def setup_gca(**kwargs):
     setup_axes(plt.gca(), **kwargs)
 
 
-def last_line_color(default: str = "black") -> str:
+def last_line_color(axes: matplotlib.axes.Axes = None, default: str = "black") -> str:
     """Return the color used to draw the last line
+
+    Arguments
+    ---------
+    axes : matplotlib.axes.Axes
+        The axes to get the last line color from.
+
+    default : str
+        The default color to return if no lines are found.
     """
+    if axes is None:
+        axes = plt.gca()
     try:
-        return plt.gca().get_lines()[-1].get_color()
+        return axes.get_lines()[-1].get_color()
     except IndexError:
         return default
 

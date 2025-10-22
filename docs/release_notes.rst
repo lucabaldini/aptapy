@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.9.2 (2025-10-22)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Added error handling in ConstrainedTextMarker.move() to gracefully hide markers
   when trajectory calculations fail (e.g., when extrapolating outside data range).
 * Enhanced StripChart.spline() to support configurable extrapolation behavior

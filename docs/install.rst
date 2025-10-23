@@ -63,6 +63,6 @@ and then do a pip editable install from within the repository directory:
    pip install -e .[dev,docs]
 
 (Invoking ``pip`` with the ``-e`` command-line switch will place a special link
-in the proper folder pointing back to you local version of the source files---instead
+in the proper folder pointing back to your local version of the source files---instead
 of copying the source tree---so that you will always see the last version of the
 code as you modify it, e.g., in the local copy of your git repository.)

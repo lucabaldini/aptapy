@@ -65,6 +65,18 @@ def cleanup(session: nox.Session) -> None:
 
 
 @nox.session(venv_backend="none")
+def deepclean(session: nox.Session) -> None:
+    """Cleanup literally anything that is not in the repo.
+    """
+    session.notify("cleanup")
+    for folder_name in (".nox", ".ruff_cache", ".pylint_cache"):
+        _path = _ROOT_DIR / folder_name
+        if _path.exists():
+            session.log(f"Removing folder {_path}...")
+            shutil.rmtree(_path)
+
+
+@nox.session(venv_backend="none")
 def docs(session: nox.Session) -> None:
     """Build the HTML docs.
 

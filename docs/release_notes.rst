@@ -3,8 +3,10 @@
 Release notes
 =============
 
-* Added installation documentation (install.rst).
-* Refactored nox tasks for better build cleanup functionality.
+* Added dependencies on sphinxcontrib-programoutput and nox.
+* Added new sections in the documentation for the installation and development
+  workflows.
+* Refactored nox tasks for better build cleanup functionality
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/25

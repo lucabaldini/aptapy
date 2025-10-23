@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.9.3 (2025-10-23)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Added dependencies on sphinxcontrib-programoutput and nox.
 * Added new sections in the documentation for the installation and development
   workflows.

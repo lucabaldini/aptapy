@@ -16,9 +16,11 @@
 import pathlib
 import shutil
 
+from requests import session
+
 import nox
 
-from aptapy import __name__ as __package_name__
+__package_name__ = "aptapy"
 
 # Basic environment.
 _ROOT_DIR = pathlib.Path(__file__).parent
@@ -35,17 +37,30 @@ nox.options.reuse_existing_virtualenvs = True
 
 @nox.session(venv_backend="none")
 def cleanup(session: nox.Session) -> None:
-    """Cleanup temporary files.
+    """Cleanup build artifacts and caches.
     """
-    # Remove all the __pycache__ folders.
-    for folder_path in (_ROOT_DIR, _SRC_DIR, _TESTS_DIR):
-        _path = folder_path / "__pycache__"
-        if _path.exists():
-            shutil.rmtree(_path)
+    session.log("Cleaning up build artifacts and caches...")
+    # Directories or patterns to remove
+    patterns = ("__pycache__", )
+    # Directories to skip (not to enter or delete)
+    skip_dirs = {".nox", ".ruff_cache", ".pylint_cache"}
+    # Loop through the patterns and remove matching files/directories...
+    for pattern in patterns:
+        for _path in _ROOT_DIR.rglob(pattern):
+            if any(skip in _path.parts for skip in skip_dirs):
+                continue
+            if _path.is_dir():
+                session.log(f"Removing folder {_path}...")
+                shutil.rmtree(_path)
+            elif _path.is_file():
+                session.log(f"Removing file {_path}...")
+                _path.unlink()
     # Cleanup the docs.
+    session.log("Cleaning up documentation build artifacts...")
     for folder_name in ("_build", "auto_examples"):
         _path = _DOCS_DIR / folder_name
         if _path.exists():
+            session.log(f"Removing folder {_path}...")
             shutil.rmtree(_path)
 
 

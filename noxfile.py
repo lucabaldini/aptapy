@@ -62,7 +62,7 @@ def clean(session: nox.Session) -> None:
 def cleanall(session: nox.Session) -> None:
     """Cleanup literally anything that is not in the repo.
     """
-    session.notify("cleanup")
+    session.notify("clean")
     for folder_name in (".nox", ".ruff_cache", ".pylint_cache"):
         _path = _ROOT_DIR / folder_name
         if _path.exists():

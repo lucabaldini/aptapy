@@ -3,6 +3,12 @@
 Release notes
 =============
 
+* Added installation documentation (install.rst).
+* Refactored nox tasks for better build cleanup functionality.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/25
+
 
 Version 0.9.2 (2025-10-22)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

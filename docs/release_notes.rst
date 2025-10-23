@@ -3,6 +3,14 @@
 Release notes
 =============
 
+* Added dependencies on sphinxcontrib-programoutput and nox.
+* Added new sections in the documentation for the installation and development
+  workflows.
+* Refactored nox tasks for better build cleanup functionality
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/25
+
 
 Version 0.9.2 (2025-10-22)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

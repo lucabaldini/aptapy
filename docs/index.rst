@@ -39,6 +39,7 @@ Have fun!
 
    install
    auto_examples/index
+   develop
    release_notes
 
 .. toctree::

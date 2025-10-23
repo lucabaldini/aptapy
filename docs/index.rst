@@ -27,8 +27,7 @@ More specifically, the functionality provided by the package include:
 * interactive n-dimensional histograms, supporting weights, error propagation,
   basic arithmetics, and fitting interface;
 * strip charts for online monitoring of series data, with support for interactive cursors
-  and zooming, and for time series where the x-axis values are POSIX timestamps
-  (seconds since January 1, 1970 0:00:00 UTC).
+  and zooming, and for time series with POSIX timestamps.
 
 The :doc:`example gallery <auto_examples/index>` is probably the best place to start.
 Have fun!
@@ -38,6 +37,7 @@ Have fun!
    :maxdepth: 1
    :caption: Contents:
 
+   install
    auto_examples/index
    release_notes
 

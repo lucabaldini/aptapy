@@ -26,6 +26,8 @@ classifiers = [
 authors = [
   { name = "Luca Baldini", email = "luca.baldini@unipi.it" }
   ]
+
+# start-deps (do not remove this, as it is used in a sphinx literalinclude)
 dependencies = [
     "cycler",
     "loguru",
@@ -47,6 +49,7 @@ docs = [
     "sphinxawesome-theme",
     "sphinx-gallery",
   ]
+# end-deps
 
 [project.urls]
 Homepage = "https://github.com/lucabaldini/aptapy"

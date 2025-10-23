@@ -43,11 +43,13 @@ dev = [
     "pytest",
     "ruff",
     "pylint",
+    "nox"
   ]
 docs = [
     "sphinx",
     "sphinxawesome-theme",
     "sphinx-gallery",
+    "sphinxcontrib-programoutput",
   ]
 # end-deps
 

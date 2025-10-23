@@ -71,7 +71,7 @@ def cleanall(session: nox.Session) -> None:
 
 
 @nox.session(venv_backend="none")
-def docs(session: nox.Session) -> None:
+def doc(session: nox.Session) -> None:
     """Build the HTML docs.
 
     Note this is a nox session with no virtual environment, based on the assumption

@@ -16,17 +16,11 @@
 import pathlib
 import shutil
 
-from requests import session
-
 import nox
-
-__package_name__ = "aptapy"
 
 # Basic environment.
 _ROOT_DIR = pathlib.Path(__file__).parent
 _DOCS_DIR = _ROOT_DIR / "docs"
-_SRC_DIR = _ROOT_DIR / "src" / __package_name__
-_TESTS_DIR = _ROOT_DIR / "tests"
 
 # Folders containing source code that potentially needs linting.
 _LINT_DIRS = ("src", "tests", "tools")

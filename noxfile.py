@@ -30,7 +30,7 @@ nox.options.reuse_existing_virtualenvs = True
 
 
 @nox.session(venv_backend="none")
-def cleanup(session: nox.Session) -> None:
+def clean(session: nox.Session) -> None:
     """Cleanup build artifacts and caches.
     """
     session.log("Cleaning up build artifacts and caches...")
@@ -59,7 +59,7 @@ def cleanup(session: nox.Session) -> None:
 
 
 @nox.session(venv_backend="none")
-def deepclean(session: nox.Session) -> None:
+def cleanall(session: nox.Session) -> None:
     """Cleanup literally anything that is not in the repo.
     """
     session.notify("cleanup")

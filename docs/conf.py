@@ -29,6 +29,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_gallery.gen_gallery",
+    "sphinxcontrib.programoutput",
 ]
 autodoc_default_options = {
     "members": True,

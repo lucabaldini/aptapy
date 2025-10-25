@@ -53,7 +53,7 @@ class AbstractPlottable(ABC):
 
     """Abstract base class for plottable objects.
 
-    This is a small convenicence class that defines a common interface for plottable
+    This is a small convenience class that defines a common interface for plottable
     objects, and it is meant to guarantee a consistent interface across different
     plottable objects, such as fitting models, histograms and strip charts.
 

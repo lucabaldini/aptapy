@@ -63,9 +63,9 @@ class AbstractPlottable(ABC):
     * a ``ylabel``, that is used to label the y axis of the plot.
 
     The main public interface is the ``plot()`` method, that takes care of plotting
-    the object on the given axes, taking care of setting up the labels as needed.
-    What the ``plot()`` method does internally is delegate to the ``_render()``
-    slot, that must be implemented by derived classes.
+    the object on the given axes (defaulting to the current axes), taking care of
+    setting up the labels as needed. What the ``plot()`` method does internally is
+    delegated to the ``_render()`` slot, that must be implemented by derived classes.
     """
 
     label: str = None
@@ -108,7 +108,6 @@ class AbstractPlottable(ABC):
         **kwargs : keyword arguments
             Additional keyword arguments.
         """
-        pass
 
 
 class ConstrainedTextMarker:

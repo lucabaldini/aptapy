@@ -290,7 +290,7 @@ class Histogram1d(AbstractHistogram):
             whether to include basic statistics (mean and RMS) in the legend entry
             (default: False).
 
-        **kwargs : keyword arguments
+        kwargs : keyword arguments
             additional keyword arguments passed to the plotting backend.
         """
         kwargs.setdefault("label", self.label)

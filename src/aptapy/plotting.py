@@ -27,8 +27,6 @@ from cycler import cycler
 from loguru import logger
 from matplotlib import patches
 from matplotlib.backend_bases import FigureCanvasBase
-from matplotlib.pyplot import xlabel
-from matplotlib.pyplot import ylabel
 
 __all__ = [
     "VerticalCursor",

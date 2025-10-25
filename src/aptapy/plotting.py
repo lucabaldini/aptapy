@@ -29,6 +29,7 @@ from matplotlib import patches
 from matplotlib.backend_bases import FigureCanvasBase
 
 __all__ = [
+    "AbstractPlottable",
     "VerticalCursor",
     "setup_axes",
     "setup_gca",

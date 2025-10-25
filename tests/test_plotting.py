@@ -83,9 +83,9 @@ def test_plottable():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
 
-    class Plot(AbstractPlottable):
+    class Plottable(AbstractPlottable):
 
-        def __init__(self, x, y, label, xlabel, ylabel) -> None:
+        def __init__(self, x, y, label=None, xlabel=None, ylabel=None) -> None:
             super().__init__(label=label, xlabel=xlabel, ylabel=ylabel)
             self.x = x
             self.y = y
@@ -96,8 +96,13 @@ def test_plottable():
     x = np.linspace(0., 2. * np.pi, 100)
     y = np.sin(x)
     # Create a plottable with no label to make sure that the default label handling works.
-    plottable = Plot(x, y, label=None, xlabel="x", ylabel="sin(x)")
+    plottable = Plottable(x, y, label="A plottable!", xlabel="x", ylabel="sin(x)")
     plottable.plot()
+    plottable = Plottable(x, 0.5 * y, label="Another plottable")
+    plottable.plot(label="This is set from plot()")
+    plottable = Plottable(x, 0.25 * y)
+    plottable.plot()  # No label at all
+    plt.legend()
 
 
 if __name__ == '__main__':

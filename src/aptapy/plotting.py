@@ -73,7 +73,24 @@ class AbstractPlottable(ABC):
     ylabel: str = None
 
     def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
-        """Plot the object on the given axes.
+        """Plot the object on the given axes (or on the current axes if none
+        is passed as an argument).
+
+        The intended behavior for underlying text labels is that:
+
+        * if the ``label`` attribute is set on the plottable object, this is used
+          to create an entry in the legend;
+        * if a ``label`` keyword argument is passed to this method, this overrides
+          the object attribute;
+        * if no ``label`` attribute is set on the object, and no ``label`` keyword
+          argument is passed, no entry is created in the legend (i.e., we recover
+          the native matplotlib behavior);
+        * if the ``xlabel`` and/or ``ylabel`` attributes are set on the object,
+          these are used to label the corresponding axes.
+
+        Derived classes can add behavior on top of this (e.g., enrich the label based
+        on the current state of the object), but for consistency they should respect
+        the intended behavior described above.
 
         Arguments
         ---------

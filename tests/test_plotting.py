@@ -20,7 +20,7 @@ import inspect
 
 import numpy as np
 
-from aptapy.plotting import ConstrainedTextMarker, VerticalCursor, plt, setup_gca
+from aptapy.plotting import AbstractPlottable, ConstrainedTextMarker, VerticalCursor, plt, setup_gca
 from aptapy.strip import StripChart
 
 
@@ -78,7 +78,30 @@ def test_strip_cursor():
     return cursor
 
 
+def test_plottable():
+    """Test the Plottable base class.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+
+    class Plot(AbstractPlottable):
+
+        def __init__(self, x, y, label, xlabel, ylabel) -> None:
+            super().__init__(label=label, xlabel=xlabel, ylabel=ylabel)
+            self.x = x
+            self.y = y
+
+        def _render(self, axes: plt.Axes, **kwargs) -> None:
+            axes.plot(self.x, self.y, **kwargs)
+
+    x = np.linspace(0., 2. * np.pi, 100)
+    y = np.sin(x)
+    # Create a plottable with no label to make sure that the default label handling works.
+    plottable = Plot(x, y, label=None, xlabel="x", ylabel="sin(x)")
+    plottable.plot()
+
+
 if __name__ == '__main__':
+    test_plottable()
     # Note we have to keep a reference to the cursor not to lose it.
     cursor1 = test_cursor()
     cursor2 = test_strip_cursor()

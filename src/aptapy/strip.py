@@ -28,6 +28,12 @@ from .plotting import AbstractPlottable
 from .typing_ import ArrayLike
 
 
+__all__ = [
+    "StripChart",
+    "EpochStripChart",
+]
+
+
 class StripChart(AbstractPlottable):
 
     """Class describing a sliding strip chart, that is, a scatter plot where the

@@ -19,7 +19,7 @@
 import enum
 import functools
 import inspect
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number

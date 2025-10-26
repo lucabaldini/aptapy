@@ -25,6 +25,7 @@ from itertools import chain
 from numbers import Number
 from typing import Callable, Dict, Iterator, Sequence, Tuple
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special
@@ -34,6 +35,7 @@ from scipy.optimize import curve_fit
 from scipy.stats import chi2
 
 from .hist import Histogram1d
+from .plotting import AbstractPlottable
 from .typing_ import ArrayLike
 
 __all__ = [
@@ -382,7 +384,7 @@ class FitStatus:
         return format(self, Format.PRETTY)
 
 
-class AbstractFitModelBase(ABC):
+class AbstractFitModelBase(AbstractPlottable):
 
     """Abstract base class for all the fit classes.
 
@@ -390,9 +392,10 @@ class AbstractFitModelBase(ABC):
     (e.g., sums of simple ones).
     """
 
-    def __init__(self) -> None:
+    def __init__(self, label: str = None, xlabel: str = None, ylabel: str = None) -> None:
         """Constructor.
         """
+        super().__init__(label, xlabel, ylabel)
         self.status = FitStatus()
         # Plotting range overriding the default coded in default_plotting_range().
         # This is set when fitting, and can be overridden programmatically by the user
@@ -794,6 +797,12 @@ class AbstractFitModelBase(ABC):
         """
         return np.linspace(*self.plotting_range(), self.num_plotting_points)
 
+    def _render(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+        """Render the model on the given axes.
+        """
+        x = self._plotting_grid()
+        axes.plot(x, self(x), **kwargs)
+
     def plot(self, **kwargs) -> np.ndarray:
         """Plot the model.
 
@@ -810,10 +819,9 @@ class AbstractFitModelBase(ABC):
             grid to draw the components).
         """
         kwargs.setdefault("label", format(self, Format.LATEX))
-        x = self._plotting_grid()
-        y = self(x)
-        plt.plot(x, y, **kwargs)
-        return x
+        self._render(plt.gca(), **kwargs)
+        # REMOVE ME!
+        return self._plotting_grid()
 
     def __format__(self, spec: str) -> str:
         """String formatting.

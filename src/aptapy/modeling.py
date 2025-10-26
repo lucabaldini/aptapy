@@ -1025,10 +1025,10 @@ class FitModelSum(AbstractFitModelBase):
         """
         return sum(component.integral(xmin, xmax) for component in self._components)
 
-    def plot(self) -> None:
+    def plot(self, **kwargs) -> None:
         """Overloaded method for plotting the model.
         """
-        x = super().plot()
+        x = super().plot(**kwargs)
         color = plt.gca().lines[-1].get_color()
         for component in self._components:
             y = component(x)
@@ -1219,13 +1219,13 @@ class PowerLaw(AbstractFitModel):
         """
         return (0.1, 10.)
 
-    def plot(self) -> None:
+    def plot(self, **kwargs) -> None:
         """Overloaded method.
 
         In addition to the base class implementation, this also sets log scales
         on both axes.
         """
-        super().plot()
+        super().plot(**kwargs)
         plt.xscale("log")
         plt.yscale("log")
 

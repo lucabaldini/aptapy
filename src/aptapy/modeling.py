@@ -803,25 +803,16 @@ class AbstractFitModelBase(AbstractPlottable):
         x = self._plotting_grid()
         axes.plot(x, self(x), **kwargs)
 
-    def plot(self, **kwargs) -> np.ndarray:
+    def plot(self, axes: matplotlib.axes.Axes = None,**kwargs) -> None:
         """Plot the model.
 
         Arguments
         ---------
         kwargs : dict, optional
             Additional keyword arguments passed to `plt.plot()`.
-
-        Returns
-        -------
-        x : np.ndarray
-            The x values used for the plot, that can be used downstream to add
-            artists on the plot itself (e.g., composite models can use the same
-            grid to draw the components).
         """
         kwargs.setdefault("label", format(self, Format.LATEX))
-        self._render(plt.gca(), **kwargs)
-        # REMOVE ME!
-        return self._plotting_grid()
+        super().plot(axes, **kwargs)
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -1033,14 +1024,14 @@ class FitModelSum(AbstractFitModelBase):
         """
         return sum(component.integral(xmin, xmax) for component in self._components)
 
-    def plot(self, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Overloaded method for plotting the model.
         """
-        x = super().plot(**kwargs)
+        super().plot(**kwargs)
         color = plt.gca().lines[-1].get_color()
+        x = self._plotting_grid()
         for component in self._components:
-            y = component(x)
-            plt.plot(x, y, label=None, ls="--", color=color)
+            plt.plot(x, component(x), label=None, ls="--", color=color)
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -1227,13 +1218,13 @@ class PowerLaw(AbstractFitModel):
         """
         return (0.1, 10.)
 
-    def plot(self, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Overloaded method.
 
         In addition to the base class implementation, this also sets log scales
         on both axes.
         """
-        super().plot(**kwargs)
+        super().plot(axes, **kwargs)
         plt.xscale("log")
         plt.yscale("log")
 

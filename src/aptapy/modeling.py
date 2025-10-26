@@ -803,7 +803,7 @@ class AbstractFitModelBase(AbstractPlottable):
         x = self._plotting_grid()
         axes.plot(x, self(x), **kwargs)
 
-    def plot(self, axes: matplotlib.axes.Axes = None,**kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Plot the model.
 
         Arguments

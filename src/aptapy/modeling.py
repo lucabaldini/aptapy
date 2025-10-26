@@ -1027,7 +1027,7 @@ class FitModelSum(AbstractFitModelBase):
     def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Overloaded method for plotting the model.
         """
-        super().plot(**kwargs)
+        super().plot(axes, **kwargs)
         color = plt.gca().lines[-1].get_color()
         x = self._plotting_grid()
         for component in self._components:

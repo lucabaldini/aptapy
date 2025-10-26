@@ -308,7 +308,6 @@ class FitStatus:
     chisquare: float = None
     dof: int = None
     pvalue: float = None
-    fit_range: Tuple[float, float] = None
 
     def reset(self) -> None:
         """Reset the fit status.
@@ -316,7 +315,6 @@ class FitStatus:
         self.chisquare = None
         self.dof = None
         self.pvalue = None
-        self.fit_range = None
 
     def valid(self) -> bool:
         """Return True if the fit status is valid, i.e., if the chisquare,
@@ -396,6 +394,12 @@ class AbstractFitModelBase(ABC):
         """Constructor.
         """
         self.status = FitStatus()
+        # Plotting range overriding the default coded in default_plotting_range().
+        # This is set when fitting, and can be overridden programmatically by the user
+        # via set_plotting_range() at any time.
+        self._plotting_range = None
+        # Number of points to use when plotting the model.
+        self.num_plotting_points = 200
 
     @abstractmethod
     def __len__(self) -> int:
@@ -701,7 +705,7 @@ class AbstractFitModelBase(ABC):
         sigma = sigma[mask]
 
         # Cache the fit range for later use.
-        self.status.fit_range = (xdata.min(), xdata.max())
+        self._plotting_range = (xdata.min(), xdata.max())
 
         # If we are not passing default starting points for the model parameters,
         # try and do something sensible.
@@ -740,8 +744,9 @@ class AbstractFitModelBase(ABC):
         """Return the default plotting range for the model.
 
         This can be reimplemented in concrete models, and can be parameter-dependent
-        (e.g., for a gaussian we might want to plot within 5 sigma from the mean by
-        default).
+        (e.g., for a gaussian we might want to plot within 5 sigma from the mean by default).
+        And if you think for a moment to move this to a ``DEFAULT_PLOTTING_RANGE`` class variable,
+        keep in mind that having it as a method allows for parameter-dependent default ranges.
 
         Returns
         -------
@@ -750,57 +755,52 @@ class AbstractFitModelBase(ABC):
         """
         return (0., 1.)
 
-    def _plotting_range(self, xmin: float = None, xmax: float = None,
-                        fit_padding: float = 0.) -> Tuple[float, float]:
-        """Convenience function trying to come up with the most sensible plot range
-        for the model.
+    def set_plotting_range(self, xmin: float, xmax: float) -> None:
+        """Set a custom plotting range for the model.
 
         Arguments
         ---------
-        xmin : float, optional
-            The minimum value of the independent variable to plot.
+        xmin : float
+            The minimum x value for plotting.
 
-        xmax : float, optional
-            The maximum value of the independent variable to plot.
+        xmax : float
+            The maximum x value for plotting.
+        """
+        self._plotting_range = (xmin, xmax)
 
-        fit_padding : float, optional
-            The amount of padding to add to the fit range.
+    def plotting_range(self) -> Tuple[float, float]:
+        """Return the current plotting range for the model.
+
+        If a custom plotting range has been set via `set_plotting_range()`, or as
+        a part of a fit, that is returned, otherwise the default plotting range for
+        the model is used.
 
         Returns
         -------
         Tuple[float, float]
             The plotting range for the model.
         """
-        # If we have fitted the model to some data, we take the fit range and pad it
-        # a little bit.
-        if self.status.fit_range is not None:
-            _xmin, _xmax = self.status.fit_range
-            fit_padding *= (_xmax - _xmin)
-            _xmin -= fit_padding
-            _xmax += fit_padding
-        # Otherwise we fall back to the default plotting range for the model.
-        else:
-            _xmin, _xmax = self.default_plotting_range()
-        # And are free to override either end!
-        if xmin is not None:
-            _xmin = xmin
-        if xmax is not None:
-            _xmax = xmax
-        return (_xmin, _xmax)
+        if self._plotting_range is not None:
+            return self._plotting_range
+        return self.default_plotting_range()
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> np.ndarray:
+    def _plotting_grid(self) -> np.ndarray:
+        """Return the grid of x values to use for plotting the model.
+
+        Returns
+        -------
+        x : np.ndarray
+            The x values used for plotting the model.
+        """
+        return np.linspace(*self.plotting_range(), self.num_plotting_points)
+
+    def plot(self, **kwargs) -> np.ndarray:
         """Plot the model.
 
         Arguments
         ---------
-        xmin : float, optional
-            The minimum value of the independent variable to plot.
-
-        xmax : float, optional
-            The maximum value of the independent variable to plot.
-
-        num_points : int, optional
-            The number of points to use for the plot.
+        kwargs : dict, optional
+            Additional keyword arguments passed to `plt.plot()`.
 
         Returns
         -------
@@ -809,9 +809,10 @@ class AbstractFitModelBase(ABC):
             artists on the plot itself (e.g., composite models can use the same
             grid to draw the components).
         """
-        x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
+        kwargs.setdefault("label", format(self, Format.LATEX))
+        x = self._plotting_grid()
         y = self(x)
-        plt.plot(x, y, label=format(self, Format.LATEX))
+        plt.plot(x, y, **kwargs)
         return x
 
     def __format__(self, spec: str) -> str:
@@ -1024,10 +1025,10 @@ class FitModelSum(AbstractFitModelBase):
         """
         return sum(component.integral(xmin, xmax) for component in self._components)
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+    def plot(self) -> None:
         """Overloaded method for plotting the model.
         """
-        x = super().plot(xmin, xmax, num_points)
+        x = super().plot()
         color = plt.gca().lines[-1].get_color()
         for component in self._components:
             y = component(x)
@@ -1218,13 +1219,13 @@ class PowerLaw(AbstractFitModel):
         """
         return (0.1, 10.)
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+    def plot(self) -> None:
         """Overloaded method.
 
         In addition to the base class implementation, this also sets log scales
         on both axes.
         """
-        super().plot(xmin, xmax, num_points)
+        super().plot()
         plt.xscale("log")
         plt.yscale("log")
 

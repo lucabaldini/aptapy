@@ -374,7 +374,8 @@ def test_multiple_sum():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian() + Line() + Constant()
-    model.plot(-5., 5.)
+    model.set_plotting_range(-5., 5.)
+    model.plot()
     plt.legend()
 
 

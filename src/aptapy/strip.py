@@ -27,7 +27,6 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from .plotting import AbstractPlottable
 from .typing_ import ArrayLike
 
-
 __all__ = [
     "StripChart",
     "EpochStripChart",

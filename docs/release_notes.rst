@@ -3,6 +3,11 @@
 Release notes
 =============
 
+* Small refactoring in modeling.py.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/28
+
 
 Version 0.10.0 (2025-10-27)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

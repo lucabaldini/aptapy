@@ -167,7 +167,7 @@ class ConstrainedTextMarker:
         self._marker = matplotlib.lines.Line2D([None], [None], **kwargs)
         axes.add_line(self._marker)
         # ...and the text label.
-        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="left", va="center")
+        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="left", va="bottom")
         self._text = axes.text(None, None, "", **text_kwargs)
         self.set_visible(False)
 

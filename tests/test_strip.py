@@ -81,9 +81,3 @@ def test_strip_chart_datetime(num_points: int = 100):
         t = t0 + np.linspace(0., duration, num_points)
         chart.put(t, y)
         chart.plot()
-
-
-if __name__ == '__main__':
-    test_strip_chart_seconds()
-    test_strip_chart_datetime()
-    plt.show()

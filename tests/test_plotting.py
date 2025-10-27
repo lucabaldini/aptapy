@@ -107,10 +107,3 @@ def test_plottable():
     plottable = Plottable(x, 0.25 * y)
     plottable.plot()  # No label at all
     plt.legend()
-
-
-if __name__ == '__main__':
-    test_plottable()
-    test_cursor()
-    test_strip_cursor()
-    plt.show()

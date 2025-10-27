@@ -167,9 +167,3 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     assert abs(sy - 1.) < 0.02
     plt.gca().set_aspect("equal")
 
-
-if __name__ == "__main__":
-    test_empty1d()
-    test_plotting1d()
-    test_plotting2d()
-    plt.show()

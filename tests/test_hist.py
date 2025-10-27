@@ -24,7 +24,7 @@ import pytest
 from aptapy.hist import Histogram1d, Histogram2d
 from aptapy.plotting import plt
 
-_RNG = np.random.default_rng()
+_RNG = np.random.default_rng(313)
 
 
 def test_init1d():

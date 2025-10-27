@@ -301,7 +301,7 @@ class Histogram1d(AbstractHistogram):
         super().plot(axes, **kwargs)
 
     def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
-        """Overloaded make_plot() method.
+        """Overloaded method.
         """
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
 
@@ -348,7 +348,7 @@ class Histogram2d(AbstractHistogram):
         super().__init__((xedges, yedges), label, [xlabel, ylabel, zlabel])
 
     def _render(self, axes: matplotlib.axes.Axes, logz: bool = False, **kwargs) -> None:
-        """Overloaded make_plot() method.
+        """Overloaded method.
         """
         # pylint: disable=arguments-differ
         if logz:

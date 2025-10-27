@@ -385,20 +385,22 @@ class VerticalCursor:
         event : matplotlib.backend_bases.MouseEvent
             The mouse event we want to respond to.
         """
-        # If we are outside the axes, we just hide the zoom rectangle and return.
-        if not event.inaxes:
-            self._zoom_rectangle.set_visible(False)
-            self.redraw_canvas()
-            return
         if event.button == MouseButton.LEFT:
-            x0, y0, x1, y1 = self._rectangle_coords(event)
-            # Set the last press position to None, as this is important for
-            # ``on_motion_notify`` events to determine whether we are trying to zoom.
-            self._last_press_position = None
-            if (x0, y0) != (x1, y1):
-                self._axes.set_xlim(x0, x1)
-                self._axes.set_ylim(y0, y1)
+            # If the event is inside the axes, we want to cache the corners of the
+            # rectangle defined by the initial press position and the current event.
+            if event.inaxes:
+                x0, y0, x1, y1 = self._rectangle_coords(event)
+                # And if the rectangle is not degenerate, we want to set the new
+                # axes limits accordingly.
+                if (x0, y0) != (x1, y1):
+                    self._axes.set_xlim(x0, x1)
+                    self._axes.set_ylim(y0, y1)
+            # In any case we want to hide the zoom rectangle...
             self._zoom_rectangle.set_visible(False)
+            # ...set the last press position to None, as this is important for
+            # ``on_motion_notify`` events to determine whether we are trying to zoom...
+            self._last_press_position = None
+            # ...and finally redraw the canvas.
             self.redraw_canvas()
 
     def on_motion_notify(self, event: matplotlib.backend_bases.MouseEvent) -> None:

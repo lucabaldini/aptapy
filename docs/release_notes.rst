@@ -3,6 +3,18 @@
 Release notes
 =============
 
+* Default vertical alignment for the text in the ``ConstrainedTextMarker`` class changed
+  from "center" to "bottom" to avoid overlapping with the underlying trajectory for
+  nearly horizontal data sets.
+* Fixed a bug in the interactive cursor logic triggered by mouse events outside the axes
+  area.
+* Fixed random seed in tests/test_hist.py to ensure consistent results across runs.
+* Added a --interactive option to pytest to allow keeping matplotlib figures open
+  after test execution for interactive inspection.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/29
+
 
 Version 0.10.1 (2025-10-27)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

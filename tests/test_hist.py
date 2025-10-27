@@ -24,7 +24,7 @@ import pytest
 from aptapy.hist import Histogram1d, Histogram2d
 from aptapy.plotting import plt
 
-_RNG = np.random.default_rng()
+_RNG = np.random.default_rng(313)
 
 
 def test_init1d():
@@ -166,10 +166,3 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     assert abs(sx - 1.) < 0.02
     assert abs(sy - 1.) < 0.02
     plt.gca().set_aspect("equal")
-
-
-if __name__ == "__main__":
-    test_empty1d()
-    test_plotting1d()
-    test_plotting2d()
-    plt.show()

@@ -167,7 +167,7 @@ class ConstrainedTextMarker:
         self._marker = matplotlib.lines.Line2D([None], [None], **kwargs)
         axes.add_line(self._marker)
         # ...and the text label.
-        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="left", va="center")
+        text_kwargs = dict(size=self.TEXT_SIZE, color=kwargs["color"], ha="left", va="bottom")
         self._text = axes.text(None, None, "", **text_kwargs)
         self.set_visible(False)
 
@@ -355,6 +355,9 @@ class VerticalCursor:
         event : matplotlib.backend_bases.MouseEvent
             The mouse event we want to respond to.
         """
+        # If we are outside the axes, we just don't care.
+        if not event.inaxes:
+            return
         # If we press the left mouse button we want to cache the initial
         # position of the mouse event, and make the zoom rectangle visible,
         # anchoring it to the position itself.
@@ -383,20 +386,21 @@ class VerticalCursor:
             The mouse event we want to respond to.
         """
         if event.button == MouseButton.LEFT:
-            x0, y0, x1, y1 = self._rectangle_coords(event)
-            # Set the last press position to None, as this is important for
-            # ``motion_notify`` events to determine whether we are trying to
-            # zoom or not. Note it is important to do this immediately, as
-            # if we are just clicking without moving the mouse we would be
-            # implicitly defining a null rectangle that we cannot zoom upon,
-            # and in this case the function returns at the next line.
-            self._last_press_position = None
-            # If the rectangle is null, return.
-            if (x0, y0) == (x1, y1):
-                return
-            self._axes.set_xlim(x0, x1)
-            self._axes.set_ylim(y0, y1)
+            # If the event is inside the axes, we want to cache the corners of the
+            # rectangle defined by the initial press position and the current event.
+            if event.inaxes:
+                x0, y0, x1, y1 = self._rectangle_coords(event)
+                # And if the rectangle is not degenerate, we want to set the new
+                # axes limits accordingly.
+                if (x0, y0) != (x1, y1):
+                    self._axes.set_xlim(x0, x1)
+                    self._axes.set_ylim(y0, y1)
+            # In any case we want to hide the zoom rectangle...
             self._zoom_rectangle.set_visible(False)
+            # ...set the last press position to None, as this is important for
+            # ``on_motion_notify`` events to determine whether we are trying to zoom...
+            self._last_press_position = None
+            # ...and finally redraw the canvas.
             self.redraw_canvas()
 
     def on_motion_notify(self, event: matplotlib.backend_bases.MouseEvent) -> None:

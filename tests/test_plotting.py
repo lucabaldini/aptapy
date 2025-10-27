@@ -23,6 +23,10 @@ import numpy as np
 from aptapy.plotting import AbstractPlottable, ConstrainedTextMarker, VerticalCursor, plt, setup_gca
 from aptapy.strip import StripChart
 
+# Global variable to keep references to matplotlib objects
+# so that they are not garbage collected.
+_MATPLOTLIB_POOL = []
+
 
 def test_marker():
     """Test the ConstrainedTextMarker.
@@ -58,7 +62,7 @@ def test_cursor():
     cursor.add_marker(np.cos)
     setup_gca(xmin=0., xmax=2. * np.pi, ymin=-1.25, ymax=1.25)
     cursor.activate()
-    return cursor
+    _MATPLOTLIB_POOL.append(cursor)
 
 
 def test_strip_cursor():
@@ -75,7 +79,7 @@ def test_strip_cursor():
     cursor.add_marker(chart2.spline())
     setup_gca(xmin=0., xmax=2.5 * np.pi, ymin=-1.25, ymax=1.25)
     cursor.activate()
-    return cursor
+    _MATPLOTLIB_POOL.append(cursor)
 
 
 def test_plottable():
@@ -103,11 +107,3 @@ def test_plottable():
     plottable = Plottable(x, 0.25 * y)
     plottable.plot()  # No label at all
     plt.legend()
-
-
-if __name__ == '__main__':
-    test_plottable()
-    # Note we have to keep a reference to the cursor not to lose it.
-    cursor1 = test_cursor()
-    cursor2 = test_strip_cursor()
-    plt.show()

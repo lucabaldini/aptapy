@@ -6,6 +6,7 @@ Release notes
 * Default vertical alignment for the text in the ``ConstrainedTextMarker`` class changed
   from "center" to "bottom" to avoid overlapping with the underlying trajectory for
   nearly horizontal data sets.
+* Fixing random seed in tests/test_hist.py to ensure consistent results across runs.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/29

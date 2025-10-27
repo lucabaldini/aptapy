@@ -355,6 +355,9 @@ class VerticalCursor:
         event : matplotlib.backend_bases.MouseEvent
             The mouse event we want to respond to.
         """
+        # If we are outside the axes, we just don't care.
+        if not event.inaxes:
+            return
         # If we press the left mouse button we want to cache the initial
         # position of the mouse event, and make the zoom rectangle visible,
         # anchoring it to the position itself.
@@ -382,6 +385,11 @@ class VerticalCursor:
         event : matplotlib.backend_bases.MouseEvent
             The mouse event we want to respond to.
         """
+        # If we are outside the axes, we just hide the zoom rectangle and return.
+        if not event.inaxes:
+            self._zoom_rectangle.set_visible(False)
+            self.redraw_canvas()
+            return
         if event.button == MouseButton.LEFT:
             x0, y0, x1, y1 = self._rectangle_coords(event)
             # Set the last press position to None, as this is important for
@@ -391,12 +399,12 @@ class VerticalCursor:
             # implicitly defining a null rectangle that we cannot zoom upon,
             # and in this case the function returns at the next line.
             self._last_press_position = None
+            self._zoom_rectangle.set_visible(False)
             # If the rectangle is null, return.
             if (x0, y0) == (x1, y1):
                 return
             self._axes.set_xlim(x0, x1)
             self._axes.set_ylim(y0, y1)
-            self._zoom_rectangle.set_visible(False)
             self.redraw_canvas()
 
     def on_motion_notify(self, event: matplotlib.backend_bases.MouseEvent) -> None:

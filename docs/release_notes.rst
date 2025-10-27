@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.10.1 (2025-10-27)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Small refactoring in modeling.py.
 * Pull requests merged and issues closed:
 

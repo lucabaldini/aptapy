@@ -24,6 +24,6 @@ model = Gaussian()
 model.prefactor.freeze(hist.area() / model.integral(-5., 5.))
 model.fit_histogram(hist)
 print(model)
-model.plot()
+model.plot(fit_output=True)
 
 plt.legend()

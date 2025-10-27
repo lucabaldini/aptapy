@@ -23,6 +23,6 @@ hist.plot()
 model = Gaussian() + Line()
 model.fit_histogram(hist)
 print(model)
-model.plot()
+model.plot(fit_output=True)
 
 plt.legend()

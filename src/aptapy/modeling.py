@@ -409,8 +409,6 @@ class AbstractFitModelBase(AbstractPlottable):
         """Constructor.
         """
         super().__init__(label, xlabel, ylabel)
-        # If the label is not set, use the model name as default. This makes sense
-        # because the name is how we would label a fit model in most circumstances.
         if self.label is None:
             self.label = self.name()
         self.status = FitStatus()

@@ -390,12 +390,29 @@ class AbstractFitModelBase(AbstractPlottable):
 
     This is a acting a base class for both simple fit models and for composite models
     (e.g., sums of simple ones).
+
+    Arguments
+    ---------
+    label : str, optional
+        The label for the model. If this is None, the model name is used as default,
+        which makes sense because the name is how we would label a fit model in
+        most circumstances.
+
+    xlabel : str, optional
+        The label for the x-axis.
+
+    ylabel : str, optional
+        The label for the y-axis.
     """
 
     def __init__(self, label: str = None, xlabel: str = None, ylabel: str = None) -> None:
         """Constructor.
         """
         super().__init__(label, xlabel, ylabel)
+        # If the label is not set, use the model name as default. This makes sense
+        # because the name is how we would label a fit model in most circumstances.
+        if self.label is None:
+            self.label = self.name()
         self.status = FitStatus()
         # Plotting range overriding the default coded in default_plotting_range().
         # This is set when fitting, and can be overridden programmatically by the user
@@ -886,9 +903,6 @@ class AbstractFitModel(AbstractFitModelBase):
         own state.
         """
         super().__init__()
-        # Set a default label for the model. Note this cannot be done in the base class,
-        # as we need to wait for the derived class to be fully initialized.
-        self.label = self.name()
         self._parameters = []
         # Note we cannot loop over self.__dict__.items() here, as that would
         # only return the members defined in the actual class, and not the
@@ -1003,11 +1017,11 @@ class FitModelSum(AbstractFitModelBase):
     def __init__(self, *components: AbstractFitModel) -> None:
         """Constructor.
         """
-        super().__init__()
+        # Note we set the _components attribute before calling the superclass
+        # constructor, as there is at least a bit (setting the default label
+        # to the model name) where we need the components to be defined.
         self._components = components
-        # Set a default label for the model. Note this cannot be done in the base class,
-        # as we need to wait for the derived class to be fully initialized.
-        self.label = self.name()
+        super().__init__()
 
     def name(self) -> str:
         """Return the model name.

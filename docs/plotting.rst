@@ -21,9 +21,9 @@ importing the module.
 
        from aptapy.plotting import plt
 
-    rather than:
+   rather than:
 
-    ..code-block:: python
+   .. code-block:: python
 
        from matplotlib import pyplot as plt
 

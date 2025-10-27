@@ -98,7 +98,7 @@ class AbstractPlottable(ABC):
         axes : matplotlib.axes.Axes, optional
             The axes to plot on. If None, the current axes are used.
 
-        **kwargs : keyword arguments
+        kwargs : keyword arguments
             Additional keyword arguments passed to the _render() method.
             Note that the specifics depends on how _render() is implemented, and
             which type of matplotlib object the plottable is representing.
@@ -123,7 +123,7 @@ class AbstractPlottable(ABC):
         axes : matplotlib.axes.Axes
             The axes to plot on.
 
-        **kwargs : keyword arguments
+        kwargs : keyword arguments
             Additional keyword arguments.
         """
 

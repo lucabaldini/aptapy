@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.10.0 (2025-10-27)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * New ``AbstractPlottable`` base class with standard ``plot()`` and abstract ``_render()``
   methods.
 * Refactored ``AbstractFitModelBase``, ``AbstractHistogram``, and ``StripChart``, as

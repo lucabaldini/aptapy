@@ -34,10 +34,9 @@ def manage_figures(request):
         plt.close("all")
 
 
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(session):
     """At the end of the test session, show any remaining figures if requested.
     """
-    # pylint: disable=unused-argument
     if session.config.getoption("--interactive"):
         # Show any open figures *once* at the end of the session
         plt.show()

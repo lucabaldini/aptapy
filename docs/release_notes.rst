@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.10.2 (2025-10-27)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Default vertical alignment for the text in the ``ConstrainedTextMarker`` class changed
   from "center" to "bottom" to avoid overlapping with the underlying trajectory for
   nearly horizontal data sets.

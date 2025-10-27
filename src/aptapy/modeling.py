@@ -799,20 +799,53 @@ class AbstractFitModelBase(AbstractPlottable):
 
     def _render(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Render the model on the given axes.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `axes.plot()`.
         """
         x = self._plotting_grid()
         axes.plot(x, self(x), **kwargs)
 
-    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Plot the model.
 
         Arguments
         ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
         kwargs : dict, optional
             Additional keyword arguments passed to `plt.plot()`.
         """
-        kwargs.setdefault("label", format(self, Format.LATEX))
+        kwargs.setdefault("label", self.label)
+        if fit_output:
+            kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         super().plot(axes, **kwargs)
+
+    def _format_fit_output(self, spec: str) -> str:
+        """String formatting for fit output.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
+        """
+        text = ""
+        if self.status.valid():
+            text = f"{text}{format(self.status, spec)}\n"
+        for parameter in self:
+            text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -827,12 +860,7 @@ class AbstractFitModelBase(AbstractPlottable):
         text : str
             The formatted string.
         """
-        text = f"{self.name()}\n"
-        if self.status.valid():
-            text = f"{text}{format(self.status, spec)}\n"
-        for parameter in self:
-            text = f"{text}{format(parameter, spec)}\n"
-        return text.strip("\n")
+        return f"{self.name()}\n{self._format_fit_output(spec)}"
 
     def __str__(self):
         """String formatting.
@@ -858,6 +886,9 @@ class AbstractFitModel(AbstractFitModelBase):
         own state.
         """
         super().__init__()
+        # Set a default label for the model. Note this cannot be done in the base class,
+        # as we need to wait for the derived class to be fully initialized.
+        self.label = self.name()
         self._parameters = []
         # Note we cannot loop over self.__dict__.items() here, as that would
         # only return the members defined in the actual class, and not the
@@ -974,6 +1005,9 @@ class FitModelSum(AbstractFitModelBase):
         """
         super().__init__()
         self._components = components
+        # Set a default label for the model. Note this cannot be done in the base class,
+        # as we need to wait for the derived class to be fully initialized.
+        self.label = self.name()
 
     def name(self) -> str:
         """Return the model name.
@@ -1024,14 +1058,36 @@ class FitModelSum(AbstractFitModelBase):
         """
         return sum(component.integral(xmin, xmax) for component in self._components)
 
-    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Overloaded method for plotting the model.
         """
-        super().plot(axes, **kwargs)
+        super().plot(axes, fit_output=fit_output, **kwargs)
         color = plt.gca().lines[-1].get_color()
         x = self._plotting_grid()
         for component in self._components:
             plt.plot(x, component(x), label=None, ls="--", color=color)
+
+    def _format_fit_output(self, spec: str) -> str:
+        """String formatting for fit output.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
+        """
+        text = ""
+        if self.status is not None:
+            text = f"{text}{format(self.status, spec)}\n"
+        for component in self._components:
+            text = f"{text}[{component.name()}]\n"
+            for parameter in component:
+                text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -1046,14 +1102,7 @@ class FitModelSum(AbstractFitModelBase):
         text : str
             The formatted string.
         """
-        text = f"{self.name()}\n"
-        if self.status is not None:
-            text = f"{text}{format(self.status, spec)}\n"
-        for component in self._components:
-            text = f"{text}[{component.name()}]\n"
-            for parameter in component:
-                text = f"{text}{format(parameter, spec)}\n"
-        return text.strip("\n")
+        return f"{self.name()}\n{self._format_fit_output(spec)}"
 
     def __add__(self, other: AbstractFitModel) -> "FitModelSum":
         """Implementation of the model sum (i.e., using the `+` operator).
@@ -1218,13 +1267,13 @@ class PowerLaw(AbstractFitModel):
         """
         return (0.1, 10.)
 
-    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Overloaded method.
 
         In addition to the base class implementation, this also sets log scales
         on both axes.
         """
-        super().plot(axes, **kwargs)
+        super().plot(axes, fit_output=fit_output, **kwargs)
         plt.xscale("log")
         plt.yscale("log")
 

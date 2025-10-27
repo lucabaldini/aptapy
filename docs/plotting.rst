@@ -63,6 +63,16 @@ The cursor follows the mouse position when no button is clicked.
    but we would like to let the API settle before we venture into that.
 
 
+The plottable hierarchy
+-----------------------
+
+The module defines an abstract base class, :class:`~aptapy.plotting.AbstractPlottable`,
+which is the base class for all objects that can be plotted on a matplotlib
+canvas. The class defines the basic interface that all plottable objects must
+implement, as well as some common functionality, and is inherited by all the histogram
+and strip chart classes defined in the package, as well as by all the fitting models.
+
+
 Module documentation
 --------------------
 

@@ -393,18 +393,12 @@ class VerticalCursor:
         if event.button == MouseButton.LEFT:
             x0, y0, x1, y1 = self._rectangle_coords(event)
             # Set the last press position to None, as this is important for
-            # ``motion_notify`` events to determine whether we are trying to
-            # zoom or not. Note it is important to do this immediately, as
-            # if we are just clicking without moving the mouse we would be
-            # implicitly defining a null rectangle that we cannot zoom upon,
-            # and in this case the function returns at the next line.
+            # ``on_motion_notify`` events to determine whether we are trying to zoom.
             self._last_press_position = None
+            if (x0, y0) != (x1, y1):
+                self._axes.set_xlim(x0, x1)
+                self._axes.set_ylim(y0, y1)
             self._zoom_rectangle.set_visible(False)
-            # If the rectangle is null, return.
-            if (x0, y0) == (x1, y1):
-                return
-            self._axes.set_xlim(x0, x1)
-            self._axes.set_ylim(y0, y1)
             self.redraw_canvas()
 
     def on_motion_notify(self, event: matplotlib.backend_bases.MouseEvent) -> None:

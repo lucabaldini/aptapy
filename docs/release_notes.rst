@@ -3,6 +3,16 @@
 Release notes
 =============
 
+* New ``AbstractPlottable`` base class with standard ``plot()`` and abstract ``_render()``
+  methods.
+* Refactored ``AbstractFitModelBase``, ``AbstractHistogram``, and ``StripChart``, as
+  well as all fit models, to inherit from ``AbstractPlottable``.
+* Simplified plotting range management for fit models.
+* Example gallery revamped.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/26
+
 
 Version 0.9.3 (2025-10-23)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

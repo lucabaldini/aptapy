@@ -287,7 +287,7 @@ def test_gaussian_fit():
     model = Gaussian()
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
-    model.plot()
+    model.plot(fit_output=True)
     assert model.mean.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
@@ -301,7 +301,7 @@ def test_gaussian_fit_subrange():
     model = Gaussian()
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM, xmin=-2., xmax=2.)
-    model.plot()
+    model.plot(fit_output=True)
     assert model.mean.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
@@ -317,7 +317,7 @@ def test_gaussian_fit_bound():
     model.mean.value = 0.1
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
-    model.plot()
+    model.plot(fit_output=True)
     assert model.mean.value >= model.mean.minimum
     plt.legend()
 
@@ -331,7 +331,7 @@ def test_gaussian_fit_frozen():
     model.prefactor.freeze(TEST_HISTOGRAM.area())
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
-    model.plot()
+    model.plot(fit_output=True)
     assert model.mean.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
@@ -348,7 +348,7 @@ def test_gaussian_fit_frozen_and_bound():
     model.mean.value = 0.1
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
-    model.plot()
+    model.plot(fit_output=True)
     assert model.mean.value >= model.mean.minimum
     assert model.sigma.value == 1.1
     plt.legend()
@@ -365,7 +365,7 @@ def test_sum_gauss_line():
     model = Gaussian() + Line()
     hist.plot()
     model.fit_histogram(hist)
-    model.plot()
+    model.plot(fit_output=True)
     plt.legend()
 
 
@@ -374,7 +374,8 @@ def test_multiple_sum():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian() + Line() + Constant()
-    model.plot(-5., 5.)
+    model.set_plotting_range(-5., 5.)
+    model.plot()
     plt.legend()
 
 

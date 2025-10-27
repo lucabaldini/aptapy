@@ -59,7 +59,7 @@ def test_empty1d():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     hist = Histogram1d(np.linspace(0., 1., 11), label="Empty histogram")
-    hist.plot()
+    hist.plot(statistics=True)
     plt.legend()
 
 
@@ -110,13 +110,13 @@ def test_plotting1d(size: int = 100000):
     """Test plotting.
     """
     plt.figure(inspect.currentframe().f_code.co_name)
-    # Create the first histogram. This has no label attached, so we will have to
-    # provide one at plotting time, if we want to have a corresponding legend entry.
+    # Create the first histogram. This has no label attached, and we do
+    # provide one at plotting time.
     mean = 0.
     sigma = 1.
-    hist1 = Histogram1d(np.linspace(-5., 5., 100), xlabel='x')
+    hist1 = Histogram1d(np.linspace(-5., 5., 100), xlabel="x")
     hist1.fill(_RNG.normal(size=size, loc=mean, scale=sigma))
-    hist1.plot(label='Standard histogram')
+    hist1.plot(label="Standard histogram")
     m, s = hist1.binned_statistics()
     # Rough checks on the binned statistics---we want the mean to be within 10
     # sigma/sqrt(N) and the stddev to be within 2% of the true value.
@@ -129,19 +129,20 @@ def test_plotting1d(size: int = 100000):
     # proper entry in the legend automatically.
     mean = 1.
     sigma = 1.5
-    hist2 = Histogram1d(np.linspace(-5., 5., 100), label='Offset histogram')
+    hist2 = Histogram1d(np.linspace(-5., 5., 100), label="Offset histogram")
     hist2.fill(_RNG.normal(size=size, loc=mean, scale=sigma))
-    hist2.plot()
+    hist2.plot(statistics=True)
     m, s = hist2.binned_statistics()
     assert abs((m - mean) / sigma * np.sqrt(size)) < 10.
     assert abs(s / sigma - 1.) < 0.02
 
-    # And this one should end up with no legend entry, as it has no label
+    # And this one should end up with no legend entry, as we are explicitly
+    # providing label=None at plotting time.
     mean = -1.
     sigma = 0.5
     hist3 = Histogram1d(np.linspace(-5., 5., 100))
     hist3.fill(_RNG.normal(size=size, loc=mean, scale=sigma))
-    hist3.plot()
+    hist3.plot(label=None)
     m, s = hist3.binned_statistics()
     assert abs((m - mean) / sigma * np.sqrt(size)) < 10.
     assert abs(s / sigma - 1.) < 0.02
@@ -153,7 +154,7 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     edges = np.linspace(-5., 5., 100)
-    hist = Histogram2d(edges, edges, 'x', 'y')
+    hist = Histogram2d(edges, edges, xlabel="x", ylabel="y")
     # Note we are adding different offsets to x and y so that we can see
     # the effect on the plot.
     hist.fill(_RNG.normal(size=size, loc=x0), _RNG.normal(size=size, loc=y0))
@@ -164,10 +165,10 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     assert abs((my - y0) * np.sqrt(size)) < 10.
     assert abs(sx - 1.) < 0.02
     assert abs(sy - 1.) < 0.02
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect("equal")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_empty1d()
     test_plotting1d()
     test_plotting2d()

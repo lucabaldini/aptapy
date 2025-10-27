@@ -19,12 +19,13 @@
 import enum
 import functools
 import inspect
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number
 from typing import Callable, Dict, Iterator, Sequence, Tuple
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special
@@ -34,6 +35,7 @@ from scipy.optimize import curve_fit
 from scipy.stats import chi2
 
 from .hist import Histogram1d
+from .plotting import AbstractPlottable
 from .typing_ import ArrayLike
 
 __all__ = [
@@ -308,7 +310,6 @@ class FitStatus:
     chisquare: float = None
     dof: int = None
     pvalue: float = None
-    fit_range: Tuple[float, float] = None
 
     def reset(self) -> None:
         """Reset the fit status.
@@ -316,7 +317,6 @@ class FitStatus:
         self.chisquare = None
         self.dof = None
         self.pvalue = None
-        self.fit_range = None
 
     def valid(self) -> bool:
         """Return True if the fit status is valid, i.e., if the chisquare,
@@ -384,7 +384,7 @@ class FitStatus:
         return format(self, Format.PRETTY)
 
 
-class AbstractFitModelBase(ABC):
+class AbstractFitModelBase(AbstractPlottable):
 
     """Abstract base class for all the fit classes.
 
@@ -392,10 +392,17 @@ class AbstractFitModelBase(ABC):
     (e.g., sums of simple ones).
     """
 
-    def __init__(self) -> None:
+    def __init__(self, label: str = None, xlabel: str = None, ylabel: str = None) -> None:
         """Constructor.
         """
+        super().__init__(label, xlabel, ylabel)
         self.status = FitStatus()
+        # Plotting range overriding the default coded in default_plotting_range().
+        # This is set when fitting, and can be overridden programmatically by the user
+        # via set_plotting_range() at any time.
+        self._plotting_range = None
+        # Number of points to use when plotting the model.
+        self.num_plotting_points = 200
 
     @abstractmethod
     def __len__(self) -> int:
@@ -701,7 +708,7 @@ class AbstractFitModelBase(ABC):
         sigma = sigma[mask]
 
         # Cache the fit range for later use.
-        self.status.fit_range = (xdata.min(), xdata.max())
+        self._plotting_range = (xdata.min(), xdata.max())
 
         # If we are not passing default starting points for the model parameters,
         # try and do something sensible.
@@ -740,8 +747,9 @@ class AbstractFitModelBase(ABC):
         """Return the default plotting range for the model.
 
         This can be reimplemented in concrete models, and can be parameter-dependent
-        (e.g., for a gaussian we might want to plot within 5 sigma from the mean by
-        default).
+        (e.g., for a gaussian we might want to plot within 5 sigma from the mean by default).
+        And if you think for a moment to move this to a ``DEFAULT_PLOTTING_RANGE`` class variable,
+        keep in mind that having it as a method allows for parameter-dependent default ranges.
 
         Returns
         -------
@@ -750,69 +758,94 @@ class AbstractFitModelBase(ABC):
         """
         return (0., 1.)
 
-    def _plotting_range(self, xmin: float = None, xmax: float = None,
-                        fit_padding: float = 0.) -> Tuple[float, float]:
-        """Convenience function trying to come up with the most sensible plot range
-        for the model.
+    def set_plotting_range(self, xmin: float, xmax: float) -> None:
+        """Set a custom plotting range for the model.
 
         Arguments
         ---------
-        xmin : float, optional
-            The minimum value of the independent variable to plot.
+        xmin : float
+            The minimum x value for plotting.
 
-        xmax : float, optional
-            The maximum value of the independent variable to plot.
+        xmax : float
+            The maximum x value for plotting.
+        """
+        self._plotting_range = (xmin, xmax)
 
-        fit_padding : float, optional
-            The amount of padding to add to the fit range.
+    def plotting_range(self) -> Tuple[float, float]:
+        """Return the current plotting range for the model.
+
+        If a custom plotting range has been set via `set_plotting_range()`, or as
+        a part of a fit, that is returned, otherwise the default plotting range for
+        the model is used.
 
         Returns
         -------
         Tuple[float, float]
             The plotting range for the model.
         """
-        # If we have fitted the model to some data, we take the fit range and pad it
-        # a little bit.
-        if self.status.fit_range is not None:
-            _xmin, _xmax = self.status.fit_range
-            fit_padding *= (_xmax - _xmin)
-            _xmin -= fit_padding
-            _xmax += fit_padding
-        # Otherwise we fall back to the default plotting range for the model.
-        else:
-            _xmin, _xmax = self.default_plotting_range()
-        # And are free to override either end!
-        if xmin is not None:
-            _xmin = xmin
-        if xmax is not None:
-            _xmax = xmax
-        return (_xmin, _xmax)
+        if self._plotting_range is not None:
+            return self._plotting_range
+        return self.default_plotting_range()
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> np.ndarray:
-        """Plot the model.
-
-        Arguments
-        ---------
-        xmin : float, optional
-            The minimum value of the independent variable to plot.
-
-        xmax : float, optional
-            The maximum value of the independent variable to plot.
-
-        num_points : int, optional
-            The number of points to use for the plot.
+    def _plotting_grid(self) -> np.ndarray:
+        """Return the grid of x values to use for plotting the model.
 
         Returns
         -------
         x : np.ndarray
-            The x values used for the plot, that can be used downstream to add
-            artists on the plot itself (e.g., composite models can use the same
-            grid to draw the components).
+            The x values used for plotting the model.
         """
-        x = np.linspace(*self._plotting_range(xmin, xmax), num_points)
-        y = self(x)
-        plt.plot(x, y, label=format(self, Format.LATEX))
-        return x
+        return np.linspace(*self.plotting_range(), self.num_plotting_points)
+
+    def _render(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+        """Render the model on the given axes.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `axes.plot()`.
+        """
+        x = self._plotting_grid()
+        axes.plot(x, self(x), **kwargs)
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
+        """Plot the model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `plt.plot()`.
+        """
+        kwargs.setdefault("label", self.label)
+        if fit_output:
+            kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
+        super().plot(axes, **kwargs)
+
+    def _format_fit_output(self, spec: str) -> str:
+        """String formatting for fit output.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
+        """
+        text = ""
+        if self.status.valid():
+            text = f"{text}{format(self.status, spec)}\n"
+        for parameter in self:
+            text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -827,12 +860,7 @@ class AbstractFitModelBase(ABC):
         text : str
             The formatted string.
         """
-        text = f"{self.name()}\n"
-        if self.status.valid():
-            text = f"{text}{format(self.status, spec)}\n"
-        for parameter in self:
-            text = f"{text}{format(parameter, spec)}\n"
-        return text.strip("\n")
+        return f"{self.name()}\n{self._format_fit_output(spec)}"
 
     def __str__(self):
         """String formatting.
@@ -858,6 +886,9 @@ class AbstractFitModel(AbstractFitModelBase):
         own state.
         """
         super().__init__()
+        # Set a default label for the model. Note this cannot be done in the base class,
+        # as we need to wait for the derived class to be fully initialized.
+        self.label = self.name()
         self._parameters = []
         # Note we cannot loop over self.__dict__.items() here, as that would
         # only return the members defined in the actual class, and not the
@@ -974,6 +1005,9 @@ class FitModelSum(AbstractFitModelBase):
         """
         super().__init__()
         self._components = components
+        # Set a default label for the model. Note this cannot be done in the base class,
+        # as we need to wait for the derived class to be fully initialized.
+        self.label = self.name()
 
     def name(self) -> str:
         """Return the model name.
@@ -1024,14 +1058,36 @@ class FitModelSum(AbstractFitModelBase):
         """
         return sum(component.integral(xmin, xmax) for component in self._components)
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Overloaded method for plotting the model.
         """
-        x = super().plot(xmin, xmax, num_points)
+        super().plot(axes, fit_output=fit_output, **kwargs)
         color = plt.gca().lines[-1].get_color()
+        x = self._plotting_grid()
         for component in self._components:
-            y = component(x)
-            plt.plot(x, y, label=None, ls="--", color=color)
+            plt.plot(x, component(x), label=None, ls="--", color=color)
+
+    def _format_fit_output(self, spec: str) -> str:
+        """String formatting for fit output.
+
+        Arguments
+        ---------
+        spec : str
+            The format specification.
+
+        Returns
+        -------
+        text : str
+            The formatted string.
+        """
+        text = ""
+        if self.status is not None:
+            text = f"{text}{format(self.status, spec)}\n"
+        for component in self._components:
+            text = f"{text}[{component.name()}]\n"
+            for parameter in component:
+                text = f"{text}{format(parameter, spec)}\n"
+        return text.strip("\n")
 
     def __format__(self, spec: str) -> str:
         """String formatting.
@@ -1046,14 +1102,7 @@ class FitModelSum(AbstractFitModelBase):
         text : str
             The formatted string.
         """
-        text = f"{self.name()}\n"
-        if self.status is not None:
-            text = f"{text}{format(self.status, spec)}\n"
-        for component in self._components:
-            text = f"{text}[{component.name()}]\n"
-            for parameter in component:
-                text = f"{text}{format(parameter, spec)}\n"
-        return text.strip("\n")
+        return f"{self.name()}\n{self._format_fit_output(spec)}"
 
     def __add__(self, other: AbstractFitModel) -> "FitModelSum":
         """Implementation of the model sum (i.e., using the `+` operator).
@@ -1218,13 +1267,13 @@ class PowerLaw(AbstractFitModel):
         """
         return (0.1, 10.)
 
-    def plot(self, xmin: float = None, xmax: float = None, num_points: int = 200) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Overloaded method.
 
         In addition to the base class implementation, this also sets log scales
         on both axes.
         """
-        super().plot(xmin, xmax, num_points)
+        super().plot(axes, fit_output=fit_output, **kwargs)
         plt.xscale("log")
         plt.yscale("log")
 

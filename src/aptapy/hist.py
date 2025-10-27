@@ -16,12 +16,12 @@
 """Histogram facilities.
 """
 
-from abc import ABC, abstractmethod
 from typing import List, Sequence, Tuple
 
+import matplotlib
 import numpy as np
 
-from .plotting import matplotlib, plt, setup_axes
+from .plotting import AbstractPlottable, plt
 from .typing_ import ArrayLike
 
 __all__ = [
@@ -29,7 +29,7 @@ __all__ = [
     "Histogram2d",
 ]
 
-class AbstractHistogram(ABC):
+class AbstractHistogram(AbstractPlottable):
 
     """Abstract base class for an n-dimensional histogram.
 
@@ -47,6 +47,12 @@ class AbstractHistogram(ABC):
     def __init__(self, edges: Sequence[np.ndarray], label: str, axis_labels: List[str]) -> None:
         """Constructor.
         """
+        # Note we assume at least two labels (x and y) for plotting purposes---they
+        # both can be None, but subclasses must provide them.
+        if len(axis_labels) < 2:
+            raise ValueError("At least two axis labels must be provided.")
+        self.axis_labels = axis_labels
+        super().__init__(label, *self.axis_labels[:2])
         # Edges are fixed once and forever, so we create a copy. Also, no matter
         # which kind of sequence we are passing, we turn the thing into a tuple.
         self._edges = tuple(np.asarray(item, dtype=float).copy() for item in edges)
@@ -67,8 +73,6 @@ class AbstractHistogram(ABC):
         self._shape = tuple(item.size - 1 for item in self._edges)
         self._sumw = np.zeros(self._shape, dtype=float)
         self._sumw2 = np.zeros(self._shape, dtype=float)
-        self.label = label
-        self.axis_labels = axis_labels
 
     @property
     def content(self) -> np.ndarray:
@@ -212,18 +216,16 @@ class AbstractHistogram(ABC):
         histogram -= other
         return histogram
 
-    @abstractmethod
-    def _do_plot(self, axes, **kwargs) -> None:
-        pass
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+        """Overloaded plot() method.
 
-    def plot(self, axes=None, **kwargs) -> None:
-        """Plot the histogram.
+        Before the actual plotting, this method sets some default plotting options
+        specific to the histogram type. Subclasses can override the
+        DEFAULT_PLOT_OPTIONS class attribute to provide their own defaults.
         """
-        if axes is None:
-            axes = plt.gca()
         for key, value in self.DEFAULT_PLOT_OPTIONS.items():
             kwargs.setdefault(key, value)
-        self._do_plot(axes, **kwargs)
+        AbstractPlottable.plot(self, axes, **kwargs)
 
     def __repr__(self) -> str:
         """String representation of the histogram.
@@ -272,14 +274,36 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
-    def _do_plot(self, axes: matplotlib.axes._axes.Axes, **kwargs) -> None:
-        """Overloaded make_plot() method.
+    def plot(self, axes: matplotlib.axes.Axes = None, statistics: bool = False, **kwargs) -> None:
+        """Overloaded plot() method.
+
+        This method adds an option to include basic statistics (mean and RMS) in the
+        legend entry. Note that, apart from this addition, the method behaves as the
+        base class dictates.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            the axes where to plot the histogram (default: current axes).
+
+        statistics : bool, optional
+            whether to include basic statistics (mean and RMS) in the legend entry
+            (default: False).
+
+        kwargs : keyword arguments
+            additional keyword arguments passed to the plotting backend.
         """
-        # If we are not explicitly providing a label at plotting time, use
-        # the one attached to the histogram, if any.
-        kwargs.setdefault("label", f"{self}")
+        kwargs.setdefault("label", self.label)
+        label = kwargs["label"]
+        if label is not None and statistics:
+            mean, rms = self.binned_statistics()
+            kwargs["label"] = f"{label}\nMean: {mean:g}\nRMS: {rms:g}"
+        super().plot(axes, **kwargs)
+
+    def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
+        """Overloaded method.
+        """
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
-        setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])
 
     def __str__(self) -> str:
         """String formatting.
@@ -323,8 +347,8 @@ class Histogram2d(AbstractHistogram):
         """
         super().__init__((xedges, yedges), label, [xlabel, ylabel, zlabel])
 
-    def _do_plot(self, axes: matplotlib.axes._axes.Axes, logz: bool = False, **kwargs) -> None:
-        """Overloaded make_plot() method.
+    def _render(self, axes: matplotlib.axes.Axes, logz: bool = False, **kwargs) -> None:
+        """Overloaded method.
         """
         # pylint: disable=arguments-differ
         if logz:
@@ -333,4 +357,3 @@ class Histogram2d(AbstractHistogram):
             kwargs.setdefault("norm", matplotlib.colors.LogNorm(vmin, vmax))
         mappable = axes.pcolormesh(*self._edges, self.content.T, **kwargs)
         plt.colorbar(mappable, ax=axes, label=self.axis_labels[2])
-        setup_axes(axes, xlabel=self.axis_labels[0], ylabel=self.axis_labels[1])

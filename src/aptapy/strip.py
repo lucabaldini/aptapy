@@ -19,15 +19,21 @@
 import collections
 from numbers import Number
 
+import matplotlib
 import numpy as np
 from matplotlib import dates as mdates
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-from .plotting import plt, setup_axes
+from .plotting import AbstractPlottable
 from .typing_ import ArrayLike
 
+__all__ = [
+    "StripChart",
+    "EpochStripChart",
+]
 
-class StripChart:
+
+class StripChart(AbstractPlottable):
 
     """Class describing a sliding strip chart, that is, a scatter plot where the
     number of points is limited to a maximum, so that the thing acts essentially
@@ -49,13 +55,11 @@ class StripChart:
         the label for the y axis.
     """
 
-    def __init__(self, max_length: int = None, label: str = "", xlabel: str = None,
+    def __init__(self, max_length: int = None, label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:
         """Constructor.
         """
-        self.label = label
-        self.xlabel = xlabel
-        self.ylabel = ylabel
+        super().__init__(label, xlabel, ylabel)
         self.x = collections.deque(maxlen=max_length)
         self.y = collections.deque(maxlen=max_length)
 
@@ -163,14 +167,10 @@ class StripChart:
         """
         return InterpolatedUnivariateSpline(self.x, self.y, k=k, ext=ext)
 
-    def plot(self, axes=None, **kwargs) -> None:
+    def _render(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Plot the strip chart.
         """
-        kwargs.setdefault("label", self.label)
-        if axes is None:
-            axes = plt.gca()
         axes.plot(self.x, self.y, **kwargs)
-        setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)
 
 
 class EpochStripChart(StripChart):
@@ -226,7 +226,7 @@ class EpochStripChart(StripChart):
         # ...and the associated multiplier to convert from seconds since epoch.
         self._multiplier = self._RESOLUTION_MULTIPLIER_DICT[resolution]
 
-    def plot(self, axes=None, **kwargs) -> None:
+    def _render(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
         """Plot the strip chart.
 
         This is more tricky than one would expect, as NumPy's datetime64 type stores
@@ -235,9 +235,6 @@ class EpochStripChart(StripChart):
         epoch as input, we need to convert those into the appropriate integer counts.
         This boils down to using a multiplier depending on the desired resolution.
         """
-        kwargs.setdefault("label", self.label)
-        if axes is None:
-            axes = plt.gca()
         # Convert seconds since epoch into appropriate datetime64 type.
         # Now, this might be an overkill, but the series of numpy conversions is meant
         # to turn the float seconds into the floating-point representation of the
@@ -248,4 +245,3 @@ class EpochStripChart(StripChart):
         # Set up datetime x axis.
         axes.xaxis.set_major_locator(self.locator)
         axes.xaxis.set_major_formatter(self.formatter)
-        setup_axes(axes, xlabel=self.xlabel, ylabel=self.ylabel, grids=True)

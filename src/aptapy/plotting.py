@@ -16,6 +16,8 @@
 """Plotting facilities.
 """
 
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, Callable, Tuple
 
@@ -27,6 +29,7 @@ from matplotlib import patches
 from matplotlib.backend_bases import FigureCanvasBase
 
 __all__ = [
+    "AbstractPlottable",
     "VerticalCursor",
     "setup_axes",
     "setup_gca",
@@ -42,6 +45,87 @@ DEFAULT_COLOR_CYCLE = [
     "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b",
     "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
 ]
+
+
+@dataclass
+class AbstractPlottable(ABC):
+
+    """Abstract base class for plottable objects.
+
+    This is a small convenience class that defines a common interface for plottable
+    objects, and it is meant to guarantee a consistent interface across different
+    plottable objects, such as fitting models, histograms and strip charts.
+
+    This is largely based on the matplotlib plotting interface. A plottable object has
+    three basic attributes:
+
+    * a ``label``, that is used to label the data series in the plot legend;
+    * an ``xlabel``, that is used to label the x axis of the plot;
+    * a ``ylabel``, that is used to label the y axis of the plot.
+
+    The main public interface is the ``plot()`` method, that takes care of plotting
+    the object on the given axes (defaulting to the current axes), taking care of
+    setting up the labels as needed. What the ``plot()`` method does internally is
+    delegated to the ``_render()`` slot, that must be implemented by derived classes.
+    """
+
+    label: str = None
+    xlabel: str = None
+    ylabel: str = None
+
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+        """Plot the object on the given axes (or on the current axes if none
+        is passed as an argument).
+
+        The intended behavior for underlying text labels is that:
+
+        * if the ``label`` attribute is set on the plottable object, this is used
+          to create an entry in the legend;
+        * if a ``label`` keyword argument is passed to this method, this overrides
+          the object attribute;
+        * if no ``label`` attribute is set on the object, and no ``label`` keyword
+          argument is passed, no entry is created in the legend (i.e., we recover
+          the native matplotlib behavior);
+        * if the ``xlabel`` and/or ``ylabel`` attributes are set on the object,
+          these are used to label the corresponding axes.
+
+        Derived classes can add behavior on top of this (e.g., enrich the label based
+        on the current state of the object), but for consistency they should respect
+        the intended behavior described above.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on. If None, the current axes are used.
+
+        kwargs : keyword arguments
+            Additional keyword arguments passed to the _render() method.
+            Note that the specifics depends on how _render() is implemented, and
+            which type of matplotlib object the plottable is representing.
+        """
+        # Set the default value for the label keyword argument, if not already set.
+        # Note that if self.label is None, matplotlib will do nothing, as expected.
+        kwargs.setdefault("label", self.label)
+        if axes is None:
+            axes = plt.gca()
+        self._render(axes, **kwargs)
+        if self.xlabel is not None:
+            axes.set_xlabel(self.xlabel)
+        if self.ylabel is not None:
+            axes.set_ylabel(self.ylabel)
+
+    @abstractmethod
+    def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
+        """Render the object on the given axes.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes
+            The axes to plot on.
+
+        kwargs : keyword arguments
+            Additional keyword arguments.
+        """
 
 
 class ConstrainedTextMarker:

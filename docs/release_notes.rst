@@ -7,6 +7,8 @@ Release notes
   from "center" to "bottom" to avoid overlapping with the underlying trajectory for
   nearly horizontal data sets.
 * Fixing random seed in tests/test_hist.py to ensure consistent results across runs.
+* Added a --interactive option to pytest to allow keeping matplotlib figures open
+  after test execution for interactive inspection.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/29

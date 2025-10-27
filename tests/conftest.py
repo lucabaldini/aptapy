@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import pytest
 import matplotlib.pyplot as plt
+import pytest
 
 
 def pytest_addoption(parser):
@@ -37,6 +37,7 @@ def manage_figures(request):
 def pytest_sessionfinish(session, exitstatus):
     """At the end of the test session, show any remaining figures if requested.
     """
+    # pylint: disable=unused-argument
     if session.config.getoption("--interactive"):
         # Show any open figures *once* at the end of the session
         plt.show()

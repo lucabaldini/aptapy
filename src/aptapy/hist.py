@@ -253,7 +253,7 @@ class Histogram1d(AbstractHistogram):
         the text label for the y axis (default: "Entries/bin").
     """
 
-    # Note neither alpha not histtype can be configured via style sheets,
+    # Note neither alpha nor histtype can be configured via style sheets,
     # so we have to set the defaults here.
     DEFAULT_PLOT_OPTIONS = dict(alpha=0.4, histtype="stepfilled")
 

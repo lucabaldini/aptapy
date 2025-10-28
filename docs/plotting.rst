@@ -8,8 +8,8 @@ make use of.
 
 At the very basic level, the module provides a complete matplotlib setup tailored
 for interactive use in a GUI environment. This is encapsulated in the
-:meth:`~aptapy.plotting.configure()` function, which is automatically called when
-importing the module.
+:meth:`~aptapy.plotting.apply_stylesheet()` function, which is automatically called
+with the default stylesheet when importing the module.
 
 .. note::
 
@@ -71,6 +71,33 @@ which is the base class for all objects that can be plotted on a matplotlib
 canvas. The class defines the basic interface that all plottable objects must
 implement, as well as some common functionality, and is inherited by all the histogram
 and strip chart classes defined in the package, as well as by all the fitting models.
+
+
+Styling matplotlib
+------------------
+
+All native matplotlib styling facilities aside, aptapy provides a few custom stylesheets
+that can be used to style plots consistently across the package. The stylesheets are
+stored in the ``aptapy/styles`` folder, and can be applied in two different
+ways:
+
+* globally, via the :meth:`~aptapy.plotting.apply_stylesheet()` function;
+* temporarily, via the :meth:`~aptapy.plotting.stylesheet_context()` context manager.
+
+.. seealso::
+
+   The :ref:`sphx_glr_auto_examples_dark_theme.py` and
+   :ref:`sphx_glr_auto_examples_xkcd_theme.py`
+   examples illustrate some of the custom aptapy stylesheets.
+
+.. warning::
+
+   If you are using a matplotlib version newer than 3.7.1, you can use the
+   dotted package-style syntax in conjunction with all the matplotlib styling
+   facilities, and refer to the aptapy stylesheets directly as, e.g.,
+   ``aptapy.styles.aptapy-dark``. The custom functions provided in this module
+   allow you to refer to the aptapy stylesheets by name (e.g., ``aptapy-dark``)
+   and should support older matplotlib versions as well.
 
 
 Module documentation

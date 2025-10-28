@@ -54,15 +54,42 @@ _APTAPY_FONTS = _APTAPY_SRC / "fonts"
 matplotlib.font_manager.fontManager.addfont(str(_APTAPY_FONTS / "Humor-Sans.ttf"))
 
 
-def _stylesheet_path(style_name: str) -> str:
-    """Return the full path to a given stylesheet.
+def _normalize_stylesheet_designator(designator: str) -> str:
+    """Normalize a stylesheet designator.
+
+    This would not be needed in recent versions of matplotlib, where a dotted
+    package-style_name syntax is supported directly by ``plt.style.use()`` and
+    ``plt.style.context()``, but unfortunately this is only available in
+    matplotlib 3.7.1 and later. (If you are using a newer matplotlib version,
+    by all means you can use all the useful facilities referring to the
+    stylesheet provided by the package as ``aptapy.styles.style_name``.) This
+    function is purely to support older matplotlib versions, and allow to
+    refer to the stylesheets in the ``styles`` folder by name.
+
+    For the same reasons, note that the ``pathlib.Path`` object is cast to a string
+    before being returned, as older matplotlib versions do not accept Path
+    objects.
+
+    The basic rules are:
+
+    * if the designator starts with ``aptapy``, it is assumed to refer to one
+      of the stylesheets shipped with aptapy, and the corresponding path
+      is returned;
+    * otherwise, the designator is casted to string and returned, assuming it is
+      either a valid matplotlib style name, or a path to a custom stylesheet.
 
     Arguments
     ---------
-    style_name : str
-        The name of the style to get the path for.
+    designator : str
+        The designator of the style to get the path for.
     """
-    return str(_APTAPY_STYLES / f"{style_name}.mplstyle")
+    if designator.startswith("aptapy"):
+        file_path = _APTAPY_STYLES / f"{designator}.mplstyle"
+        if not file_path.is_file():
+            raise ValueError(f"Style '{designator}' not found in aptapy styles.")
+        # Note we have to cast to str for compatibility with older matplotlib versions.
+        return str(file_path)
+    return str(designator)
 
 
 def apply_stylesheet(style: str = "aptapy") -> None:
@@ -89,7 +116,7 @@ def apply_stylesheet(style: str = "aptapy") -> None:
     # matplotlib context.
     if style == "aptapy-xkcd":
         plt.xkcd()
-    plt.style.use(_stylesheet_path(style))
+    plt.style.use(_normalize_stylesheet_designator(style))
 
 
 @contextmanager
@@ -104,10 +131,10 @@ def stylesheet_context(style: str = "aptapy") -> Generator[None, None, None]:
     # If we are using the xkcd style, we also need to enter the native xkcd
     # matplotlib context.
     if style == "aptapy-xkcd":
-        with plt.xkcd(), plt.style.context(_stylesheet_path(style)):
+        with plt.xkcd(), plt.style.context(_normalize_stylesheet_designator(style)):
             yield
     else:
-        with plt.style.context(_stylesheet_path(style)):
+        with plt.style.context(_normalize_stylesheet_designator(style)):
             yield
 
 

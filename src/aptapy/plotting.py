@@ -42,6 +42,10 @@ def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
     See https://matplotlib.org/stable/users/explain/customizing.html for more
     information about the basic matplotlib customization.
 
+    Note that `plt.style.use <https://matplotlib.org/stable/api/style_api.html#matplotlib.style.use>`_
+    accepts dotted names of the form ``package.style_name`` (in that case, ``package``
+    should be an importable Python package name; style files in subpackages are.)
+
     Arguments
     ---------
     style : str

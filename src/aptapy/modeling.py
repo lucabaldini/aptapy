@@ -689,10 +689,12 @@ class AbstractFitModelBase(AbstractPlottable):
             See the `curve_fit()` documentation for details.
 
         xmin : float, optional (default -inf)
-            The minimum value of the independent variable to fit.
+            The minimum value of the independent variable to fit. Note that if
+            xmin < xmax the (xmax, xmin) interval is excluded from the fit.
 
         xmax : float, optional (default inf)
-            The maximum value of the independent variable to fit.
+            The maximum value of the independent variable to fit. Note that if
+            xmin < xmax the (xmax, xmin) interval is excluded from the fit.
 
         Returns
         -------
@@ -710,8 +712,18 @@ class AbstractFitModelBase(AbstractPlottable):
         if isinstance(sigma, Number):
             sigma = np.full(ydata.shape, sigma)
         sigma = np.asarray(sigma)
-        # If we are fitting over a subrange, filter the input data.
-        mask = np.logical_and(xdata >= xmin, xdata <= xmax)
+        # If we are fitting over a subrange, filter the input data. We have three cases:
+        # if the limits are equal we raise...
+        if xmin == xmax:
+            raise ValueError("xmin and xmax cannot be equal")
+        # ... if xmin < xmax (which is the usual case) we do a standard in-range
+        # selection...
+        if xmin < xmax:
+            mask = np.logical_and(xdata >= xmin, xdata <= xmax)
+        # ... while if xmin > xmax we tale this as signaling that we want to
+        # exclude the (xmax, xmin) interval, and do an out-of-range selection.
+        else:
+            mask = np.logical_or(xdata >= xmin, xdata <= xmax)
         # Also, filter out any points with non-positive uncertainties.
         mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)

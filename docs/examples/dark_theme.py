@@ -11,12 +11,11 @@ import numpy as np
 
 from aptapy.hist import Histogram1d
 from aptapy.modeling import Gaussian
-from aptapy.plotting import plt
+from aptapy.plotting import plt, stylesheet_context
 
 # Note we use a context manager to apply the dark theme only within this block.
-# You can also apply the stylesheet globally using
-# apply_stylesheet("aptapy.styles.aptapy-dark")
-with plt.style.context("aptapy.styles.aptapy-dark"):
+# You can also apply the stylesheet globally using apply_stylesheet("aptapy-dark").
+with stylesheet_context("aptapy-dark"):
 
     hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
     hist.fill(np.random.default_rng().normal(size=100000))

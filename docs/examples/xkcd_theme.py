@@ -15,7 +15,7 @@ from aptapy.plotting import apply_stylesheet, plt
 
 # You can either use the aptapy_xkcd() context manager, or apply the stylesheet
 # directly. Here we show the latter.
-apply_stylesheet("aptapy.styles.aptapy-xkcd")
+apply_stylesheet("aptapy-xkcd")
 
 hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
 hist.fill(np.random.default_rng().normal(size=100000))

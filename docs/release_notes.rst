@@ -3,6 +3,12 @@
 Release notes
 =============
 
+*
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/31
+  - https://github.com/lucabaldini/aptapy/issues/27
+
 
 Version 0.10.2 (2025-10-27)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

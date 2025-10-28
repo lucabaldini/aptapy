@@ -35,18 +35,37 @@ __all__ = [
     "setup_gca",
     "last_line_color",
     "apply_stylesheet",
+    "stylesheet_context",
+    "reset",
 ]
 
+
+# Define paths to the styles and fonts directories.
+_APTAPY_SRC = pathlib.Path(__file__).parent.resolve()
+_APTAPY_STYLES = _APTAPY_SRC / "styles"
+_APTAPY_FONTS = _APTAPY_SRC / "fonts"
 
 # Register the Humor Sans font in the matplotlib font manager, most notably for
 # the xkcd style. Note we ship the font file within the aptapy package as a
 # replacement for the default xkcd font, that is not freely distributable---see
 # the non-commercial clause in the license at https://github.com/ipython/xkcd-font.
-_HUMOR_SANS_FILE_PATH = pathlib.Path(__file__).parent.resolve() / "fonts" / "Humor-Sans.ttf"
-matplotlib.font_manager.fontManager.addfont(str(_HUMOR_SANS_FILE_PATH))
+# Note that we have to cast the Path object to str, as addfont() does not
+# accept Path objects in older versions of matplotlib (surely not in 3.5.3).
+matplotlib.font_manager.fontManager.addfont(str(_APTAPY_FONTS / "Humor-Sans.ttf"))
 
 
-def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
+def _stylesheet_path(style_name: str) -> str:
+    """Return the full path to a given stylesheet.
+
+    Arguments
+    ---------
+    style_name : str
+        The name of the style to get the path for.
+    """
+    return str(_APTAPY_STYLES / f"{style_name}.mplstyle")
+
+
+def apply_stylesheet(style: str = "aptapy") -> None:
     """Apply a given matplotlib stylesheet permanently.
 
     See https://matplotlib.org/stable/users/explain/customizing.html for more
@@ -68,21 +87,28 @@ def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
     """
     # If we are using the xkcd style, we also need to enter the native xkcd
     # matplotlib context.
-    if "xkcd" in style:
+    if style == "aptapy-xkcd":
         plt.xkcd()
-    plt.style.use(style)
+    plt.style.use(_stylesheet_path(style))
 
 
 @contextmanager
-def aptapy_xkcd() -> Generator[None, None, None]:
-    """Context manager to temporarily apply the xkcd style to matplotlib plots,
-    using the Humor Sans fonts shipped with aptapy.
+def stylesheet_context(style: str = "aptapy") -> Generator[None, None, None]:
+    """Context manager to temporarily apply a given matplotlib stylesheet.
 
-    Note this enters the native matplotlib xkcd context first, and then applies
-    the necessary tweaks defined in our custom stylesheet.
+    Arguments
+    ---------
+    style : str
+        The style to use for the plot.
     """
-    with plt.xkcd(), plt.style.context("aptapy.styles.aptapy-xkcd"):
-        yield
+    # If we are using the xkcd style, we also need to enter the native xkcd
+    # matplotlib context.
+    if style == "aptapy-xkcd":
+        with plt.xkcd(), plt.style.context(_stylesheet_path(style)):
+            yield
+    else:
+        with plt.style.context(_stylesheet_path(style)):
+            yield
 
 
 def reset(gallery_conf, fname) -> None:

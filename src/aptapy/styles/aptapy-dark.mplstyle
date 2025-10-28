@@ -1,0 +1,59 @@
+# Base matplotlib dark style for aptapy.
+
+# Patches
+# -------
+patch.force_edgecolor: True  # We like edges on the histograms bins.
+patch.edgecolor: "#eeeeee"
+patch.linewidth: 1.2
+
+# Font
+# ----
+font.size: 14.0
+
+# Text
+# ----
+text.color: "#eeeeee"
+
+# Axes
+# ----
+axes.linewidth: 1.2
+axes.grid: True
+axes.facecolor: "#222222"
+axes.edgecolor: "#cccccc"
+axes.labelcolor: "#eeeeee"
+
+# Ticks
+# -----
+xtick.color: "#eeeeee"
+ytick.color: "#eeeeee"
+
+# Grids
+# -----
+grid.color: "#777777"
+grid.linestyle: --
+grid.linewidth: 0.8
+grid.alpha: 0.75
+
+# Legend
+# ------
+legend.framealpha: 0.5
+legend.facecolor: "#222222"
+legend.edgecolor: "#444444"
+legend.shadow: False
+legend.fontsize: "small"
+
+# Figures
+# -------
+figure.figsize: 8.0, 6.0
+figure.subplot.left: 0.125
+figure.subplot.right: 0.97
+figure.subplot.bottom: 0.11
+figure.subplot.top: 0.96
+figure.facecolor: "#111111"
+figure.edgecolor: "#111111"
+
+# Saving figures
+# --------------
+savefig.dpi: 300
+savefig.facecolor: "#111111"
+savefig.edgecolor: "#111111"

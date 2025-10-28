@@ -3,6 +3,17 @@
 Release notes
 =============
 
+* New mechanism for matplotlib style management in the plotting module.
+* Replace the ``configure()`` function with ``apply_stylesheet()`` and ``stylesheet_context()``
+  context manager for better control over style application.
+* Shipping a custom dark theme and bundling the Humor Sans font for xkcd-style
+  stylesheet.
+* Dependencies on ``cycler`` and ``loguru`` packages removed.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/31
+  - https://github.com/lucabaldini/aptapy/issues/27
+
 
 Version 0.10.2 (2025-10-27)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

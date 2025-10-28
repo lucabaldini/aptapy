@@ -1,0 +1,4 @@
+# xkcd matplotlib style for aptapy.
+
+font.family: Humor Sans
+mathtext.default: regular

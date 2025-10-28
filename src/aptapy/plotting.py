@@ -17,8 +17,10 @@
 """
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
+import pathlib
 from typing import Callable, Tuple
 
 import matplotlib
@@ -36,6 +38,14 @@ __all__ = [
 ]
 
 
+# Register the Humor Sans font in the matplotlib font manager, most notably for
+# the xkcd style. Note we ship the font file within the aptapy package as a
+# replacement for the default xkcd font, that is not freely distributable, see
+# the non-commercial clause at https://github.com/ipython/xkcd-font.
+HUMOR_SANS_FILE_PATH = pathlib.Path(__file__).parent.resolve() / "fonts" / "Humor-Sans.ttf"
+matplotlib.font_manager.fontManager.addfont(HUMOR_SANS_FILE_PATH)
+
+
 def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
     """Apply a given matplotlib stylesheet.
 
@@ -51,7 +61,20 @@ def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
     style : str
         The style to use for the plot.
     """
+    # If we are using the xkcd style, we also need to enter the native xkcd
+    # matplotlib context.
+    if "xkcd" in style:
+        plt.xkcd().__enter__()
     plt.style.use(style)
+
+
+@contextmanager
+def aptapy_xkcd() -> None:
+    """Apply the xkcd style to matplotlib plots, using the Humor Sans font.
+    """
+    with plt.xkcd():
+        with plt.style.context("aptapy.styles.aptapy-xkcd"):
+            yield
 
 
 def reset(gallery_conf, fname) -> None:

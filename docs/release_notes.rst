@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.11.0 (2025-10-28)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * New mechanism for matplotlib style management in the plotting module.
 * Replace the ``configure()`` function with ``apply_stylesheet()`` and ``stylesheet_context()``
   context manager for better control over style application.

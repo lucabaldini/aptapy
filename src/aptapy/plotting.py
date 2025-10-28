@@ -32,8 +32,40 @@ __all__ = [
     "setup_axes",
     "setup_gca",
     "last_line_color",
-    "configure",
+    "apply_stylesheet",
 ]
+
+
+def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
+    """Apply a given matplotlib stylesheet.
+
+    See https://matplotlib.org/stable/users/explain/customizing.html for more
+    information about the basic matplotlib customization.
+
+    Arguments
+    ---------
+    style : str
+        The style to use for the plot.
+    """
+    plt.style.use(style)
+
+
+def reset(gallery_conf, fname) -> None:
+    """Reset the matplotlib configuration to the default one.
+
+    This is the hook called by sphinx-gallery before running each example
+    script, to avoid that configuration changes in one example affect the
+    subsequent ones. The callback is configured in ``docs/conf.py``, via the
+    ``reset_module`` key of the ``sphinx_gallery_conf``.
+    """
+    # pylint: disable=unused-argument
+    apply_stylesheet()
+
+
+# Note that we immediately apply the default stylesheet when importing
+# this module, so that any plotting operation done afterwards respects
+# the aptapy style.
+apply_stylesheet()
 
 
 @dataclass
@@ -486,21 +518,3 @@ def last_line_color(axes: matplotlib.axes.Axes = None, default: str = "black") -
         return axes.get_lines()[-1].get_color()
     except IndexError:
         return default
-
-
-def configure(*args) -> None:
-    """See https://matplotlib.org/stable/users/explain/customizing.html for more
-    information.
-
-    .. note::
-
-       Note that this function can be used as a hook by Sphinx Gallery to
-       configure the plotting environment for each example, so that the matplotlib
-       configuration is consistent across all examples and is not reset each time.
-       This is the reason why the function signature includes unused arguments.
-    """
-    # pylint: disable=unused-argument
-    plt.style.use("aptapy.styles.aptapy")
-
-
-configure()

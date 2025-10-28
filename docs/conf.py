@@ -50,7 +50,7 @@ sphinx_gallery_conf = {
     # "backreferences_dir": "gen_modules/backreferences",
     # "doc_module": ("yourpkg",),       # populate backrefs for your package API
     # "thumbnail_size": (320, 240),
-    "reset_modules": ("matplotlib", "aptapy.plotting.configure"),
+    "reset_modules": ("matplotlib", "aptapy.plotting.reset"),
 }
 
 # Options for syntax highlighting.

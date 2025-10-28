@@ -3,6 +3,7 @@
 # Patches
 # -------
 patch.force_edgecolor: True  # We like edges on the histograms bins.
+patch.linewidth: 1.2
 
 # Font
 # ----
@@ -18,7 +19,7 @@ axes.grid: True
 grid.color: "#b0b0b0"
 grid.linestyle: --
 grid.linewidth: 0.8
-grid.alpha: 0.8
+grid.alpha: 0.75
 
 # Legend
 # ------
@@ -35,4 +36,6 @@ figure.subplot.right: 0.97
 figure.subplot.bottom: 0.11
 figure.subplot.top: 0.96
 
+# Saving figures
+# --------------
 savefig.dpi: 300

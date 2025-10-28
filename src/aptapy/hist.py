@@ -198,6 +198,7 @@ class AbstractHistogram(AbstractPlottable):
         """Histogram addition.
         """
         histogram = self.copy()
+        histogram.label = None
         histogram += other
         return histogram
 
@@ -275,6 +276,15 @@ class Histogram1d(AbstractHistogram):
             The total area under the histogram.
         """
         return (self.content * self.bin_widths()).sum()
+
+    def __isub__(self, other):
+        if isinstance(other, Histogram1d):
+            return super().__isub__(other)
+        if callable(other):
+            # Assume other is a model
+            self._sumw -= other(self.bin_centers())
+            return self
+        raise TypeError(f"Cannot subtract {type(other)} from Histogram1d")
 
     def plot(self, axes: matplotlib.axes.Axes = None, statistics: bool = False, **kwargs) -> None:
         """Overloaded plot() method.

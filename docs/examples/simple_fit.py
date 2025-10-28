@@ -1,6 +1,6 @@
 """
-Simple fit example
-==================
+Simple fit
+==========
 
 Simple gaussian fit to histogram data.
 """

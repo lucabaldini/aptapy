@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Callable, Generator, Tuple
+from typing import Callable, Dict, Generator, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -138,7 +138,7 @@ def stylesheet_context(style: str = "aptapy") -> Generator[None, None, None]:
             yield
 
 
-def reset(gallery_conf, fname) -> None:
+def reset(gallery_conf: Dict = None, fname: str = None) -> None:
     """Reset the matplotlib configuration to the default one.
 
     This is the hook called by sphinx-gallery before running each example
@@ -153,7 +153,7 @@ def reset(gallery_conf, fname) -> None:
 # Note that we immediately apply the default stylesheet when importing
 # this module, so that any plotting operation done afterwards respects
 # the aptapy style.
-apply_stylesheet()
+reset()
 
 
 @dataclass

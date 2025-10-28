@@ -11,7 +11,9 @@ import numpy as np
 
 from aptapy.hist import Histogram1d
 from aptapy.modeling import Exponential, Gaussian
-from aptapy.plotting import plt, setup_gca
+from aptapy.plotting import apply_stylesheet, plt, setup_gca
+
+apply_stylesheet("aptapy-xkcd")
 
 fig = plt.figure()
 ax1, ax2 = fig.subplots(2, 1, sharex=True, gridspec_kw=dict(height_ratios=[2, 1.25], hspace=0.05))

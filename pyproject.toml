@@ -29,8 +29,6 @@ authors = [
 
 # start-deps (do not remove this, as it is used in a sphinx literalinclude)
 dependencies = [
-    "cycler",
-    "loguru",
     "matplotlib",
     "numpy",
     "scipy",

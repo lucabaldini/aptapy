@@ -16,15 +16,15 @@
 """Plotting facilities.
 """
 
+import pathlib
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
-import pathlib
 from typing import Callable, Tuple
 
 import matplotlib
-import matplotlib.pyplot as plt  # noqa: F401 pylint: disable=unused-import
+import matplotlib.pyplot as plt
 from matplotlib import patches
 from matplotlib.backend_bases import FigureCanvasBase
 
@@ -40,21 +40,26 @@ __all__ = [
 
 # Register the Humor Sans font in the matplotlib font manager, most notably for
 # the xkcd style. Note we ship the font file within the aptapy package as a
-# replacement for the default xkcd font, that is not freely distributable, see
-# the non-commercial clause at https://github.com/ipython/xkcd-font.
-HUMOR_SANS_FILE_PATH = pathlib.Path(__file__).parent.resolve() / "fonts" / "Humor-Sans.ttf"
-matplotlib.font_manager.fontManager.addfont(HUMOR_SANS_FILE_PATH)
+# replacement for the default xkcd font, that is not freely distributable---see
+# the non-commercial clause in the license at https://github.com/ipython/xkcd-font.
+_HUMOR_SANS_FILE_PATH = pathlib.Path(__file__).parent.resolve() / "fonts" / "Humor-Sans.ttf"
+matplotlib.font_manager.fontManager.addfont(_HUMOR_SANS_FILE_PATH)
 
 
 def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
-    """Apply a given matplotlib stylesheet.
+    """Apply a given matplotlib stylesheet permanently.
 
     See https://matplotlib.org/stable/users/explain/customizing.html for more
     information about the basic matplotlib customization.
 
-    Note that `plt.style.use <https://matplotlib.org/stable/api/style_api.html#matplotlib.style.use>`_
+    Note `plt.style.use <https://matplotlib.org/stable/api/style_api.html#matplotlib.style.use>`_
     accepts dotted names of the form ``package.style_name`` (in that case, ``package``
-    should be an importable Python package name; style files in subpackages are.)
+    should be an importable Python package name; style files in subpackages are
+    allowed too.)
+
+    If you want to temporarily apply a given style, consider using the
+    ``plt.style.context()`` context manager instead (the rules for the stylesheets
+    are exactly the same).
 
     Arguments
     ---------
@@ -64,17 +69,20 @@ def apply_stylesheet(style: str = "aptapy.styles.aptapy") -> None:
     # If we are using the xkcd style, we also need to enter the native xkcd
     # matplotlib context.
     if "xkcd" in style:
-        plt.xkcd().__enter__()
+        plt.xkcd()
     plt.style.use(style)
 
 
 @contextmanager
 def aptapy_xkcd() -> None:
-    """Apply the xkcd style to matplotlib plots, using the Humor Sans font.
+    """Context manager to temporarily apply the xkcd style to matplotlib plots,
+    using the Humor Sans fonts shipped with aptapy.
+
+    Note this enters the native matplotlib xkcd context first, and then applies
+    the necessary tweaks defined in our custom stylesheet.
     """
-    with plt.xkcd():
-        with plt.style.context("aptapy.styles.aptapy-xkcd"):
-            yield
+    with plt.xkcd(), plt.style.context("aptapy.styles.aptapy-xkcd"):
+        yield
 
 
 def reset(gallery_conf, fname) -> None:

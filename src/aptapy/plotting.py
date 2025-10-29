@@ -610,7 +610,7 @@ def last_line_color(axes: matplotlib.axes.Axes = None, default: str = "black") -
 
 
 def subplot_vstack(num_rows: int = 2, sharex: bool = True, height_ratios: List = None,
-                   gridspec_kw: Dict = None, **kwargs):
+                   gridspec_kw: Dict = None, **kwargs) -> List:
     """Create a vertical stack of axes in a new figure.
 
     This is intended to be a small wrapper around the ``subplots()`` methods for
@@ -665,7 +665,7 @@ def subplot_vstack(num_rows: int = 2, sharex: bool = True, height_ratios: List =
 
 
 def residual_axes(sharex: bool = True, height_ratio: float = 0.5,
-                  gridspec_kw: Dict = None, **kwargs):
+                  gridspec_kw: Dict = None, **kwargs) -> List:
     """Create a vertical stack of two subplots suitable for a residual plot.
 
     Arguments

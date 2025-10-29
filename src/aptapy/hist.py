@@ -303,7 +303,7 @@ class Histogram1d(AbstractHistogram):
             # The bin errors stay unchanged.
             self._sumw -= other(self.bin_centers())
             return self
-        raise TypeError(f"Cannot subtract {type(other)} from Histogram1d")
+        raise NotImplementedError(f"Cannot subtract {type(other)} from Histogram1d")
 
     def plot(self, axes: matplotlib.axes.Axes = None, statistics: bool = False,
              errors: bool = False, **kwargs) -> None:

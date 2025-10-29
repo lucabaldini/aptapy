@@ -5,7 +5,7 @@ Release notes
 
 * Added support for subtracting callable models from ``Histogram1d`` objects
   (this is useful, e.g., to create a residual histogram wrt a fit model).
-* Introduced ``vertical_axes_stack()`` and ``residual_axes()`` functions for
+* Introduced ``subplot_vstack()`` and ``residual_axes()`` functions for
   creating multi-panel plots.
 * Enhanced the ``fit()`` method to support excluding intervals when xmin > xmax.
 * Improved histogram copying functionality to allow optional relabeling.

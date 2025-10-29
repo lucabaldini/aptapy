@@ -24,7 +24,7 @@ signal.fill(np.random.default_rng().normal(loc=6., scale=0.5, size=10000))
 background = Histogram1d(binning, label="Background")
 background.fill(np.random.default_rng().exponential(scale=3., size=100000))
 
-#Sum the two histograms to create the total histogram, and fit an exponential
+# Sum the two histograms to create the total histogram, and fit an exponential
 total = signal + background
 background_model = Exponential()
 # Note the use of xmin > xmax to fit outside the signal region: this will actually

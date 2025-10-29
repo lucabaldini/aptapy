@@ -623,7 +623,9 @@ def vertical_axes_stack(num_axes: int = 2, figure_kw: dict = None, gridspec_kw: 
     gridspec_kw.setdefault("height_ratios", [1.] * num_axes)
     axes_list = fig.subplots(num_axes, 1, sharex=True, gridspec_kw=gridspec_kw)
     fig.align_ylabels(axes_list)
-    return fig, *axes_list
+    # Note ``fig, *axes_list`` (iterable unpacking in return statements)
+    # was only added in Python 3.8).
+    return [fig] + list(axes_list)
 
 
 def residual_axes(figure_kw: dict = None, gridspec_kw: dict = None):

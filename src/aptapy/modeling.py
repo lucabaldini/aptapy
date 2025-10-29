@@ -720,7 +720,7 @@ class AbstractFitModelBase(AbstractPlottable):
         # selection...
         if xmin < xmax:
             mask = np.logical_and(xdata >= xmin, xdata <= xmax)
-        # ... while if xmin > xmax we tale this as signaling that we want to
+        # ... while if xmin > xmax we take this as signaling that we want to
         # exclude the (xmax, xmin) interval, and do an out-of-range selection.
         else:
             mask = np.logical_or(xdata >= xmin, xdata <= xmax)

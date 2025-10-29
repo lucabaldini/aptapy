@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Callable, Dict, Generator, Tuple
+from typing import Callable, Dict, Generator, List, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -609,30 +609,80 @@ def last_line_color(axes: matplotlib.axes.Axes = None, default: str = "black") -
         return default
 
 
-def vertical_axes_stack(num_axes: int = 2, figure_kw: dict = None, gridspec_kw: dict = None):
+def subplot_vstack(num_rows: int = 2, sharex: bool = True, height_ratios: List = None,
+                   gridspec_kw: Dict = None, **kwargs):
     """Create a vertical stack of axes in a new figure.
+
+    This is intended to be a small wrapper around the ``subplots()`` methods for
+    the case of a single column of vertically stacked axes. The signature of the
+    function only exposes the relevant parameters for this specific case.
+
+    Arguments
+    ---------
+    num_rows : int
+        The number of rows (i.e., axes) to create.
+
+    sharex : bool
+        Flag indicating whether the x axis should be shared across all axes. Defaults to True.
+
+    height_ratios : List
+        A list of height ratios for the different axes. If None, all axes will have the
+        same height.
+
+    gridspec_kw : Dict
+        Additional keyword arguments passed to the ``GridSpec`` constructor.
+
+    kwargs : keyword arguments
+        Additional keyword arguments passed to the ``figure()`` constructor.
     """
-    if figure_kw is None:
-        figure_kw = {}
+    # Create the figure. Note the heuristic in the default figsize: we take the
+    # default figure width and scale the default height with the square root of
+    # the number of rows, i.e., this 1.41 times the default height for 2 rows,
+    # 2 time for 4 rows, and so on.
     width, height = plt.rcParams["figure.figsize"]
-    figure_kw.setdefault("figsize", (width, height * np.sqrt(num_axes)))
-    fig = plt.figure(**figure_kw)
+    kwargs.setdefault("figsize", (width, height * np.sqrt(num_rows)))
+    fig = plt.figure(**kwargs)
+
+    # Create the subplots. If no height ratios are given, all the subplots
+    # will have the same height.
+    height_ratios = height_ratios or [1.] * num_rows
     if gridspec_kw is None:
         gridspec_kw = {}
     gridspec_kw.setdefault("hspace", 0.05)
-    gridspec_kw.setdefault("height_ratios", [1.] * num_axes)
-    axes_list = fig.subplots(num_axes, 1, sharex=True, gridspec_kw=gridspec_kw)
+    # Create the subplots.
+    axes_list = fig.subplots(num_rows, 1, sharex=sharex, gridspec_kw=gridspec_kw)
+    # Align all the labels on the y axis for all the subplots.
     fig.align_ylabels(axes_list)
-    # Note ``fig, *axes_list`` (iterable unpacking in return statements)
-    # was only added in Python 3.8).
+    # Hide the x axis labels for all but the last (bottom-most) axes.
+    for ax in axes_list[:-1]:
+        ax.xaxis.label.set_visible(False)
+
+    # Here it would have been nice to be able to do ``fig, *axes_list``, but
+    # unfortunately this functionality (iterable unpacking in return statements)
+    # was only added in Python 3.8, and we are still committed to support
+    # Python 3.7.
     return [fig] + list(axes_list)
 
 
-def residual_axes(figure_kw: dict = None, gridspec_kw: dict = None):
-    """Create a vertical stack of two subplots for a residual plot.
+def residual_axes(sharex: bool = True, height_ratio: float = 0.5,
+                  gridspec_kw: Dict = None, **kwargs):
+    """Create a vertical stack of two subplots suitable for a residual plot.
+
+    Arguments
+    ---------
+    sharex : bool
+        Flag indicating whether the x axis should be shared across both axes. Defaults to True.
+
+    height_ratio : float
+        The height ratio between the residuals axes and the main axes. Note this is
+        a float, and it not the same thing as the height_ratios argument of
+        subplot_vstack().
+
+    gridspec_kw : Dict
+        Additional keyword arguments passed to the ``GridSpec`` constructor.
+
+    kwargs : keyword arguments
+        Additional keyword arguments passed to the ``figure()`` constructor.
     """
-    if gridspec_kw is None:
-        gridspec_kw = {}
-    gridspec_kw.setdefault("hspace", 0.05)
-    gridspec_kw.setdefault("height_ratios", [1., 0.5])
-    return vertical_axes_stack(2, figure_kw, gridspec_kw)
+    height_ratios = [1., height_ratio]
+    return subplot_vstack(2, sharex, height_ratios, gridspec_kw, **kwargs)

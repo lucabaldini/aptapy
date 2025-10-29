@@ -3,6 +3,18 @@
 Release notes
 =============
 
+* Added support for subtracting callable models from ``Histogram1d`` objects
+  (this is useful, e.g., to create a residual histogram wrt a fit model).
+* Introduced ``subplot_vstack()`` and ``residual_axes()`` functions for
+  creating multi-panel plots.
+* Enhanced the ``fit()`` method to support excluding intervals when xmin > xmax.
+* Improved histogram copying functionality to allow optional relabeling.
+* Updated documentation and example gallery.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/32
+  - https://github.com/lucabaldini/aptapy/issues/30
+
 
 Version 0.11.0 (2025-10-28)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -16,7 +16,7 @@
 """Histogram facilities.
 """
 
-from typing import List, Sequence, Tuple
+from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
 import numpy as np
@@ -161,14 +161,20 @@ class AbstractHistogram(AbstractPlottable):
         self._sumw2 += sumw2
         return self
 
-    def copy(self) -> "AbstractHistogram":
+    def copy(self, label: str = None) -> "AbstractHistogram":
         """Create a full copy of a histogram.
+
+        Arguments
+        ---------
+        label : str
+            the label for the copied histogram. If None (default), the label of the
+            original histogram is used.
         """
         # pylint: disable=protected-access
         # Note we really need the * in the constructor, here, as the abstract
         # base class is never instantiated, and the arguments are unpacked in the
         # constructors of all the derived classes.
-        histogram = self.__class__(*self._edges, self.label, *self.axis_labels)
+        histogram = self.__class__(*self._edges, label or self.label, *self.axis_labels)
         histogram._sumw = self._sumw.copy()
         histogram._sumw2 = self._sumw2.copy()
         return histogram
@@ -198,6 +204,9 @@ class AbstractHistogram(AbstractPlottable):
         """Histogram addition.
         """
         histogram = self.copy()
+        # It is not immediately obvious what the right label for the new histogram
+        # should be in all possible cases, so we just drop it.
+        histogram.label = None
         histogram += other
         return histogram
 
@@ -213,6 +222,9 @@ class AbstractHistogram(AbstractPlottable):
         """Histogram subtraction.
         """
         histogram = self.copy()
+        # It is not immediately obvious what the right label for the new histogram
+        # should be in all possible cases, so we just drop it.
+        histogram.label = None
         histogram -= other
         return histogram
 
@@ -276,7 +288,25 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
-    def plot(self, axes: matplotlib.axes.Axes = None, statistics: bool = False, **kwargs) -> None:
+    def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":
+        """Overloaded in-place subtraction operator.
+
+        Here we allow subtracting either another histogram (as in the base class)
+        or a callable object (e.g., a fitting model) that is evaluated at the bin
+        centers.
+        """
+        if isinstance(other, Histogram1d):
+            return super().__isub__(other)
+        if callable(other):
+            # Assume other is a model with no uncertainties. We evaluate the model
+            # at the bin centers and subtract the result from the histogram content.
+            # The bin errors stay unchanged.
+            self._sumw -= other(self.bin_centers())
+            return self
+        raise NotImplementedError(f"Cannot subtract {type(other)} from Histogram1d")
+
+    def plot(self, axes: matplotlib.axes.Axes = None, statistics: bool = False,
+             errors: bool = False, **kwargs) -> None:
         """Overloaded plot() method.
 
         This method adds an option to include basic statistics (mean and RMS) in the
@@ -292,6 +322,9 @@ class Histogram1d(AbstractHistogram):
             whether to include basic statistics (mean and RMS) in the legend entry
             (default: False).
 
+        errors : bool, optional
+            whether to overplot the error bars (default: False).
+
         kwargs : keyword arguments
             additional keyword arguments passed to the plotting backend.
         """
@@ -301,11 +334,22 @@ class Histogram1d(AbstractHistogram):
             mean, rms = self.binned_statistics()
             kwargs["label"] = f"{label}\nMean: {mean:g}\nRMS: {rms:g}"
         super().plot(axes, **kwargs)
+        if errors:
+            # Need to recover the color and alpha used in the histogram
+            # plotting to make the error bars match.
+            color = kwargs.get("color", plt.rcParams["patch.edgecolor"])
+            alpha = kwargs.get("alpha", self.DEFAULT_PLOT_OPTIONS["alpha"])
+            self._render_errors(axes, fmt=',', color=color, alpha=alpha)
 
     def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
         """Overloaded method.
         """
         axes.hist(self.bin_centers(0), self._edges[0], weights=self.content, **kwargs)
+
+    def _render_errors(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
+        """Small convenience function to overplot the error bars on the histogram.
+        """
+        axes.errorbar(self.bin_centers(0), self._sumw, self.errors, **kwargs)
 
     def __str__(self) -> str:
         """String formatting.

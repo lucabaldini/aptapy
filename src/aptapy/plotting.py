@@ -25,6 +25,7 @@ from typing import Callable, Dict, Generator, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import patches
 from matplotlib.backend_bases import FigureCanvasBase
 
@@ -606,3 +607,30 @@ def last_line_color(axes: matplotlib.axes.Axes = None, default: str = "black") -
         return axes.get_lines()[-1].get_color()
     except IndexError:
         return default
+
+
+def vertical_axes_stack(num_axes: int = 2, figure_kw: dict = None, gridspec_kw: dict = None):
+    """Create a vertical stack of axes in a new figure.
+    """
+    if figure_kw is None:
+        figure_kw = {}
+    width, height = plt.rcParams["figure.figsize"]
+    figure_kw.setdefault("figsize", (width, height * np.sqrt(num_axes)))
+    fig = plt.figure(**figure_kw)
+    if gridspec_kw is None:
+        gridspec_kw = {}
+    gridspec_kw.setdefault("hspace", 0.05)
+    gridspec_kw.setdefault("height_ratios", [1.] * num_axes)
+    axes_list = fig.subplots(num_axes, 1, sharex=True, gridspec_kw=gridspec_kw)
+    fig.align_ylabels(axes_list)
+    return fig, *axes_list
+
+
+def residual_axes(figure_kw: dict = None, gridspec_kw: dict = None):
+    """Create a vertical stack of two subplots for a residual plot.
+    """
+    if gridspec_kw is None:
+        gridspec_kw = {}
+    gridspec_kw.setdefault("hspace", 0.05)
+    gridspec_kw.setdefault("height_ratios", [1., 0.5])
+    return vertical_axes_stack(2, figure_kw, gridspec_kw)

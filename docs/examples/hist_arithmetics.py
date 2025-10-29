@@ -12,7 +12,7 @@ import numpy as np
 
 from aptapy.hist import Histogram1d
 from aptapy.modeling import Exponential, Gaussian
-from aptapy.plotting import plt, residual_axes, setup_gca
+from aptapy.plotting import residual_axes, setup_gca
 
 # Custom command to create two vertically aligned axes with shared x-axis.
 fig, ax1, ax2 = residual_axes()

@@ -16,7 +16,7 @@
 """Histogram facilities.
 """
 
-from typing import List, Sequence, Tuple
+from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
 import numpy as np
@@ -161,14 +161,20 @@ class AbstractHistogram(AbstractPlottable):
         self._sumw2 += sumw2
         return self
 
-    def copy(self) -> "AbstractHistogram":
+    def copy(self, label: str = None) -> "AbstractHistogram":
         """Create a full copy of a histogram.
+
+        Arguments
+        ---------
+        label : str
+            the label for the copied histogram. If None (default), the label of the
+            original histogram is used.
         """
         # pylint: disable=protected-access
         # Note we really need the * in the constructor, here, as the abstract
         # base class is never instantiated, and the arguments are unpacked in the
         # constructors of all the derived classes.
-        histogram = self.__class__(*self._edges, self.label, *self.axis_labels)
+        histogram = self.__class__(*self._edges, label or self.label, *self.axis_labels)
         histogram._sumw = self._sumw.copy()
         histogram._sumw2 = self._sumw2.copy()
         return histogram
@@ -198,6 +204,8 @@ class AbstractHistogram(AbstractPlottable):
         """Histogram addition.
         """
         histogram = self.copy()
+        # It is not immediately obvious what the right label for the new histogram
+        # should be in all possible cases, so we just drop it.
         histogram.label = None
         histogram += other
         return histogram
@@ -214,6 +222,9 @@ class AbstractHistogram(AbstractPlottable):
         """Histogram subtraction.
         """
         histogram = self.copy()
+        # It is not immediately obvious what the right label for the new histogram
+        # should be in all possible cases, so we just drop it.
+        histogram.label = None
         histogram -= other
         return histogram
 
@@ -277,11 +288,19 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
-    def __isub__(self, other):
+    def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":
+        """Overloaded in-place subtraction operator.
+
+        Here we allow subtracting either another histogram (as in the base class)
+        or a callable object (e.g., a fitting model) that is evaluated at the bin
+        centers.
+        """
         if isinstance(other, Histogram1d):
             return super().__isub__(other)
         if callable(other):
-            # Assume other is a model
+            # Assume other is a model with no uncertainties. We evaluate the model
+            # at the bin centers and subtract the result from the histogram content.
+            # The bin errors stay unchanged.
             self._sumw -= other(self.bin_centers())
             return self
         raise TypeError(f"Cannot subtract {type(other)} from Histogram1d")

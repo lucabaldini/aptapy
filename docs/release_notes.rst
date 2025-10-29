@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.12.0 (2025-10-29)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Added support for subtracting callable models from ``Histogram1d`` objects
   (this is useful, e.g., to create a residual histogram wrt a fit model).
 * Introduced ``subplot_vstack()`` and ``residual_axes()`` functions for

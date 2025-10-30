@@ -386,9 +386,10 @@ def test_sum_frozen():
     plt.figure(inspect.currentframe().f_code.co_name)
     x = np.linspace(0., 8., 50)
     y = np.exp(-x) + 1. + _RNG.normal(scale=error, size=x.shape)
-    model = Exponential() + Constant()
-    model._components[1].value.freeze(1.)
-    model.fit(x, y, sigma=error)
     plt.errorbar(x, y, error, label="Data", fmt="o")
+
+    model = Exponential() + Constant()
+    model[1].value.freeze(1.)
+    model.fit(x, y, sigma=error)
     model.plot(fit_output=True)
     plt.legend()

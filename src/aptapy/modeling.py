@@ -1039,6 +1039,21 @@ class FitModelSum(AbstractFitModelBase):
         """
         return " + ".join(component.name() for component in self._components)
 
+    def __getitem__(self, index: int) -> AbstractFitModel:
+        """Return the component at the given index.
+
+        Arguments
+        ---------
+        index : int
+            The index of the component to return.
+
+        Returns
+        -------
+        component : AbstractFitModel
+            The component at the given index.
+        """
+        return self._components[index]
+
     def __len__(self) -> int:
         """Return the sum of `all` the fit parameters in the underlying models.
         """

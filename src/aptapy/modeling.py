@@ -1138,7 +1138,24 @@ class FitModelSum(AbstractFitModelBase):
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
              plot_components: bool = True, **kwargs) -> None:
-        """Overloaded method for plotting the model.
+        """
+        Overloaded method for plotting the model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes on which to plot the model. If None, uses the current axes.
+        fit_output : bool, optional
+            If True, displays the fit output on the plot. Default is False.
+        plot_components : bool, optional
+            If True, plots the individual components of the model as dashed lines.
+            Default is True.
+        **kwargs
+            Additional keyword arguments passed to the underlying plot function.
+
+        Returns
+        -------
+        None
         """
         super().plot(axes, fit_output=fit_output, **kwargs)
         color = plt.gca().lines[-1].get_color()

@@ -1457,10 +1457,9 @@ class StretchedExponential(Exponential):
     """Stretched exponential model.
     """
 
-    stretch = FitParameter(1.)
+    stretch = FitParameter(1., minimum=0.)
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
+    def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         x = x - self.origin
         return prefactor * np.exp(-(x / scale)**stretch)

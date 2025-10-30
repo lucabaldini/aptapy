@@ -622,7 +622,7 @@ class AbstractFitModelBase(AbstractPlottable):
         if not constraints:
             return model_function
 
-        # Cache a couple of constant to save on line length later.
+        # Cache a couple of constants to save on line length later.
         positional_only = inspect.Parameter.POSITIONAL_ONLY
         positional_or_keyword = inspect.Parameter.POSITIONAL_OR_KEYWORD
 
@@ -1088,7 +1088,7 @@ class FitModelSum(AbstractFitModelBase):
         Since components can be added at runtime, we need to build the signature
         dynamically.
         """
-        # Cache a couple of constant to save on line length later.
+        # Cache a couple of constants to save on line length later.
         positional_only = inspect.Parameter.POSITIONAL_ONLY
         positional_or_keyword = inspect.Parameter.POSITIONAL_OR_KEYWORD
         # Note that for a FitModelSum object the first argument is `self`, as

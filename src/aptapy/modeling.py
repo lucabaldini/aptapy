@@ -640,6 +640,7 @@ class AbstractFitModelBase(AbstractPlottable):
         # that set(dict) returns the set of the keys, and after subtracting the two sets
         # you end up with all the names of the unknown parameters, which is handy to
         # print out an error message.
+        print(model_function, constraints, parameter_names)
         unknown_parameter_names = set(constraints) - set(parameter_names)
         if unknown_parameter_names:
             raise ValueError(f"Cannot freeze unknown parameters {unknown_parameter_names}")
@@ -1348,6 +1349,44 @@ class Exponential(AbstractFitModel):
         """Overloaded method.
         """
         return (0., scale_factor * self.scale.value)
+
+
+class ShiftedExponential(Exponential):
+
+    """Shifted exponential model.
+    """
+
+    origin = FitParameter(0.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, scale: float, origin: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return prefactor * np.exp(-(x - origin) / scale)
+
+    #def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+    #    """Overloaded method.
+    #    """
+    #    super().init_parameters(xdata - self.origin.value, ydata, sigma)
+    #    self.origin.init(0.)
+
+
+class StretchedExponential(Exponential):
+
+    """Stretched exponential model.
+    """
+
+    stretch = FitParameter(1.)
+
+    @staticmethod
+    def evaluate(x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        return prefactor * np.exp(-(x / scale)**stretch)
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1):
+        """Overloaded method.
+        """
+        super().init_parameters(xdata, ydata, sigma)
+        self.stretch.init(1.)
 
 
 class _GaussianBase(AbstractFitModel):

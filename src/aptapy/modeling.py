@@ -1136,14 +1136,16 @@ class FitModelSum(AbstractFitModelBase):
         """
         return sum(component.integral(xmin, xmax) for component in self._components)
 
-    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_components: bool = True, **kwargs) -> None:
         """Overloaded method for plotting the model.
         """
         super().plot(axes, fit_output=fit_output, **kwargs)
         color = plt.gca().lines[-1].get_color()
         x = self._plotting_grid()
-        for component in self._components:
-            plt.plot(x, component(x), label=None, ls="--", color=color)
+        if plot_components:
+            for component in self._components:
+                plt.plot(x, component(x), label=None, ls="--", color=color)
 
     def _format_fit_output(self, spec: str) -> str:
         """String formatting for fit output.

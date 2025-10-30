@@ -391,5 +391,5 @@ def test_sum_frozen():
     model = Exponential() + Constant()
     model[1].value.freeze(1.)
     model.fit(x, y, sigma=error)
-    model.plot(fit_output=True)
+    model.plot(fit_output=True, plot_components=False)
     plt.legend()

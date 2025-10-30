@@ -8,7 +8,7 @@ Release notes
   ``composite_model[0]`` returns the first component).
 * Added a unit test for composite model parameter freezing.
 * New ``plot_components`` argument in the ``plot()`` method of fit models to
-  controls individual components of composite models.
+  control individual components of composite models.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/38

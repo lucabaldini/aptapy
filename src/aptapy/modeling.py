@@ -1145,13 +1145,16 @@ class FitModelSum(AbstractFitModelBase):
         ---------
         axes : matplotlib.axes.Axes, optional
             The axes on which to plot the model. If None, uses the current axes.
+
         fit_output : bool, optional
-            If True, displays the fit output on the plot. Default is False.
+            If True, displays the fit output on the legend. Default is False.
+
         plot_components : bool, optional
             If True, plots the individual components of the model as dashed lines.
             Default is True.
-        **kwargs
-            Additional keyword arguments passed to the underlying plot function.
+
+        kwargs
+            Additional keyword arguments passed to the parent class.
 
         Returns
         -------

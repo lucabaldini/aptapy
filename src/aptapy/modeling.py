@@ -1064,6 +1064,25 @@ class FitModelSum(AbstractFitModelBase):
         """
         return chain(*self._components)
 
+    @staticmethod
+    def _param(name: str, kind: inspect._ParameterKind) -> inspect.Parameter:
+        """Helper function to create an inspect.Parameter object.
+
+        Arguments
+        ---------
+        name : str
+            The name of the parameter.
+
+        kind : inspect.ParameterKind
+            The kind of the parameter.
+
+        Returns
+        -------
+        parameter : inspect.Parameter
+            The created parameter.
+        """
+        return inspect.Parameter(name, kind)
+
     def signature(self) -> inspect.Signature:
         """Return the signature of the evaluate method at any given instant in time.
 
@@ -1073,12 +1092,11 @@ class FitModelSum(AbstractFitModelBase):
         # Cache a couple of constant to save on line length later.
         positional_only = inspect.Parameter.POSITIONAL_ONLY
         positional_or_keyword = inspect.Parameter.POSITIONAL_OR_KEYWORD
-        _param = lambda name, kind: inspect.Parameter(name, kind)
         # Note that for a FitModelSum object the first argument is `self`, as
         # evaluate() is not a static method.
-        parameters = [_param("self", positional_only), _param("x", positional_only)]
+        parameters = [self._param("self", positional_only), self._param("x", positional_only)]
         # And, after self and x, we have all the parameters of all the components.
-        parameters += [_param(parameter.name, positional_or_keyword) for parameter in self]
+        parameters += [self._param(parameter.name, positional_or_keyword) for parameter in self]
         return inspect.Signature(parameters)
 
     def freeze(self, model_function, **constraints) -> Callable:
@@ -1091,6 +1109,7 @@ class FitModelSum(AbstractFitModelBase):
         so we need to build a new signature that reflects the actual parameters
         of the model when we actually want to use it in a fit.
         """
+        # pylint: disable=arguments-differ
         if not constraints:
             return model_function
         # Sticky point: model_function.__signature__ = self.signature() would

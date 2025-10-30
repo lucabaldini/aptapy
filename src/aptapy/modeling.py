@@ -632,7 +632,6 @@ class AbstractFitModelBase(AbstractPlottable):
         # ... while all the others, internally, are passed positionally only
         # (i.e., never as keywords), so here we cache all the names of the
         # positional parameters.
-        print(parameters)
         parameter_names = [parameter.name for parameter in parameters if
                            parameter.kind in (positional_only, positional_or_keyword)]
 

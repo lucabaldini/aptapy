@@ -3,6 +3,15 @@
 Release notes
 =============
 
+* Fix for issue #33 (cannot freeze parameters for composite models).
+* Components within composite models now accessible via indexing (e.g.,
+  ``composite_model[0]`` returns the first component).
+* Added a unit test for composite model parameter freezing.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/37
+  - https://github.com/lucabaldini/aptapy/issues/33
+
 
 Version 0.12.0 (2025-10-29)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

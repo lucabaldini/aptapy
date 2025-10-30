@@ -377,3 +377,18 @@ def test_multiple_sum():
     model.set_plotting_range(-5., 5.)
     model.plot()
     plt.legend()
+
+
+def test_sum_frozen():
+    """Test fitting the sum of two models with a frozen parameter.
+    """
+    error = 0.05
+    plt.figure(inspect.currentframe().f_code.co_name)
+    x = np.linspace(0., 8., 50)
+    y = np.exp(-x) + 1. + _RNG.normal(scale=error, size=x.shape)
+    model = Exponential() + Constant()
+    model._components[1].value.freeze(1.)
+    model.fit(x, y, sigma=error)
+    plt.errorbar(x, y, error, label="Data", fmt="o")
+    model.plot(fit_output=True)
+    plt.legend()

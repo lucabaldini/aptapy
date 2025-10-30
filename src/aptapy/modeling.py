@@ -1063,40 +1063,26 @@ class FitModelSum(AbstractFitModelBase):
         """
         return chain(*self._components)
 
-    @staticmethod
-    def _param(name: str, kind: inspect._ParameterKind) -> inspect.Parameter:
-        """Helper function to create an inspect.Parameter object.
-
-        Arguments
-        ---------
-        name : str
-            The name of the parameter.
-
-        kind : inspect.ParameterKind
-            The kind of the parameter.
-
-        Returns
-        -------
-        parameter : inspect.Parameter
-            The created parameter.
+    def _wrap_evaluate(self) -> Callable:
+        """Helper function to build a wrapper around the evaluate() method with
+        the (correct) explicit signature, including all the parameter names.
         """
-        return inspect.Parameter(name, kind)
+        # Build the correct signature for the evaluate() method. Note that
+        # the method bound to the class has signature (self, x, *parameter_values)
+        # and we do want a wrapper with signature (x, param1, param2, ...).
+        parameters = [inspect.Parameter("x", inspect.Parameter.POSITIONAL_ONLY)]
+        parameter_kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
+        parameters.extend(inspect.Parameter(par.name, parameter_kind) for par in self)
+        signature = inspect.Signature(parameters)
 
-    def signature(self) -> inspect.Signature:
-        """Return the signature of the evaluate method at any given instant in time.
+        # Create a loose wrapper around evaluate().
+        @functools.wraps(self.evaluate)
+        def wrapper(x, *args):
+            return self.evaluate(x, *args)
 
-        Since components can be added at runtime, we need to build the signature
-        dynamically.
-        """
-        # Cache a couple of constants to save on line length later.
-        positional_only = inspect.Parameter.POSITIONAL_ONLY
-        positional_or_keyword = inspect.Parameter.POSITIONAL_OR_KEYWORD
-        # Note that for a FitModelSum object the first argument is `self`, as
-        # evaluate() is not a static method.
-        parameters = [self._param("self", positional_only), self._param("x", positional_only)]
-        # And, after self and x, we have all the parameters of all the components.
-        parameters += [self._param(parameter.name, positional_or_keyword) for parameter in self]
-        return inspect.Signature(parameters)
+        # Set the correct signature on the wrapper and return it.
+        wrapper.__signature__ = signature
+        return wrapper
 
     def freeze(self, model_function, **constraints) -> Callable:
         """Overloaded method.
@@ -1106,17 +1092,15 @@ class FitModelSum(AbstractFitModelBase):
         components to sum over; (ii) since components can be added at runtime,
         the original signature of the function is generic, with *parameter_values,
         so we need to build a new signature that reflects the actual parameters
-        of the model when we actually want to use it in a fit.
+        of the model when we actually want to use it in a fit. In order to make
+        this work, when freezing parameters we build a wrapper around evaluate()
+        with the correct signature, and pass it downstream to the static freeze()
+        method of the parent class AbstractFitModel.
         """
         # pylint: disable=arguments-differ
         if not constraints:
             return model_function
-        # Sticky point: model_function.__signature__ = self.signature() would
-        # raise an AttributeError, as model_function is a function object, and
-        # function objects do not have a __signature__ attribute. So we need
-        # to set it on the class method itself.
-        self.__class__.evaluate.__signature__ = self.signature()
-        return AbstractFitModel.freeze(self.evaluate, **constraints)
+        return AbstractFitModel.freeze(self._wrap_evaluate(), **constraints)
 
     def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
         """Overloaded method for evaluating the model.

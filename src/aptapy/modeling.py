@@ -1048,6 +1048,24 @@ class FitModelSum(AbstractFitModelBase):
         """
         return chain(*self._components)
 
+    def signature(self) -> inspect.Signature:
+        """Return the signature of the evaluate method.
+
+        Since components can be added at runtime, we need to build the signature
+        dynamically.
+        """
+        _param = lambda name: inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        parameters = [_param("x")] + [_param(parameter.name) for parameter in self]
+        return inspect.Signature(parameters)
+
+    def freeze(self, model_function, **constraints) -> Callable:
+        """Overloaded method.
+        """
+        #if not constraints:
+        #    return model_function
+        #model_function.__signature__ = self.signature()
+        AbstractFitModel.freeze(model_function, **constraints)
+
     def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
         """Overloaded method for evaluating the model.
 

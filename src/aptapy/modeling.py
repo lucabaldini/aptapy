@@ -640,7 +640,6 @@ class AbstractFitModelBase(AbstractPlottable):
         # that set(dict) returns the set of the keys, and after subtracting the two sets
         # you end up with all the names of the unknown parameters, which is handy to
         # print out an error message.
-        print(model_function, constraints, parameter_names)
         unknown_parameter_names = set(constraints) - set(parameter_names)
         if unknown_parameter_names:
             raise ValueError(f"Cannot freeze unknown parameters {unknown_parameter_names}")
@@ -1338,6 +1337,11 @@ class PowerLaw(AbstractFitModel):
         using non-linear least squares would be needed.
         """
         # pylint: disable=invalid-name
+        mask = np.logical_and(xdata > 0., ydata > 0.)
+        xdata = xdata[mask]
+        ydata = ydata[mask]
+        if isinstance(sigma, np.ndarray):
+            sigma = sigma[mask]
         X = np.log(xdata)
         Y = np.log(ydata)
         # Propagate the errors to log space.
@@ -1382,14 +1386,27 @@ class PowerLaw(AbstractFitModel):
 class Exponential(AbstractFitModel):
 
     """Exponential model.
+
+    Note this is an example of a model with a state, i. e., one where ``evaluate()``
+    is not a static method, as we have an ``origin`` attribute that needs to be
+    taken into account. This is done in the spirit of facilitating fits where
+    the exponential decay starts at a non-zero x value.
+
+    (One might argue that ``origin`` should be a fit parameter as well, but that
+    would be degenerate with the ``scale`` parameter, and it would have to be
+    fixed in most cases anyway, so a simple attribute seems more appropriate here.)
     """
 
     prefactor = FitParameter(1.)
     scale = FitParameter(1.)
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
+    def __init__(self, origin: float = 0.) -> None:
+        super().__init__()
+        self.origin = origin
+
+    def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
         # pylint: disable=arguments-differ
+        x = x - self.origin
         return prefactor * np.exp(-x / scale)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
@@ -1400,7 +1417,13 @@ class Exponential(AbstractFitModel):
         using non-linear least squares would be needed.
         """
         # pylint: disable=invalid-name
-        X = xdata
+        # Filter out non-positive ydata values, as we shall take the logarithm.
+        mask = ydata > 0.
+        xdata = xdata[mask]
+        ydata = ydata[mask]
+        if isinstance(sigma, np.ndarray):
+            sigma = sigma[mask]
+        X = xdata - self.origin
         Y = np.log(ydata)
         # Propagate the errors to log space.
         weights = ydata**2. / sigma**2.
@@ -1419,31 +1442,14 @@ class Exponential(AbstractFitModel):
         """Overloaded method with the analytical integral.
         """
         prefactor, scale = self.parameter_values()
+        xmin = xmin - self.origin
+        xmax = xmax - self.origin
         return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
         """Overloaded method.
         """
-        return (0., scale_factor * self.scale.value)
-
-
-class ShiftedExponential(Exponential):
-
-    """Shifted exponential model.
-    """
-
-    origin = FitParameter(0.)
-
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, scale: float, origin: float) -> ArrayLike:
-        # pylint: disable=arguments-differ
-        return prefactor * np.exp(-(x - origin) / scale)
-
-    #def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-    #    """Overloaded method.
-    #    """
-    #    super().init_parameters(xdata - self.origin.value, ydata, sigma)
-    #    self.origin.init(0.)
+        return (self.origin, self.origin + scale_factor * self.scale.value)
 
 
 class StretchedExponential(Exponential):
@@ -1456,6 +1462,7 @@ class StretchedExponential(Exponential):
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
         # pylint: disable=arguments-differ
+        x = x - self.origin
         return prefactor * np.exp(-(x / scale)**stretch)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1):

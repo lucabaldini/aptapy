@@ -382,8 +382,8 @@ def test_multiple_sum():
 def test_sum_frozen():
     """Test fitting the sum of two models with a frozen parameter.
     """
-    error = 0.05
     plt.figure(inspect.currentframe().f_code.co_name)
+    error = 0.05
     x = np.linspace(0., 8., 50)
     y = np.exp(-x) + 1. + _RNG.normal(scale=error, size=x.shape)
     plt.errorbar(x, y, error, label="Data", fmt="o")
@@ -392,4 +392,37 @@ def test_sum_frozen():
     model[1].value.freeze(1.)
     model.fit(x, y, sigma=error)
     model.plot(fit_output=True, plot_components=False)
+    plt.legend()
+
+
+def test_shifted_exponential():
+    """Test the shifted exponential model.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    error = 0.05
+    x0 = 10.
+    x = np.linspace(x0, 8. + x0, 50)
+    y = np.exp(-(x - x0)) + _RNG.normal(scale=error, size=x.shape)
+    plt.errorbar(x, y, error, label="Data", fmt="o")
+
+    model = Exponential(x0)
+    model.fit(x, y, sigma=error)
+    model.plot(fit_output=True)
+    plt.legend()
+
+
+def test_shifted_exponential_frozen():
+    """Test the shifted exponential model.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    error = 0.05
+    x0 = 10.
+    x = np.linspace(x0, 8. + x0, 50)
+    y = np.exp(-(x - x0)) + _RNG.normal(scale=error, size=x.shape)
+    plt.errorbar(x, y, error, label="Data", fmt="o")
+
+    model = Exponential(x0)
+    model.scale.freeze(1.)
+    model.fit(x, y, sigma=error)
+    model.plot(fit_output=True)
     plt.legend()

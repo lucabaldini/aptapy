@@ -1452,6 +1452,17 @@ class Exponential(AbstractFitModel):
         return (self.origin, self.origin + scale_factor * self.scale.value)
 
 
+class ExponentialInverse(Exponential):
+
+    """Inverse exponential model.
+    """
+
+    def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        x = x - self.origin
+        return prefactor * (1. - np.exp(-x / scale))
+
+
 class StretchedExponential(Exponential):
 
     """Stretched exponential model.
@@ -1469,6 +1480,17 @@ class StretchedExponential(Exponential):
         """
         super().init_parameters(xdata, ydata, sigma)
         self.stretch.init(1.)
+
+
+class StretchedExponentialInverse(StretchedExponential):
+
+    """Inverse stretched exponential model.
+    """
+
+    def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        x = x - self.origin
+        return prefactor * (1. - np.exp(-(x / scale)**stretch))
 
 
 class _GaussianBase(AbstractFitModel):

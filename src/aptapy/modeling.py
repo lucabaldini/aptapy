@@ -152,8 +152,8 @@ class FitParameter:
         if value < self.minimum or value > self.maximum:
             raise ValueError(f"Cannot set value {value} for parameter {self.name}, "
                              f"out of bounds [{self.minimum}, {self.maximum}]")
-        self.value = value
-        self.error = error
+        self.value = float(value)
+        self.error = float(error) if error is not None else None
 
     def init(self, value: float) -> None:
         """Initialize the fit parameter to a given value, unless it is frozen, or
@@ -451,7 +451,7 @@ class AbstractFitModelBase(AbstractPlottable):
 
     @staticmethod
     @abstractmethod
-    def evaluate(x: ArrayLike, *parameter_values: Sequence[float]) -> ArrayLike:
+    def evaluate(x: ArrayLike, *parameter_values: float) -> ArrayLike:
         """Evaluate the model at a given set of parameter values.
 
         Arguments
@@ -515,6 +515,17 @@ class AbstractFitModelBase(AbstractPlottable):
         """
         # pylint: disable=unused-argument
         return
+
+    def set_parameters(self, *parameter_values: float) -> None:
+        """Set the model parameters to the given values.
+
+        Arguments
+        ---------
+        parameter_values : sequence of float
+            The new values for the model parameters.
+        """
+        for parameter, value in zip(self, parameter_values):
+            parameter.set(value)
 
     def parameter_values(self) -> Tuple[float]:
         """Return the current parameter values.
@@ -1465,8 +1476,9 @@ class Exponential(AbstractFitModel):
     prefactor = FitParameter(1.)
     scale = FitParameter(1.)
 
-    def __init__(self, origin: float = 0.) -> None:
-        super().__init__()
+    def __init__(self, origin: float = 0., label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        super().__init__(label, xlabel, ylabel)
         self.origin = origin
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:

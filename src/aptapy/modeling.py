@@ -854,6 +854,25 @@ class AbstractFitModelBase(AbstractPlottable):
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         super().plot(axes, **kwargs)
 
+    def random_sample(self, sigma: ArrayLike, num_points: int = 25) -> Tuple[np.ndarray, np.ndarray]:
+        """Generate a random sample from the model, adding gaussian noise.
+
+        Arguments
+        ---------
+        sigma : array_like
+            The standard deviation of the gaussian noise to add to the model.
+
+        num_points : int, optional
+            The number of points to generate (default 25).
+        """
+        xdata = np.linspace(*self.plotting_range(), num_points)
+        if isinstance(sigma, Number):
+            sigma = np.full(xdata.shape, sigma)
+        if len(sigma) != len(xdata):
+            raise ValueError("Length of sigma does not match number of points")
+        ydata = self(xdata) + np.random.default_rng().normal(0., sigma)
+        return xdata, ydata
+
     def _format_fit_output(self, spec: str) -> str:
         """String formatting for fit output.
 
@@ -905,14 +924,14 @@ class AbstractFitModel(AbstractFitModelBase):
     """Abstract base class for a fit model.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, label: str = None, xlabel: str = None, ylabel: str = None) -> None:
         """Constructor.
 
         Here we loop over the FitParameter objects defined at the class level, and
         create copies that are attached to the instance, so that the latter has its
         own state.
         """
-        super().__init__()
+        super().__init__(label, xlabel, ylabel)
         self._parameters = []
         # Note we cannot loop over self.__dict__.items() here, as that would
         # only return the members defined in the actual class, and not the
@@ -1218,7 +1237,15 @@ class FitModelSum(AbstractFitModelBase):
 
 class Constant(AbstractFitModel):
 
-    """Constant model.
+    r"""Constant model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = c
+            \quad \text{with} \quad
+            c \rightarrow \texttt{value}
+        \end{align}
     """
 
     value = FitParameter(1.)
@@ -1243,6 +1270,8 @@ class Constant(AbstractFitModel):
            fit() method. (Everything will continue working as expected, e.g., when
            one uses bounds on parameters.)
         """
+        if isinstance(sigma, Number):
+            sigma = np.full(ydata.shape, sigma)
         self.value.init(np.average(ydata, weights=1. / sigma**2.))
 
     def integral(self, x1: float, x2: float) -> float:
@@ -1253,7 +1282,18 @@ class Constant(AbstractFitModel):
 
 class Line(AbstractFitModel):
 
-    """Linear model.
+    r"""Linear model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = mx + q
+            \quad \text{with} \quad
+            \begin{cases}
+            m \rightarrow \texttt{slope} \\
+            q \rightarrow \texttt{intercept}
+            \end{cases}
+        \end{align}
     """
 
     slope = FitParameter(1.)
@@ -1277,6 +1317,8 @@ class Line(AbstractFitModel):
            one uses bounds on parameters.)
         """
         # pylint: disable=invalid-name
+        if isinstance(sigma, Number):
+            sigma = np.full(ydata.shape, sigma)
         weights = 1. / sigma**2.
         S0x = weights.sum()
         S1x = (weights * xdata).sum()
@@ -1297,7 +1339,19 @@ class Line(AbstractFitModel):
 
 class Quadratic(AbstractFitModel):
 
-    """Quadratic model.
+    r"""Quadratic model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = ax^2 + bx + c
+            \quad \text{with} \quad
+            \begin{cases}
+            a \rightarrow \texttt{a}\\
+            b \rightarrow \texttt{b}\\
+            c \rightarrow \texttt{c}
+            \end{cases}
+        \end{align}
     """
 
     a = FitParameter(1.)

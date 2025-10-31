@@ -10,6 +10,7 @@ Readily available simple models include
 
 * :class:`~aptapy.modeling.Constant`: a constant value;
 * :class:`~aptapy.modeling.Line`: a straight line;
+* :class:`~aptapy.modeling.Quadratic`: a quadratic function;
 * :class:`~aptapy.modeling.PowerLaw`: a power law;
 * :class:`~aptapy.modeling.Gaussian`: a Gaussian function.
 

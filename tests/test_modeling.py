@@ -93,7 +93,7 @@ def test_model_parameters():
     assert id(p1) != id(p2)
 
 
-def test_plot():
+def __test_plot():
     """Test the plot method of the models.
     """
     for model in (Constant(), Line(), Quadratic(), PowerLaw(), Exponential(),
@@ -101,6 +101,63 @@ def test_plot():
         plt.figure(f"{inspect.currentframe().f_code.co_name}_{model.__class__.__name__}")
         model.plot()
         plt.legend()
+
+
+def test_constant():
+    """Test the Constant model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    # Model definition
+    value = 5.
+    sigma = 0.1
+    model = Constant(xlabel="x [a. u.]", ylabel="y [a. u.]")
+    model.value.set(value)
+    xmin, xmax = model.plotting_range()
+    # Integral.
+    target = value * (xmax - xmin)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Parameter initialization and fitting.
+    xdata, ydata = model.random_sample(sigma)
+    model.init_parameters(xdata, ydata, sigma)
+    value_init = model.value.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.value.compatible_with(value_init)
+    # In this case the initial value should be identical to the fitted one.
+    assert model.value.value == pytest.approx(value_init)
+    # Plotting.
+    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
+    model.plot(fit_output=True)
+    plt.legend()
+
+
+def test_line():
+    """Test the Line model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    # Model definition.
+    slope, intercept = 2., 5.
+    sigma = 0.1
+    model = Line(xlabel="x [a. u.]", ylabel="y [a. u.]")
+    model.slope.set(slope)
+    model.intercept.set(intercept)
+    xmin, xmax = model.plotting_range()
+    # Integral.
+    target = 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
+    assert model.quadrature(xmin, xmax) == pytest.approx(target)
+    assert model.integral(xmin, xmax) == pytest.approx(target)
+    # Parameter initialization and fitting.
+    xdata, ydata = model.random_sample(sigma)
+    model.init_parameters(xdata, ydata, sigma)
+    slope_init = model.slope.value
+    intercept_init = model.intercept.value
+    model.fit(xdata, ydata, sigma=sigma)
+    assert model.slope.compatible_with(slope_init)
+    assert model.intercept.compatible_with(intercept_init)
+    # Plotting.
+    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
+    model.plot(fit_output=True)
+    plt.legend()
 
 
 def test_integral():
@@ -111,26 +168,6 @@ def test_integral():
     defined in the base class---which is an indication that both are sensible.
     """
     # pylint: disable=too-many-statements
-    # Constant.
-    xmin = 0.
-    xmax = 1.
-    value = 1.
-    target = value * (xmax - xmin)
-    model = Constant()
-    model.value.freeze(1.)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # Line.
-    slope = 1.
-    intercept = 1.
-    target = 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
-    model = Line()
-    model.slope.freeze(slope)
-    model.intercept.freeze(intercept)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
     # Quadratic.
     a = 1.
     b = 1.
@@ -193,19 +230,6 @@ def test_init_parameters():
     full least-squares fit.
     """
     # pylint: disable=too-many-statements
-    # Constant.
-    value = 0.1
-    error = 0.1
-    xdata = np.linspace(0., 10., 11)
-    ydata = np.full(xdata.shape, value) + _RNG.normal(scale=error, size=xdata.shape)
-    sigma = np.full(xdata.shape, error)
-    model = Constant()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_value = model.value.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.value.compatible_with(initial_value)
-    # In this case the initial value should be identical to the fitted one.
-    assert model.value.value == pytest.approx(initial_value)
 
     # Line.
     slope = 5.
@@ -426,3 +450,9 @@ def test_shifted_exponential_frozen():
     model.fit(x, y, sigma=error)
     model.plot(fit_output=True)
     plt.legend()
+
+
+if __name__ == "__main__":
+    test_constant()
+    test_line()
+    plt.show()

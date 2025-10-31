@@ -152,8 +152,8 @@ class FitParameter:
         if value < self.minimum or value > self.maximum:
             raise ValueError(f"Cannot set value {value} for parameter {self.name}, "
                              f"out of bounds [{self.minimum}, {self.maximum}]")
-        self.value = value
-        self.error = error
+        self.value = float(value)
+        self.error = float(error) if error is not None else None
 
     def init(self, value: float) -> None:
         """Initialize the fit parameter to a given value, unless it is frozen, or
@@ -451,7 +451,7 @@ class AbstractFitModelBase(AbstractPlottable):
 
     @staticmethod
     @abstractmethod
-    def evaluate(x: ArrayLike, *parameter_values: Sequence[float]) -> ArrayLike:
+    def evaluate(x: ArrayLike, *parameter_values: float) -> ArrayLike:
         """Evaluate the model at a given set of parameter values.
 
         Arguments
@@ -516,7 +516,7 @@ class AbstractFitModelBase(AbstractPlottable):
         # pylint: disable=unused-argument
         return
 
-    def set_parameters(self, *parameter_values: Sequence[float]) -> None:
+    def set_parameters(self, *parameter_values: float) -> None:
         """Set the model parameters to the given values.
 
         Arguments

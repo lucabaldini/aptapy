@@ -17,6 +17,7 @@
 """
 
 import inspect
+from typing import Callable, Sequence
 
 import numpy as np
 import pytest
@@ -93,60 +94,47 @@ def test_model_parameters():
     assert id(p1) != id(p2)
 
 
-def test_constant():
-    """Test the Constant model.
+def _test_model_base(model_class: type, parameter_values: Sequence[float],
+                     integral: Callable = None, sigma: float = 0.1):
+    """Basic tests for the Model base class.
     """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    # Model definition
-    value = 5.
-    sigma = 0.1
-    model = Constant(xlabel="x [a. u.]", ylabel="y [a. u.]")
-    model.set_parameters(value)
+    model = model_class()
+    model.set_parameters(*parameter_values)
     xmin, xmax = model.plotting_range()
     # Integral.
-    target = value * (xmax - xmin)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
+    if integral is not None:
+        target = integral(xmin, xmax)
+        assert model.quadrature(xmin, xmax) == pytest.approx(target)
+        assert model.integral(xmin, xmax) == pytest.approx(target)
     # Parameter initialization and fitting.
     xdata, ydata = model.random_sample(sigma)
     model.init_parameters(xdata, ydata, sigma)
-    value_init = model.value.value
+    initial_values = model.parameter_values()
     model.fit(xdata, ydata, sigma=sigma)
-    assert model.value.compatible_with(value_init)
-    # In this case the initial value should be identical to the fitted one.
-    assert model.value.value == pytest.approx(value_init)
+    for param, initial_value in zip(model, initial_values):
+        assert param.compatible_with(initial_value)
     # Plotting.
     plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
     model.plot(fit_output=True)
     plt.legend()
+
+
+def test_constant():
+    """Test the Constant model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    value = 5.
+    integral = lambda xmin, xmax: value * (xmax - xmin)
+    _test_model_base(Constant, (value, ), integral)
 
 
 def test_line():
     """Test the Line model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    # Model definition.
     slope, intercept = 2., 5.
-    sigma = 0.1
-    model = Line(xlabel="x [a. u.]", ylabel="y [a. u.]")
-    model.set_parameters(slope, intercept)
-    xmin, xmax = model.plotting_range()
-    # Integral.
-    target = 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-    # Parameter initialization and fitting.
-    xdata, ydata = model.random_sample(sigma)
-    model.init_parameters(xdata, ydata, sigma)
-    slope_init = model.slope.value
-    intercept_init = model.intercept.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.slope.compatible_with(slope_init)
-    assert model.intercept.compatible_with(intercept_init)
-    # Plotting.
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
-    model.plot(fit_output=True)
-    plt.legend()
+    integral = lambda xmin, xmax: 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
+    _test_model_base(Line, (slope, intercept), integral)
 
 
 def test_integral():

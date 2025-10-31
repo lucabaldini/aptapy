@@ -1676,6 +1676,11 @@ class Erf(_GaussianBase):
         z = (x - mean) / sigma
         return prefactor * 0.5 * (1. + scipy.special.erf(z / _GaussianBase._SQRT2))
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        pass
+
 
 class ErfInverse(_GaussianBase):
 
@@ -1686,3 +1691,8 @@ class ErfInverse(_GaussianBase):
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         return prefactor - Erf.evaluate(x, prefactor, mean, sigma)
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        pass

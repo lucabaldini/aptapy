@@ -106,13 +106,16 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
         target = integral(xmin, xmax)
         assert model.quadrature(xmin, xmax) == pytest.approx(target)
         assert model.integral(xmin, xmax) == pytest.approx(target)
-    # Parameter initialization and fitting.
+    # Parameter initialization and fitting. Note that if the parameter initialization
+    # is not implemented for the model, this will be a no-op, and the fit starts
+    # from the ground truth---no need to tweak the test function to handle this case.
     xdata, ydata = model.random_sample(sigma)
     model.init_parameters(xdata, ydata, sigma)
     initial_values = model.parameter_values()
     model.fit(xdata, ydata, sigma=sigma)
-    for param, initial_value in zip(model, initial_values):
-        assert param.compatible_with(initial_value)
+    for param, guess, ground_truth in zip(model, initial_values, parameter_values):
+        assert param.compatible_with(guess)
+        assert param.compatible_with(ground_truth)
     # Plotting.
     plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
     model.plot(fit_output=True)
@@ -137,6 +140,27 @@ def test_line():
     _test_model_base(Line, (slope, intercept), integral)
 
 
+def test_quadratic():
+    """Test the Quadratic model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    a, b, c = 1., 2., 16.
+    integral = lambda xmin, xmax: (a * (xmax**3 - xmin**3) / 3. +
+                                   b * (xmax**2 - xmin**2) / 2. +
+                                   c * (xmax - xmin))
+    _test_model_base(Quadratic, (a, b, c), integral)
+
+
+def test_power_law():
+    """Test the PowerLaw model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, index = 10., -2.
+    integral = lambda xmin, xmax: (prefactor / (index + 1.) *
+                                   (xmax**(index + 1.) - xmin**(index + 1.)))
+    _test_model_base(PowerLaw, (prefactor, index), integral)
+
+
 def test_integral():
     """Test the integral method of the models.
 
@@ -144,18 +168,6 @@ def test_integral():
     integrals, where provided, give the same answer as the numerical quadrature
     defined in the base class---which is an indication that both are sensible.
     """
-    # pylint: disable=too-many-statements
-    # Quadratic.
-    a = 1.
-    b = 1.
-    c = 1.
-    target = a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
-    model = Quadratic()
-    model.a.freeze(a)
-    model.b.freeze(b)
-    model.c.freeze(c)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
 
     # PowerLaw.
     xmin = 1.
@@ -207,24 +219,6 @@ def test_init_parameters():
     full least-squares fit.
     """
     # pylint: disable=too-many-statements
-
-    # Line.
-    slope = 5.
-    intercept = 3.
-    error = 0.1
-    xdata = np.linspace(0., 10., 11)
-    ydata = slope * xdata + intercept + _RNG.normal(scale=error, size=xdata.shape)
-    sigma = np.full(xdata.shape, error)
-    model = Line()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_slope = model.slope.value
-    initial_intercept = model.intercept.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.slope.compatible_with(initial_slope)
-    assert model.intercept.compatible_with(initial_intercept)
-    # In this case the initial values should be identical to the fitted ones.
-    assert model.slope.value == pytest.approx(initial_slope)
-    assert model.intercept.value == pytest.approx(initial_intercept)
 
     # PowerLaw.
     prefactor = 10.
@@ -432,4 +426,6 @@ def test_shifted_exponential_frozen():
 if __name__ == "__main__":
     test_constant()
     test_line()
+    test_quadratic()
+    test_power_law()
     plt.show()

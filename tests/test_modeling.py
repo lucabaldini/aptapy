@@ -28,6 +28,7 @@ from aptapy.modeling import (
     Erf,
     ErfInverse,
     Exponential,
+    ExponentialInverse,
     FitParameter,
     Gaussian,
     Line,
@@ -174,89 +175,21 @@ def test_exponential():
     _test_model_base(Exponential, (prefactor, scale), integral)
 
 
-def test_integral():
-    """Test the integral method of the models.
-
-    Here we basically run through the models one by one and check that the analytical
-    integrals, where provided, give the same answer as the numerical quadrature
-    defined in the base class---which is an indication that both are sensible.
+def test_exponential_inverse():
+    """Test the ExponentialInverse model.
     """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, scale = 10, 2.
+    _test_model_base(ExponentialInverse, (prefactor, scale,), None)
 
 
-    # Exponential.
-    xmin = 0.
-    xmax = 10.
-    prefactor = 1.
-    scale = 1.
-    target = prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
-    model = Exponential()
-    model.prefactor.freeze(prefactor)
-    model.scale.freeze(scale)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # Gaussian.
-    xmin = -5.
-    xmax = 5.
-    prefactor = 1.
-    mean = 0.
-    sigma = 1.
-    target = 1.
-    model = Gaussian()
-    model.prefactor.freeze(prefactor)
-    model.mean.freeze(mean)
-    model.sigma.freeze(sigma)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-
-def test_init_parameters():
-    """Test the init_parameters method of the models.
-
-    Here we basically run through the models one by one and check that the estimate
-    of the initial parameters, where available, is consistent with the results of a
-    full least-squares fit.
+def test_gaussian():
+    """Test the Gaussian model.
     """
-    # pylint: disable=too-many-statements
-
-    # Exponential.
-    prefactor = 10.
-    scale = 2.
-    xdata = np.linspace(0., 10., 11)
-    ydata = prefactor * np.exp(-xdata / scale)
-    sigma = 0.05 * ydata
-    ydata += _RNG.normal(scale=sigma)
-    model = Exponential()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_prefactor = model.prefactor.value
-    initial_scale = model.scale.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.prefactor.compatible_with(initial_prefactor)
-    assert model.scale.compatible_with(initial_scale)
-
-    # Gaussian.
-    prefactor = 10.
-    mean = 3.
-    sigma = 2.
-    xdata = np.linspace(-5., 10., 100)
-    model = Gaussian()
-    model.prefactor.set(prefactor)
-    model.mean.set(mean)
-    model.sigma.set(sigma)
-    ydata = model(xdata)
-    sigma = 0.05 * ydata
-    ydata += _RNG.normal(scale=sigma)
-    model = Gaussian()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_prefactor = model.prefactor.value
-    initial_mean = model.mean.value
-    initial_sigma = model.sigma.value
-    model.fit(xdata, ydata, sigma=sigma)
-    # Here we are a bit more lenient, as the initial estimates are not expected to be
-    # very accurate.
-    assert model.prefactor.compatible_with(initial_prefactor, 15.)
-    assert model.mean.compatible_with(initial_mean, 15.)
-    assert model.sigma.compatible_with(initial_sigma, 15.)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, mean, sigma = 10., 0., 1.
+    integral = lambda xmin, xmax: prefactor
+    _test_model_base(Gaussian, (prefactor, mean, sigma), integral)
 
 
 def test_gaussian_fit():
@@ -413,4 +346,6 @@ if __name__ == "__main__":
     test_quadratic()
     test_power_law()
     test_exponential()
+    test_exponential_inverse()
+    test_gaussian()
     plt.show()

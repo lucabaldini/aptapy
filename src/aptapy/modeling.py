@@ -599,8 +599,7 @@ class AbstractFitModelBase(AbstractPlottable):
             The covariance matrix for the fit parameters.
         """
         for parameter, value, error in zip(self.free_parameters(), popt, np.sqrt(pcov.diagonal())):
-            parameter.value = value
-            parameter.error = error
+            parameter.set(value, error)
 
     def calculate_chisquare(self, xdata: np.ndarray, ydata: np.ndarray, sigma) -> float:
         """Calculate the chisquare of the fit to some input data with the current
@@ -1539,6 +1538,11 @@ class ExponentialInverse(Exponential):
         x = x - self.origin
         return prefactor * (1. - np.exp(-x / scale))
 
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        pass
+
 
 class StretchedExponential(Exponential):
 
@@ -1568,6 +1572,11 @@ class StretchedExponentialInverse(StretchedExponential):
         # pylint: disable=arguments-differ
         x = x - self.origin
         return prefactor * (1. - np.exp(-(x / scale)**stretch))
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        pass
 
 
 class _GaussianBase(AbstractFitModel):

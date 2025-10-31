@@ -516,6 +516,17 @@ class AbstractFitModelBase(AbstractPlottable):
         # pylint: disable=unused-argument
         return
 
+    def set_parameters(self, *parameter_values: Sequence[float]) -> None:
+        """Set the model parameters to the given values.
+
+        Arguments
+        ---------
+        parameter_values : sequence of float
+            The new values for the model parameters.
+        """
+        for parameter, value in zip(self, parameter_values):
+            parameter.set(value)
+
     def parameter_values(self) -> Tuple[float]:
         """Return the current parameter values.
 

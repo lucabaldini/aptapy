@@ -101,7 +101,7 @@ def test_constant():
     value = 5.
     sigma = 0.1
     model = Constant(xlabel="x [a. u.]", ylabel="y [a. u.]")
-    model.value.set(value)
+    model.set_parameters(value)
     xmin, xmax = model.plotting_range()
     # Integral.
     target = value * (xmax - xmin)
@@ -129,8 +129,7 @@ def test_line():
     slope, intercept = 2., 5.
     sigma = 0.1
     model = Line(xlabel="x [a. u.]", ylabel="y [a. u.]")
-    model.slope.set(slope)
-    model.intercept.set(intercept)
+    model.set_parameters(slope, intercept)
     xmin, xmax = model.plotting_range()
     # Integral.
     target = 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)

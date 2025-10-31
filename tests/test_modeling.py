@@ -93,16 +93,6 @@ def test_model_parameters():
     assert id(p1) != id(p2)
 
 
-def __test_plot():
-    """Test the plot method of the models.
-    """
-    for model in (Constant(), Line(), Quadratic(), PowerLaw(), Exponential(),
-                  Gaussian(), Erf(), ErfInverse()):
-        plt.figure(f"{inspect.currentframe().f_code.co_name}_{model.__class__.__name__}")
-        model.plot()
-        plt.legend()
-
-
 def test_constant():
     """Test the Constant model.
     """

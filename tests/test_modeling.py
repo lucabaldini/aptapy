@@ -175,7 +175,7 @@ def test_exponential():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, scale = 10., 2.
     def integral(xmin, xmax):
-        return prefactor * scale * (1. - np.exp(-xmax / scale) - (1. - np.exp(-xmin / scale)))
+        return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
     _test_model_base(Exponential, (prefactor, scale), integral)
 
 

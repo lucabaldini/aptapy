@@ -516,17 +516,6 @@ class AbstractFitModelBase(AbstractPlottable):
         # pylint: disable=unused-argument
         return
 
-    def set_parameters(self, *parameter_values: Sequence[float]) -> None:
-        """Set the model parameters to the given values.
-
-        Arguments
-        ---------
-        parameter_values : sequence of float
-            The new values for the model parameters.
-        """
-        for parameter, value in zip(self, parameter_values):
-            parameter.set(value)
-
     def parameter_values(self) -> Tuple[float]:
         """Return the current parameter values.
 
@@ -575,6 +564,17 @@ class AbstractFitModelBase(AbstractPlottable):
         free_parameters = self.free_parameters()
         return (tuple(parameter.minimum for parameter in free_parameters),
                 tuple(parameter.maximum for parameter in free_parameters))
+
+    def set_parameters(self, *parameter_values: Sequence[float]) -> None:
+        """Set the model parameters to the given values.
+
+        Arguments
+        ---------
+        parameter_values : sequence of float
+            The new values for the model parameters.
+        """
+        for parameter, value in zip(self, parameter_values):
+            parameter.set(value)
 
     def update_parameters(self, popt: np.ndarray, pcov: np.ndarray) -> None:
         """Update the model parameters based on the output of the ``curve_fit()`` call.

@@ -129,7 +129,8 @@ def test_constant():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     value = 5.
-    integral = lambda xmin, xmax: value * (xmax - xmin)
+    def integral(xmin, xmax):
+        return value * (xmax - xmin)
     _test_model_base(Constant, (value, ), integral)
 
 
@@ -138,7 +139,8 @@ def test_line():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     slope, intercept = 2., 5.
-    integral = lambda xmin, xmax: 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
+    def integral(xmin, xmax):
+        return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
     _test_model_base(Line, (slope, intercept), integral)
 
 
@@ -147,9 +149,8 @@ def test_quadratic():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     a, b, c = 1., 2., 16.
-    integral = lambda xmin, xmax: (a * (xmax**3 - xmin**3) / 3. +
-                                   b * (xmax**2 - xmin**2) / 2. +
-                                   c * (xmax - xmin))
+    def integral(xmin, xmax):
+        return (a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin))
     _test_model_base(Quadratic, (a, b, c), integral)
 
 
@@ -160,10 +161,11 @@ def test_power_law():
         plt.figure(f"{inspect.currentframe().f_code.co_name}_index{abs(index)}")
         prefactor = 10.
         if index == -1.:
-            integral = lambda xmin, xmax: prefactor * np.log(xmax / xmin)
+            def integral(xmin, xmax, prefactor=prefactor):
+                return prefactor * np.log(xmax / xmin)
         else:
-            integral = lambda xmin, xmax: (prefactor / (index + 1.) *
-                                           (xmax**(index + 1.) - xmin**(index + 1.)))
+            def integral(xmin, xmax, prefactor=prefactor, index=index):
+                return (prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.)))
         _test_model_base(PowerLaw, (prefactor, index), integral)
 
 
@@ -172,7 +174,8 @@ def test_exponential():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, scale = 10., 2.
-    integral = lambda xmin, xmax: prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
+    def integral(xmin, xmax):
+        return prefactor * scale * (1. - np.exp(-xmax / scale) - (1. - np.exp(-xmin / scale)))
     _test_model_base(Exponential, (prefactor, scale), integral)
 
 
@@ -189,7 +192,9 @@ def test_gaussian():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, mean, sigma = 10., 0., 1.
-    integral = lambda xmin, xmax: prefactor
+    def integral(xmin, xmax):
+        # pylint: disable=unused-argument
+        return prefactor
     # Note we need to relax the test on the initial parameter guess.
     _test_model_base(Gaussian, (prefactor, mean, sigma), integral, num_sigma=10.)
 

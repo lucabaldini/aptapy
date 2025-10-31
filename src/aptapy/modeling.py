@@ -516,17 +516,6 @@ class AbstractFitModelBase(AbstractPlottable):
         # pylint: disable=unused-argument
         return
 
-    def set_parameters(self, *parameter_values: float) -> None:
-        """Set the model parameters to the given values.
-
-        Arguments
-        ---------
-        parameter_values : sequence of float
-            The new values for the model parameters.
-        """
-        for parameter, value in zip(self, parameter_values):
-            parameter.set(value)
-
     def parameter_values(self) -> Tuple[float]:
         """Return the current parameter values.
 
@@ -875,7 +864,8 @@ class AbstractFitModelBase(AbstractPlottable):
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         super().plot(axes, **kwargs)
 
-    def random_sample(self, sigma: ArrayLike, num_points: int = 25) -> Tuple[np.ndarray, np.ndarray]:
+    def random_sample(self, sigma: ArrayLike,
+                      num_points: int = 25) ->Tuple[np.ndarray, np.ndarray]:
         """Generate a random sample from the model, adding gaussian noise.
 
         Arguments
@@ -1541,7 +1531,6 @@ class ExponentialInverse(Exponential):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
-        pass
 
 
 class StretchedExponential(Exponential):
@@ -1576,7 +1565,6 @@ class StretchedExponentialInverse(StretchedExponential):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
-        pass
 
 
 class _GaussianBase(AbstractFitModel):
@@ -1679,7 +1667,6 @@ class Erf(_GaussianBase):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
-        pass
 
 
 class ErfInverse(_GaussianBase):
@@ -1695,4 +1682,3 @@ class ErfInverse(_GaussianBase):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
-        pass

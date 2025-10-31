@@ -98,7 +98,7 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
                      integral: Callable = None, sigma: float = 0.1):
     """Basic tests for the Model base class.
     """
-    model = model_class()
+    model = model_class()#xlabel="x [a.u.]", ylabel="y [a.u.]")
     model.set_parameters(*parameter_values)
     xmin, xmax = model.plotting_range()
     # Integral.
@@ -152,13 +152,26 @@ def test_quadratic():
 
 
 def test_power_law():
-    """Test the PowerLaw model.
+    """Test the PowerLaw model---note we do this for two different indices.
+    """
+    for index in (-2., -1.):
+        plt.figure(f"{inspect.currentframe().f_code.co_name}_index{abs(index)}")
+        prefactor = 10.
+        if index == -1.:
+            integral = lambda xmin, xmax: prefactor * np.log(xmax / xmin)
+        else:
+            integral = lambda xmin, xmax: (prefactor / (index + 1.) *
+                                           (xmax**(index + 1.) - xmin**(index + 1.)))
+        _test_model_base(PowerLaw, (prefactor, index), integral)
+
+
+def test_exponential():
+    """Test the Exponential model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    prefactor, index = 10., -2.
-    integral = lambda xmin, xmax: (prefactor / (index + 1.) *
-                                   (xmax**(index + 1.) - xmin**(index + 1.)))
-    _test_model_base(PowerLaw, (prefactor, index), integral)
+    prefactor, scale = 10., 2.
+    integral = lambda xmin, xmax: prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
+    _test_model_base(Exponential, (prefactor, scale), integral)
 
 
 def test_integral():
@@ -169,20 +182,6 @@ def test_integral():
     defined in the base class---which is an indication that both are sensible.
     """
 
-    # PowerLaw.
-    xmin = 1.
-    xmax = 10.
-    prefactor = 1.
-    for index in (-2., -1.):
-        if index == -1.:
-            target = prefactor * np.log(xmax / xmin)
-        else:
-            target = prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
-        model = PowerLaw()
-        model.prefactor.freeze(prefactor)
-        model.index.freeze(index)
-        assert model.quadrature(xmin, xmax) == pytest.approx(target)
-        assert model.integral(xmin, xmax) == pytest.approx(target)
 
     # Exponential.
     xmin = 0.
@@ -219,21 +218,6 @@ def test_init_parameters():
     full least-squares fit.
     """
     # pylint: disable=too-many-statements
-
-    # PowerLaw.
-    prefactor = 10.
-    index = -2.
-    xdata = np.linspace(1., 10., 10)
-    ydata = prefactor * xdata**index
-    sigma = 0.05 * ydata
-    ydata += _RNG.normal(scale=sigma)
-    model = PowerLaw()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_prefactor = model.prefactor.value
-    initial_index = model.index.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.prefactor.compatible_with(initial_prefactor)
-    assert model.index.compatible_with(initial_index)
 
     # Exponential.
     prefactor = 10.
@@ -428,4 +412,5 @@ if __name__ == "__main__":
     test_line()
     test_quadratic()
     test_power_law()
+    test_exponential()
     plt.show()

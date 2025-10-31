@@ -9,10 +9,13 @@ Release notes
 * Added a unit test for composite model parameter freezing.
 * New ``plot_components`` argument in the ``plot()`` method of fit models to
   control individual components of composite models.
+* Arguments names for the ``integral()`` methods of fit models updated from
+  ``xmin``, ``xmax`` to ``x1``, ``x2`` for consistency.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/38
   - https://github.com/lucabaldini/aptapy/pull/37
+  - https://github.com/lucabaldini/aptapy/issues/39
   - https://github.com/lucabaldini/aptapy/issues/34
   - https://github.com/lucabaldini/aptapy/issues/33
 

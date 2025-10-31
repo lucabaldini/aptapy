@@ -973,45 +973,45 @@ class AbstractFitModel(AbstractFitModelBase):
             raise TypeError(f"{other} is not a fit model")
         return FitModelSum(self, other)
 
-    def quadrature(self, xmin: float, xmax: float) -> float:
-        """Calculate the integral of the model between xmin and xmax using
+    def quadrature(self, x1: float, x2: float) -> float:
+        """Calculate the integral of the model between x1 and x2 using
         numerical integration.
 
         Arguments
         ---------
-        xmin : float
+        x1 : float
             The minimum value of the independent variable to integrate over.
 
-        xmax : float
+        x2 : float
             The maximum value of the independent variable to integrate over.
 
         Returns
         -------
         integral : float
-            The integral of the model between xmin and xmax.
+            The integral of the model between x1 and x2.
         """
-        value, _ = quad(self, xmin, xmax)
+        value, _ = quad(self, x1, x2)
         return value
 
-    def integral(self, xmin: float, xmax: float) -> float:
-        """Default implementation of the integral of the model between xmin and xmax.
+    def integral(self, x1: float, x2: float) -> float:
+        """Default implementation of the integral of the model between x1 and x2.
         Subclasses can (and are encouraged to) overload this method with an
         analytical implementation, when available.
 
         Arguments
         ---------
-        xmin : float
+        x1 : float
             The minimum value of the independent variable to integrate over.
 
-        xmax : float
+        x2 : float
             The maximum value of the independent variable to integrate over.
 
         Returns
         -------
         integral : float
-            The integral of the model between xmin and xmax.
+            The integral of the model between x1 and x2.
         """
-        return self.quadrature(xmin, xmax)
+        return self.quadrature(x1, x2)
 
 
 class FitModelSum(AbstractFitModelBase):
@@ -1116,25 +1116,25 @@ class FitModelSum(AbstractFitModelBase):
             cursor += len(component)
         return value
 
-    def integral(self, xmin: float, xmax: float) -> float:
-        """Calculate the integral of the model between xmin and xmax.
+    def integral(self, x1: float, x2: float) -> float:
+        """Calculate the integral of the model between x1 and x2.
 
         This is implemented as the sum of the integrals of the components.
 
         Arguments
         ---------
-        xmin : float
+        x1 : float
             The minimum value of the independent variable to integrate over.
 
-        xmax : float
+        x2 : float
             The maximum value of the independent variable to integrate over.
 
         Returns
         -------
         integral : float
-            The integral of the model between xmin and xmax.
+            The integral of the model between x1 and x2.
         """
-        return sum(component.integral(xmin, xmax) for component in self._components)
+        return sum(component.integral(x1, x2) for component in self._components)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
              plot_components: bool = True, **kwargs) -> None:
@@ -1245,10 +1245,10 @@ class Constant(AbstractFitModel):
         """
         self.value.init(np.average(ydata, weights=1. / sigma**2.))
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def integral(self, x1: float, x2: float) -> float:
         """Overloaded method with the analytical integral.
         """
-        return self.value.value * (xmax - xmin)
+        return self.value.value * (x2 - x1)
 
 
 class Line(AbstractFitModel):
@@ -1288,11 +1288,11 @@ class Line(AbstractFitModel):
             self.slope.init((S0x * S1xy - S1x * S0xy) / D)
             self.intercept.init((S2x * S0xy - S1x * S1xy) / D)
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def integral(self, x1: float, x2: float) -> float:
         """Overloaded method with the analytical integral.
         """
         slope, intercept = self.parameter_values()
-        return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
+        return 0.5 * slope * (x2**2 - x1**2) + intercept * (x2 - x1)
 
 
 class Quadratic(AbstractFitModel):
@@ -1309,11 +1309,11 @@ class Quadratic(AbstractFitModel):
         # pylint: disable=arguments-differ
         return a * x**2 + b * x + c
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def integral(self, x1: float, x2: float) -> float:
         """Overloaded method with the analytical integral.
         """
         a, b, c = self.parameter_values()
-        return a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
+        return a * (x2**3 - x1**3) / 3. + b * (x2**2 - x1**2) / 2. + c * (x2 - x1)
 
 
 class PowerLaw(AbstractFitModel):
@@ -1355,13 +1355,13 @@ class PowerLaw(AbstractFitModel):
             self.index.init(Sxy / Sxx)
             self.prefactor.init(np.exp(Y0 - self.index.value * X0))
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def integral(self, x1: float, x2: float) -> float:
         """Overloaded method with the analytical integral.
         """
         prefactor, index = self.parameter_values()
         if index == -1.:
-            return prefactor * np.log(xmax / xmin)
-        return prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
+            return prefactor * np.log(x2 / x1)
+        return prefactor / (index + 1.) * (x2**(index + 1.) - x1**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
@@ -1438,13 +1438,13 @@ class Exponential(AbstractFitModel):
             if not np.isclose(b, 0.):
                 self.scale.init(1. / b)
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def integral(self, x1: float, x2: float) -> float:
         """Overloaded method with the analytical integral.
         """
         prefactor, scale = self.parameter_values()
-        xmin = xmin - self.origin
-        xmax = xmax - self.origin
-        return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
+        x1 = x1 - self.origin
+        x2 = x2 - self.origin
+        return prefactor * scale * (np.exp(-x1 / scale) - np.exp(-x2 / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
         """Overloaded method.
@@ -1570,12 +1570,12 @@ class Gaussian(_GaussianBase):
         self.mean.init(mean)
         self.sigma.init(np.sqrt(variance))
 
-    def integral(self, xmin: float, xmax: float) -> float:
+    def integral(self, x1: float, x2: float) -> float:
         """Overloaded method with the analytical integral.
         """
         prefactor, mean, sigma = self.parameter_values()
-        zmin = (xmin - mean) / (sigma * self._SQRT2)
-        zmax = (xmax - mean) / (sigma * self._SQRT2)
+        zmin = (x1 - mean) / (sigma * self._SQRT2)
+        zmax = (x2 - mean) / (sigma * self._SQRT2)
         return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
 
 

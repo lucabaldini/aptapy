@@ -865,7 +865,7 @@ class AbstractFitModelBase(AbstractPlottable):
         super().plot(axes, **kwargs)
 
     def random_sample(self, sigma: ArrayLike,
-                      num_points: int = 25) ->Tuple[np.ndarray, np.ndarray]:
+                      num_points: int = 25) -> Tuple[np.ndarray, np.ndarray]:
         """Generate a random sample from the model, adding gaussian noise.
 
         Arguments
@@ -1529,7 +1529,7 @@ class ExponentialInverse(Exponential):
         return prefactor * (1. - np.exp(-x / scale))
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
+        """This is left empty for the time being, but we might be able to implement it.
         """
 
 
@@ -1563,7 +1563,7 @@ class StretchedExponentialInverse(StretchedExponential):
         return prefactor * (1. - np.exp(-(x / scale)**stretch))
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
+        """This is left empty for the time being, but we might be able to implement it.
         """
 
 
@@ -1665,7 +1665,7 @@ class Erf(_GaussianBase):
         return prefactor * 0.5 * (1. + scipy.special.erf(z / _GaussianBase._SQRT2))
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
+        """This is left empty for the time being, but we might be able to implement it.
         """
 
 
@@ -1680,5 +1680,5 @@ class ErfInverse(_GaussianBase):
         return prefactor - Erf.evaluate(x, prefactor, mean, sigma)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
+        """This is left empty for the time being, but we might be able to implement it.
         """

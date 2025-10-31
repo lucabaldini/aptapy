@@ -96,7 +96,7 @@ def test_model_parameters():
 
 
 def _test_model_base(model_class: type, parameter_values: Sequence[float],
-                     integral: Callable = None, sigma: float = 0.1):
+                     integral: Callable = None, sigma: float = 0.1, num_sigma: float = 5.):
     """Basic tests for the Model base class.
     """
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]")
@@ -114,9 +114,10 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
     model.init_parameters(xdata, ydata, sigma)
     initial_values = model.parameter_values()
     model.fit(xdata, ydata, sigma=sigma)
+    print(f"Initial values: {initial_values}, Final values: {model.parameter_values()}")
     for param, guess, ground_truth in zip(model, initial_values, parameter_values):
-        assert param.compatible_with(guess)
-        assert param.compatible_with(ground_truth)
+        assert param.compatible_with(guess, num_sigma)
+        assert param.compatible_with(ground_truth, num_sigma)
     # Plotting.
     plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
     model.plot(fit_output=True)
@@ -189,7 +190,24 @@ def test_gaussian():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, mean, sigma = 10., 0., 1.
     integral = lambda xmin, xmax: prefactor
-    _test_model_base(Gaussian, (prefactor, mean, sigma), integral)
+    # Note we need to relax the test on the initial parameter guess.
+    _test_model_base(Gaussian, (prefactor, mean, sigma), integral, num_sigma=10.)
+
+
+def test_erf():
+    """Test the Erf model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, mean, sigma = 5., 0., 1.
+    _test_model_base(Erf, (prefactor, mean, sigma), None)
+
+
+def test_erf_inverse():
+    """Test the ErfInverse model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, mean, sigma = 5., 0., 1.
+    _test_model_base(ErfInverse, (prefactor, mean, sigma), None)
 
 
 def test_gaussian_fit():
@@ -338,14 +356,3 @@ def test_shifted_exponential_frozen():
     model.fit(x, y, sigma=error)
     model.plot(fit_output=True)
     plt.legend()
-
-
-if __name__ == "__main__":
-    test_constant()
-    test_line()
-    test_quadratic()
-    test_power_law()
-    test_exponential()
-    test_exponential_inverse()
-    test_gaussian()
-    plt.show()

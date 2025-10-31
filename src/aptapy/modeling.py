@@ -1465,8 +1465,9 @@ class Exponential(AbstractFitModel):
     prefactor = FitParameter(1.)
     scale = FitParameter(1.)
 
-    def __init__(self, origin: float = 0.) -> None:
-        super().__init__()
+    def __init__(self, origin: float = 0., label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        super().__init__(label, xlabel, ylabel)
         self.origin = origin
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:

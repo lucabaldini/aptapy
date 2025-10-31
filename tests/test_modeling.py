@@ -98,7 +98,7 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
                      integral: Callable = None, sigma: float = 0.1):
     """Basic tests for the Model base class.
     """
-    model = model_class()#xlabel="x [a.u.]", ylabel="y [a.u.]")
+    model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]")
     model.set_parameters(*parameter_values)
     xmin, xmax = model.plotting_range()
     # Integral.

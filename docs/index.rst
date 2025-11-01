@@ -49,4 +49,5 @@ Have fun!
    plotting
    hist
    modeling
+   models
    strip

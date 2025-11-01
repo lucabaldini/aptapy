@@ -11,7 +11,7 @@ and subtracting it from the total histogram.
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Exponential, Gaussian
+from aptapy.models import Exponential, Gaussian
 from aptapy.plotting import residual_axes, setup_gca
 
 # Custom command to create two vertically aligned axes with shared x-axis.

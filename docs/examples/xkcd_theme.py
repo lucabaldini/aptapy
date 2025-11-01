@@ -10,7 +10,7 @@ Simple gaussian fit to histogram data with the XKCD theme.
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Gaussian
+from aptapy.models import Gaussian
 from aptapy.plotting import apply_stylesheet, plt
 
 # You can either use the stylesheet_context() context manager, or apply the stylesheet

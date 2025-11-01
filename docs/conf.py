@@ -26,10 +26,11 @@ release = version
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
-    "sphinx_gallery.gen_gallery",
     "sphinxcontrib.programoutput",
+    "sphinx_gallery.gen_gallery",
 ]
 autodoc_default_options = {
     "members": True,

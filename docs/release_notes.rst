@@ -3,16 +3,34 @@
 Release notes
 =============
 
+* Major refactoring of the modeling module (now split into the `models` and `modeling`
+  modules, the former containing all the core functionality and latter the actual
+  models) to improve code organization and maintainability.
+* Erf and ErfInverse models have been renamed.
+* New models from the exponential family, including the StretchedExponential and
+  its complement, and all exponential models now supporting a generic origin.
+* Added facility to draw random samples from fit models, in order to facilitate
+  model validation and testing.
+* Base class AbstractPlottable now correctly propagated to all fit models.
+* Detailed mathematical formulae added to the docstrings of all model classes.
 * Fix for issue #33 (cannot freeze parameters for composite models).
 * Components within composite models now accessible via indexing (e.g.,
   ``composite_model[0]`` returns the first component).
 * Added a unit test for composite model parameter freezing.
 * New ``plot_components`` argument in the ``plot()`` method of fit models to
   control individual components of composite models.
+* Arguments names for the ``integral()`` methods of fit models updated from
+  ``xmin``, ``xmax`` to ``x1``, ``x2`` for consistency.
+* Enhanced unit test coverage for the modeling module.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/42
   - https://github.com/lucabaldini/aptapy/pull/38
   - https://github.com/lucabaldini/aptapy/pull/37
+  - https://github.com/lucabaldini/aptapy/issues/41
+  - https://github.com/lucabaldini/aptapy/issues/39
+  - https://github.com/lucabaldini/aptapy/issues/36
+  - https://github.com/lucabaldini/aptapy/issues/35
   - https://github.com/lucabaldini/aptapy/issues/34
   - https://github.com/lucabaldini/aptapy/issues/33
 

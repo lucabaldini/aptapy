@@ -10,7 +10,7 @@ Composite fit with a Gaussian plus a straight line.
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import Gaussian, Line
+from aptapy.models import Gaussian, Line
 from aptapy.plotting import plt
 
 hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")

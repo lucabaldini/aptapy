@@ -1,21 +1,15 @@
 .. _modeling:
 
-:mod:`~aptapy.modeling` --- Fitting models
-==========================================
+:mod:`~aptapy.modeling` --- Modeling
+====================================
 
-The modeling module provides tools for fitting models to data, including parameter
-estimation and uncertainty quantification.
-
-Readily available simple models include
-
-* :class:`~aptapy.modeling.Constant`: a constant value;
-* :class:`~aptapy.modeling.Line`: a straight line;
-* :class:`~aptapy.modeling.PowerLaw`: a power law;
-* :class:`~aptapy.modeling.Gaussian`: a Gaussian function.
-
+The modeling module provides all the core tools for fitting models to data, including
+parameter estimation and uncertainty quantification. All predefined simple models
+are defined in the :mod:`~aptapy.models` module, which builds on top of the
+functionality provided here.
 More complex models can be built by summing simple ones, e.g.,
 
->>> from aptapy.modeling import Line, Gaussian
+>>> from aptapy.models import Line, Gaussian
 >>>
 >>> model = Line() + Gaussian()
 
@@ -71,7 +65,7 @@ and using simple fit models, and heavily used internally.
 The easiest way to see how you would go about defining an actual fit model is to
 look at the source code for a simple one.
 
-.. literalinclude:: ../src/aptapy/modeling.py
+.. literalinclude:: ../src/aptapy/models.py
    :language: python
    :pyobject: Line
    :linenos:

@@ -19,20 +19,10 @@
 import inspect
 
 import numpy as np
-import pytest
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import (
-    Constant,
-    Erf,
-    ErfInverse,
-    Exponential,
-    FitParameter,
-    Gaussian,
-    Line,
-    PowerLaw,
-    Quadratic,
-)
+from aptapy.modeling import FitParameter
+from aptapy.models import Constant, Exponential, Gaussian, Line
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -91,193 +81,6 @@ def test_model_parameters():
     print(p2, id(p2))
     assert p1 == p2
     assert id(p1) != id(p2)
-
-
-def test_plot():
-    """Test the plot method of the models.
-    """
-    for model in (Constant(), Line(), Quadratic(), PowerLaw(), Exponential(),
-                  Gaussian(), Erf(), ErfInverse()):
-        plt.figure(f"{inspect.currentframe().f_code.co_name}_{model.__class__.__name__}")
-        model.plot()
-        plt.legend()
-
-
-def test_integral():
-    """Test the integral method of the models.
-
-    Here we basically run through the models one by one and check that the analytical
-    integrals, where provided, give the same answer as the numerical quadrature
-    defined in the base class---which is an indication that both are sensible.
-    """
-    # pylint: disable=too-many-statements
-    # Constant.
-    xmin = 0.
-    xmax = 1.
-    value = 1.
-    target = value * (xmax - xmin)
-    model = Constant()
-    model.value.freeze(1.)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # Line.
-    slope = 1.
-    intercept = 1.
-    target = 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
-    model = Line()
-    model.slope.freeze(slope)
-    model.intercept.freeze(intercept)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # Quadratic.
-    a = 1.
-    b = 1.
-    c = 1.
-    target = a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin)
-    model = Quadratic()
-    model.a.freeze(a)
-    model.b.freeze(b)
-    model.c.freeze(c)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # PowerLaw.
-    xmin = 1.
-    xmax = 10.
-    prefactor = 1.
-    for index in (-2., -1.):
-        if index == -1.:
-            target = prefactor * np.log(xmax / xmin)
-        else:
-            target = prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.))
-        model = PowerLaw()
-        model.prefactor.freeze(prefactor)
-        model.index.freeze(index)
-        assert model.quadrature(xmin, xmax) == pytest.approx(target)
-        assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # Exponential.
-    xmin = 0.
-    xmax = 10.
-    prefactor = 1.
-    scale = 1.
-    target = prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
-    model = Exponential()
-    model.prefactor.freeze(prefactor)
-    model.scale.freeze(scale)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-    # Gaussian.
-    xmin = -5.
-    xmax = 5.
-    prefactor = 1.
-    mean = 0.
-    sigma = 1.
-    target = 1.
-    model = Gaussian()
-    model.prefactor.freeze(prefactor)
-    model.mean.freeze(mean)
-    model.sigma.freeze(sigma)
-    assert model.quadrature(xmin, xmax) == pytest.approx(target)
-    assert model.integral(xmin, xmax) == pytest.approx(target)
-
-
-def test_init_parameters():
-    """Test the init_parameters method of the models.
-
-    Here we basically run through the models one by one and check that the estimate
-    of the initial parameters, where available, is consistent with the results of a
-    full least-squares fit.
-    """
-    # pylint: disable=too-many-statements
-    # Constant.
-    value = 0.1
-    error = 0.1
-    xdata = np.linspace(0., 10., 11)
-    ydata = np.full(xdata.shape, value) + _RNG.normal(scale=error, size=xdata.shape)
-    sigma = np.full(xdata.shape, error)
-    model = Constant()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_value = model.value.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.value.compatible_with(initial_value)
-    # In this case the initial value should be identical to the fitted one.
-    assert model.value.value == pytest.approx(initial_value)
-
-    # Line.
-    slope = 5.
-    intercept = 3.
-    error = 0.1
-    xdata = np.linspace(0., 10., 11)
-    ydata = slope * xdata + intercept + _RNG.normal(scale=error, size=xdata.shape)
-    sigma = np.full(xdata.shape, error)
-    model = Line()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_slope = model.slope.value
-    initial_intercept = model.intercept.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.slope.compatible_with(initial_slope)
-    assert model.intercept.compatible_with(initial_intercept)
-    # In this case the initial values should be identical to the fitted ones.
-    assert model.slope.value == pytest.approx(initial_slope)
-    assert model.intercept.value == pytest.approx(initial_intercept)
-
-    # PowerLaw.
-    prefactor = 10.
-    index = -2.
-    xdata = np.linspace(1., 10., 10)
-    ydata = prefactor * xdata**index
-    sigma = 0.05 * ydata
-    ydata += _RNG.normal(scale=sigma)
-    model = PowerLaw()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_prefactor = model.prefactor.value
-    initial_index = model.index.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.prefactor.compatible_with(initial_prefactor)
-    assert model.index.compatible_with(initial_index)
-
-    # Exponential.
-    prefactor = 10.
-    scale = 2.
-    xdata = np.linspace(0., 10., 11)
-    ydata = prefactor * np.exp(-xdata / scale)
-    sigma = 0.05 * ydata
-    ydata += _RNG.normal(scale=sigma)
-    model = Exponential()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_prefactor = model.prefactor.value
-    initial_scale = model.scale.value
-    model.fit(xdata, ydata, sigma=sigma)
-    assert model.prefactor.compatible_with(initial_prefactor)
-    assert model.scale.compatible_with(initial_scale)
-
-    # Gaussian.
-    prefactor = 10.
-    mean = 3.
-    sigma = 2.
-    xdata = np.linspace(-5., 10., 100)
-    model = Gaussian()
-    model.prefactor.set(prefactor)
-    model.mean.set(mean)
-    model.sigma.set(sigma)
-    ydata = model(xdata)
-    sigma = 0.05 * ydata
-    ydata += _RNG.normal(scale=sigma)
-    model = Gaussian()
-    model.init_parameters(xdata, ydata, sigma)
-    initial_prefactor = model.prefactor.value
-    initial_mean = model.mean.value
-    initial_sigma = model.sigma.value
-    model.fit(xdata, ydata, sigma=sigma)
-    # Here we are a bit more lenient, as the initial estimates are not expected to be
-    # very accurate.
-    assert model.prefactor.compatible_with(initial_prefactor, 15.)
-    assert model.mean.compatible_with(initial_mean, 15.)
-    assert model.sigma.compatible_with(initial_sigma, 15.)
 
 
 def test_gaussian_fit():
@@ -382,8 +185,8 @@ def test_multiple_sum():
 def test_sum_frozen():
     """Test fitting the sum of two models with a frozen parameter.
     """
-    error = 0.05
     plt.figure(inspect.currentframe().f_code.co_name)
+    error = 0.05
     x = np.linspace(0., 8., 50)
     y = np.exp(-x) + 1. + _RNG.normal(scale=error, size=x.shape)
     plt.errorbar(x, y, error, label="Data", fmt="o")
@@ -392,4 +195,37 @@ def test_sum_frozen():
     model[1].value.freeze(1.)
     model.fit(x, y, sigma=error)
     model.plot(fit_output=True, plot_components=False)
+    plt.legend()
+
+
+def test_shifted_exponential():
+    """Test the shifted exponential model.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    error = 0.05
+    x0 = 10.
+    x = np.linspace(x0, 8. + x0, 50)
+    y = np.exp(-(x - x0)) + _RNG.normal(scale=error, size=x.shape)
+    plt.errorbar(x, y, error, label="Data", fmt="o")
+
+    model = Exponential(x0)
+    model.fit(x, y, sigma=error)
+    model.plot(fit_output=True)
+    plt.legend()
+
+
+def test_shifted_exponential_frozen():
+    """Test the shifted exponential model with a frozen parameter.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    error = 0.05
+    x0 = 10.
+    x = np.linspace(x0, 8. + x0, 50)
+    y = np.exp(-(x - x0)) + _RNG.normal(scale=error, size=x.shape)
+    plt.errorbar(x, y, error, label="Data", fmt="o")
+
+    model = Exponential(x0)
+    model.scale.freeze(1.)
+    model.fit(x, y, sigma=error)
+    model.plot(fit_output=True)
     plt.legend()

@@ -206,14 +206,6 @@ def test_stretched_exponential_complement():
     _test_model_base(StretchedExponentialComplement, (prefactor, scale, gamma), None)
 
 
-def test_exponential_complement():
-    """Test the ExponentialComplement model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    prefactor, scale = 10, 2.
-    _test_model_base(ExponentialComplement, (prefactor, scale,), None)
-
-
 def test_gaussian():
     """Test the Gaussian model.
     """

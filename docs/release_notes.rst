@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.13.0 (2025-11-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Major refactoring of the modeling module (now split into the `models` and `modeling`
   modules, the former containing all the core functionality and latter the actual
   models) to improve code organization and maintainability.

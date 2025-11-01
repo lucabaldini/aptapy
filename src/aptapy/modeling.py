@@ -1628,7 +1628,7 @@ class StretchedExponential(Exponential):
         x = x - self.origin
         return prefactor * np.exp(-(x / scale)**stretch)
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1):
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
         """
         super().init_parameters(xdata, ydata, sigma)

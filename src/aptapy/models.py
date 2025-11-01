@@ -453,7 +453,7 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-class _GaussianBase(AbstractFitModel):
+class AbstractGaussian(AbstractFitModel):
 
     """Common base class for Gaussian-like models.
 
@@ -507,7 +507,7 @@ class _GaussianBase(AbstractFitModel):
         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
 
 
-class Gaussian(_GaussianBase):
+class Gaussian(AbstractGaussian):
 
     r"""Gaussian model.
 
@@ -529,7 +529,7 @@ class Gaussian(_GaussianBase):
         """
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
-        return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
+        return prefactor * AbstractGaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
@@ -552,7 +552,7 @@ class Gaussian(_GaussianBase):
         return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
 
 
-class GaussianCDF(_GaussianBase):
+class GaussianCDF(AbstractGaussian):
 
     r"""Gaussian cumulative distribution function (CDF) model.
 
@@ -574,10 +574,10 @@ class GaussianCDF(_GaussianBase):
         """
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
-        return prefactor * 0.5 * (1. + scipy.special.erf(z / _GaussianBase._SQRT2))
+        return prefactor * 0.5 * (1. + scipy.special.erf(z / AbstractGaussian._SQRT2))
 
 
-class GaussianCDFComplement(_GaussianBase):
+class GaussianCDFComplement(AbstractGaussian):
 
     r"""Complement of the gaussian cumulative distribution function (CDF) model.
 

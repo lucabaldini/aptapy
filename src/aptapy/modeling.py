@@ -864,8 +864,8 @@ class AbstractFitModelBase(AbstractPlottable):
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         super().plot(axes, **kwargs)
 
-    def random_sample(self, sigma: ArrayLike,
-                      num_points: int = 25) -> Tuple[np.ndarray, np.ndarray]:
+    def random_sample(self, sigma: ArrayLike, num_points: int = 25,
+                      seed: int = None) -> Tuple[np.ndarray, np.ndarray]:
         """Generate a random sample from the model, adding gaussian noise.
 
         Arguments
@@ -875,13 +875,16 @@ class AbstractFitModelBase(AbstractPlottable):
 
         num_points : int, optional
             The number of points to generate (default 25).
+
+        seed : int, optional
+            The random seed to use (default None).
         """
         xdata = np.linspace(*self.plotting_range(), num_points)
         if isinstance(sigma, Number):
             sigma = np.full(xdata.shape, sigma)
         if len(sigma) != len(xdata):
             raise ValueError("Length of sigma does not match number of points")
-        ydata = self(xdata) + np.random.default_rng().normal(0., sigma)
+        ydata = self(xdata) + np.random.default_rng(seed).normal(0., sigma)
         return xdata, ydata
 
     def _format_fit_output(self, spec: str) -> str:

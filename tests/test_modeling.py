@@ -110,7 +110,7 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
     # Parameter initialization and fitting. Note that if the parameter initialization
     # is not implemented for the model, this will be a no-op, and the fit starts
     # from the ground truth---no need to tweak the test function to handle this case.
-    xdata, ydata = model.random_sample(sigma)
+    xdata, ydata = model.random_sample(sigma, seed=313)
     model.init_parameters(xdata, ydata, sigma)
     initial_values = model.parameter_values()
     model.fit(xdata, ydata, sigma=sigma)

@@ -1043,6 +1043,28 @@ class AbstractFitModel(AbstractFitModelBase):
         return self.quadrature(x1, x2)
 
 
+class AbstractLocScaleModel(AbstractFitModel):
+
+    """Abstract base class for fit models with location and scale parameters.
+    """
+
+    amplitude = FitParameter(1.)
+    location = FitParameter(0.)
+    scale = FitParameter(1., minimum=0)
+
+    def evaluate(self, x: ArrayLike, *parameter_values: float) -> ArrayLike:
+        """
+        """
+        z = (x - self.location) / self.scale
+        return self.amplitude * self.normalized_shape(z, *parameter_values)
+
+    @staticmethod
+    @abstractmethod
+    def normalized_shape(z: ArrayLike, *parameter_values: float) -> ArrayLike:
+        """
+        """
+
+
 class FitModelSum(AbstractFitModelBase):
 
     """Composite model representing the sum of an arbitrary number of simple models.

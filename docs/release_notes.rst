@@ -3,8 +3,10 @@
 Release notes
 =============
 
-* Major refactoring of the modeling module to improve code organization and
-  maintainability---note the Erf models have been renamed.
+* Major refactoring of the modeling module (now split into the `models` and `modeling`
+  modules, the former containing all the core functionalty and latter the actual
+  models) to improve code organization and maintainability.
+* Erf and ErfInverse models have been renamed.
 * New models from the exponential family, including the StretchedExponential and
   its complement, and all exponential models now supporting a generic origin.
 * Added facility to draw random samples from fit models, in order to facilitate
@@ -25,6 +27,7 @@ Release notes
   - https://github.com/lucabaldini/aptapy/pull/42
   - https://github.com/lucabaldini/aptapy/pull/38
   - https://github.com/lucabaldini/aptapy/pull/37
+  - https://github.com/lucabaldini/aptapy/issues/41
   - https://github.com/lucabaldini/aptapy/issues/39
   - https://github.com/lucabaldini/aptapy/issues/36
   - https://github.com/lucabaldini/aptapy/issues/35

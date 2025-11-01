@@ -4,7 +4,7 @@ Release notes
 =============
 
 * Major refactoring of the modeling module (now split into the `models` and `modeling`
-  modules, the former containing all the core functionalty and latter the actual
+  modules, the former containing all the core functionality and latter the actual
   models) to improve code organization and maintainability.
 * Erf and ErfInverse models have been renamed.
 * New models from the exponential family, including the StretchedExponential and

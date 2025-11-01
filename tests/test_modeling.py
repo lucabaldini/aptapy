@@ -366,7 +366,7 @@ def test_shifted_exponential():
 
 
 def test_shifted_exponential_frozen():
-    """Test the shifted exponential model.
+    """Test the shifted exponential model with a frozen parameter.
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     error = 0.05

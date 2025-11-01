@@ -270,7 +270,7 @@ class Exponential(AbstractFitModel):
         x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
         \end{cases}
 
-    Note this is an example of a model with a state, i. e., one where ``evaluate()``
+    Note this is an example of a model with a state, i.e., one where ``evaluate()``
     is not a static method, as we have an ``origin`` attribute that needs to be
     taken into account. This is done in the spirit of facilitating fits where
     the exponential decay starts at a non-zero x value.

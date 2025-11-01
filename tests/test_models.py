@@ -39,7 +39,8 @@ from aptapy.plotting import plt
 
 
 def _test_model_base(model_class: type, parameter_values: Sequence[float],
-                     integral: Callable = None, sigma: float = 0.1, num_sigma: float = 5.):
+                     integral: Callable[[float, float], float] = None,
+                     sigma: float = 0.1, num_sigma: float = 5.):
     """Basic tests for the Model base class.
     """
     print("Testing model:", model_class.__name__)
@@ -55,7 +56,7 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
     # Parameter initialization and fitting. Note that if the parameter initialization
     # is not implemented for the model, this will be a no-op, and the fit starts
     # from the ground truth---no need to tweak the test function to handle this case.
-    xdata, ydata = model.random_sample(sigma, seed=313)
+    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
     model.init_parameters(xdata, ydata, sigma)
     initial_values = model.parameter_values()
     print(f"Initial values: {initial_values}")
@@ -129,7 +130,7 @@ def test_exponential_complement():
     """Test the ExponentialComplement model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    prefactor, scale = 10, 2.
+    prefactor, scale = 10., 2.
     _test_model_base(ExponentialComplement, (prefactor, scale,), None)
 
 

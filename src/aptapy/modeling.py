@@ -23,7 +23,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number
-from typing import Callable, Dict, Iterator, Sequence, Tuple
+from typing import Callable, Dict, Iterator, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -553,7 +553,7 @@ class AbstractFitModelBase(AbstractPlottable):
         return (tuple(parameter.minimum for parameter in free_parameters),
                 tuple(parameter.maximum for parameter in free_parameters))
 
-    def set_parameters(self, *parameter_values: Sequence[float]) -> None:
+    def set_parameters(self, *parameter_values: float) -> None:
         """Set the model parameters to the given values.
 
         Arguments
@@ -852,8 +852,8 @@ class AbstractFitModelBase(AbstractPlottable):
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         super().plot(axes, **kwargs)
 
-    def random_sample(self, sigma: ArrayLike, num_points: int = 25,
-                      seed: int = None) -> Tuple[np.ndarray, np.ndarray]:
+    def random_fit_dataset(self, sigma: ArrayLike, num_points: int = 25,
+                           seed: int = None) -> Tuple[np.ndarray, np.ndarray]:
         """Generate a random sample from the model, adding gaussian noise.
 
         Arguments
@@ -866,6 +866,14 @@ class AbstractFitModelBase(AbstractPlottable):
 
         seed : int, optional
             The random seed to use (default None).
+
+        Returns
+        -------
+        xdata : np.ndarray
+            The x values of the random sample.
+
+        ydata : np.ndarray
+            The y values of the random sample.
         """
         xdata = np.linspace(*self.plotting_range(), num_points)
         if isinstance(sigma, Number):

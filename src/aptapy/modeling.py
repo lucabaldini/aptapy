@@ -1585,8 +1585,13 @@ class ExponentialComplement(Exponential):
         return prefactor - Exponential.evaluate(self, x, prefactor, scale)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """This is left empty for the time being, but we might be able to implement it.
+        """Overloaded method.
+
+        Note we just pretend that the maximum of the y values is a reasonable estimate
+        of the prefactor, and go back to the plain exponential case via the
+        transformation ydata -> prefactor - ydata.
         """
+        Exponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
 class StretchedExponential(Exponential):
@@ -1616,8 +1621,13 @@ class StretchedExponential(Exponential):
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
+
+        Note this a little bit flaky, in that we pretend that the data are well
+        approximated by a plain exponential, and do not even try at estimating the
+        stretch factor. When the latter is significantly different from 1 this will
+        not be very accurate, but hopefully good enough to get the fit started.
         """
-        super().init_parameters(xdata, ydata, sigma)
+        Exponential.init_parameters(self, xdata, ydata, sigma)
         self.stretch.init(1.)
 
 
@@ -1644,8 +1654,12 @@ class StretchedExponentialComplement(StretchedExponential):
         return prefactor - StretchedExponential.evaluate(self, x, prefactor, scale, stretch)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """This is left empty for the time being, but we might be able to implement it.
+        """Overloaded method.
+
+        See the comment in the corresponding docstrings of the ExponentialComplement
+        class.
         """
+        StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
 class _GaussianBase(AbstractFitModel):

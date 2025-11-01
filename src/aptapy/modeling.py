@@ -1258,11 +1258,9 @@ class Constant(AbstractFitModel):
 
     .. math::
 
-        \begin{align}
-            f(x) = c
-            \quad \text{with} \quad
-            c \rightarrow \texttt{value}
-        \end{align}
+        f(x) = c
+        \quad \text{with} \quad
+        c \rightarrow \texttt{value}
     """
 
     value = FitParameter(1.)
@@ -1305,14 +1303,12 @@ class Line(AbstractFitModel):
 
     .. math::
 
-        \begin{align}
-            f(x) = mx + q
-            \quad \text{with} \quad
-            \begin{cases}
-            m \rightarrow \texttt{slope} \\
-            q \rightarrow \texttt{intercept}
-            \end{cases}
-        \end{align}
+        f(x) = mx + q
+        \quad \text{with} \quad
+        \begin{cases}
+        m \rightarrow \texttt{slope} \\
+        q \rightarrow \texttt{intercept}
+        \end{cases}
     """
 
     slope = FitParameter(1.)
@@ -1364,15 +1360,13 @@ class Quadratic(AbstractFitModel):
 
     .. math::
 
-        \begin{align}
-            f(x) = ax^2 + bx + c
-            \quad \text{with} \quad
-            \begin{cases}
-            a \rightarrow \texttt{a}\\
-            b \rightarrow \texttt{b}\\
-            c \rightarrow \texttt{c}
-            \end{cases}
-        \end{align}
+        f(x) = ax^2 + bx + c
+        \quad \text{with} \quad
+        \begin{cases}
+        a \rightarrow \texttt{a}\\
+        b \rightarrow \texttt{b}\\
+        c \rightarrow \texttt{c}
+        \end{cases}
     """
 
     a = FitParameter(1.)
@@ -1399,14 +1393,12 @@ class PowerLaw(AbstractFitModel):
 
     .. math::
 
-        \begin{align}
-            f(x) = N x^\Gamma
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            \Gamma \rightarrow \texttt{index}
-            \end{cases}
-        \end{align}
+        f(x) = N x^\Gamma
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        \Gamma \rightarrow \texttt{index}
+        \end{cases}
     """
 
     prefactor = FitParameter(1.)
@@ -1479,15 +1471,13 @@ class Exponential(AbstractFitModel):
 
     .. math::
 
-        \begin{align}
-            f(x) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            X \rightarrow \texttt{scale}\\
-            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-            \end{cases}
-        \end{align}
+        f(x) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        X \rightarrow \texttt{scale}\\
+        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+        \end{cases}
 
     Note this is an example of a model with a state, i. e., one where ``evaluate()``
     is not a static method, as we have an ``origin`` attribute that needs to be
@@ -1579,15 +1569,13 @@ class ExponentialComplement(Exponential):
 
     .. math::
 
-        \begin{align}
-            f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            X \rightarrow \texttt{scale}\\
-            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-            \end{cases}
-        \end{align}
+        f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        X \rightarrow \texttt{scale}\\
+        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+        \end{cases}
     """
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
@@ -1607,16 +1595,14 @@ class StretchedExponential(Exponential):
 
     .. math::
 
-        \begin{align}
-            f(x) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            X \rightarrow \texttt{scale}\\
-            \gamma \rightarrow \texttt{stretch}\\
-            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-            \end{cases}
-        \end{align}
+        f(x) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        X \rightarrow \texttt{scale}\\
+        \gamma \rightarrow \texttt{stretch}\\
+        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+        \end{cases}
     """
 
     stretch = FitParameter(1., minimum=0.)
@@ -1641,16 +1627,14 @@ class StretchedExponentialComplement(StretchedExponential):
 
     .. math::
 
-        \begin{align}
-            f(x) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            X \rightarrow \texttt{scale}\\
-            \gamma \rightarrow \texttt{stretch}\\
-            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-            \end{cases}
-        \end{align}
+        f(x) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        X \rightarrow \texttt{scale}\\
+        \gamma \rightarrow \texttt{stretch}\\
+        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+        \end{cases}
     """
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
@@ -1723,16 +1707,15 @@ class Gaussian(_GaussianBase):
     r"""Gaussian model.
 
     .. math::
-        \begin{align}
-            f(x) = \frac{N}{\sigma \sqrt{2 \pi}}
-            \exp\left\{-\frac{(x - \mu)^2}{2 \sigma^2}\right\}
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            \mu \rightarrow \texttt{mean}\\
-            \sigma \rightarrow \texttt{sigma}
-            \end{cases}
-        \end{align}
+
+        f(x) = \frac{N}{\sigma \sqrt{2 \pi}}
+        \exp\left\{-\frac{(x - \mu)^2}{2 \sigma^2}\right\}
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        \mu \rightarrow \texttt{mean}\\
+        \sigma \rightarrow \texttt{sigma}
+        \end{cases}
     """
 
     @staticmethod
@@ -1769,17 +1752,16 @@ class GaussianCDF(_GaussianBase):
     r"""Gaussian cumulative distribution function (CDF) model.
 
     .. math::
-        \begin{align}
-            f(x) = \frac{N}{2} \left [ 1 + \text{erf}
-            \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            \mu \rightarrow \texttt{mean}\\
-            \sigma \rightarrow \texttt{sigma}
-            \end{cases}
-        \end{align}
-        """
+
+        f(x) = \frac{N}{2} \left [ 1 + \text{erf}
+        \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        \mu \rightarrow \texttt{mean}\\
+        \sigma \rightarrow \texttt{sigma}
+        \end{cases}
+    """
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
@@ -1799,16 +1781,15 @@ class GaussianCDFComplement(_GaussianBase):
     r"""Complement of the gaussian cumulative distribution function (CDF) model.
 
     .. math::
-        \begin{align}
-            f(x) = \frac{N}{2} \left [ 1 - \text{erf}
-            \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
-            \quad \text{with} \quad
-            \begin{cases}
-            N \rightarrow \texttt{prefactor}\\
-            \mu \rightarrow \texttt{mean}\\
-            \sigma \rightarrow \texttt{sigma}
-            \end{cases}
-        \end{align}
+
+        f(x) = \frac{N}{2} \left [ 1 - \text{erf}
+        \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
+        \quad \text{with} \quad
+        \begin{cases}
+        N \rightarrow \texttt{prefactor}\\
+        \mu \rightarrow \texttt{mean}\\
+        \sigma \rightarrow \texttt{sigma}
+        \end{cases}
     """
 
     @staticmethod

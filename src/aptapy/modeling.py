@@ -1642,7 +1642,7 @@ class StretchedExponentialComplement(StretchedExponential):
     .. math::
 
         \begin{align}
-            f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}^\gamma\right\} \right ]
+            f(x) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
             \quad \text{with} \quad
             \begin{cases}
             N \rightarrow \texttt{prefactor}\\

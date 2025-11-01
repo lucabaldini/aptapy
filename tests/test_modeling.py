@@ -25,15 +25,17 @@ import pytest
 from aptapy.hist import Histogram1d
 from aptapy.modeling import (
     Constant,
-    Erf,
-    ErfInverse,
     Exponential,
-    ExponentialInverse,
+    ExponentialComplement,
     FitParameter,
     Gaussian,
+    GaussianCDF,
+    GaussianCDFComplement,
     Line,
     PowerLaw,
     Quadratic,
+    StretchedExponential,
+    StretchedExponentialComplement,
 )
 from aptapy.plotting import plt
 
@@ -179,12 +181,37 @@ def test_exponential():
     _test_model_base(Exponential, (prefactor, scale), integral)
 
 
-def test_exponential_inverse():
-    """Test the ExponentialInverse model.
+def test_exponential_complement():
+    """Test the ExponentialComplement model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, scale = 10, 2.
-    _test_model_base(ExponentialInverse, (prefactor, scale,), None)
+    _test_model_base(ExponentialComplement, (prefactor, scale,), None)
+
+
+def test_stretched_exponential():
+    """Test the StretchedExponential model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, scale, gamma = 10., 2., 0.5
+    # The initialization of the parameters is pretty flaky in this case...
+    _test_model_base(StretchedExponential, (prefactor, scale, gamma), None, num_sigma=50.)
+
+
+def test_stretched_exponential_complement():
+    """Test the StretchedExponentialComplement model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, scale, gamma = 10., 2., 0.5
+    _test_model_base(StretchedExponentialComplement, (prefactor, scale, gamma), None)
+
+
+def test_exponential_complement():
+    """Test the ExponentialComplement model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    prefactor, scale = 10, 2.
+    _test_model_base(ExponentialComplement, (prefactor, scale,), None)
 
 
 def test_gaussian():
@@ -199,20 +226,20 @@ def test_gaussian():
     _test_model_base(Gaussian, (prefactor, mean, sigma), integral, num_sigma=10.)
 
 
-def test_erf():
-    """Test the Erf model.
+def test_gaussian_cdf():
+    """Test the GaussianCDF model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, mean, sigma = 5., 0., 1.
-    _test_model_base(Erf, (prefactor, mean, sigma), None)
+    _test_model_base(GaussianCDF, (prefactor, mean, sigma), None)
 
 
-def test_erf_inverse():
-    """Test the ErfInverse model.
+def test_gaussian_cdf_complement():
+    """Test the GaussianCDFComplement model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, mean, sigma = 5., 0., 1.
-    _test_model_base(ErfInverse, (prefactor, mean, sigma), None)
+    _test_model_base(GaussianCDFComplement, (prefactor, mean, sigma), None)
 
 
 def test_gaussian_fit():

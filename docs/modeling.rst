@@ -8,11 +8,17 @@ estimation and uncertainty quantification.
 
 Readily available simple models include
 
-* :class:`~aptapy.modeling.Constant`: a constant value;
-* :class:`~aptapy.modeling.Line`: a straight line;
-* :class:`~aptapy.modeling.Quadratic`: a quadratic function;
-* :class:`~aptapy.modeling.PowerLaw`: a power law;
-* :class:`~aptapy.modeling.Gaussian`: a Gaussian function.
+* :class:`~aptapy.modeling.Constant`
+* :class:`~aptapy.modeling.Line`
+* :class:`~aptapy.modeling.Quadratic`
+* :class:`~aptapy.modeling.PowerLaw`
+* :class:`~aptapy.modeling.Exponential`
+* :class:`~aptapy.modeling.ExponentialComplement`
+* :class:`~aptapy.modeling.StretchedExponential`
+* :class:`~aptapy.modeling.StretchedExponentialComplement`
+* :class:`~aptapy.modeling.Gaussian`
+* :class:`~aptapy.modeling.GaussianCDF`
+* :class:`~aptapy.modeling.GaussianCDFComplement`
 
 More complex models can be built by summing simple ones, e.g.,
 

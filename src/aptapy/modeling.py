@@ -44,9 +44,12 @@ __all__ = [
     "Quadratic",
     "PowerLaw",
     "Exponential",
+    "ExponentialComplement",
+    "StretchedExponential",
+    "StretchedExponentialComplement",
     "Gaussian",
-    "Erf",
-    "ErfInverse",
+    "GaussianCDF",
+    "GaussianCDFComplement",
 ]
 
 
@@ -1266,6 +1269,8 @@ class Constant(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         if isinstance(x, Number):
             return value
@@ -1315,6 +1320,8 @@ class Line(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, slope: float, intercept: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         return slope * x + intercept
 
@@ -1374,6 +1381,8 @@ class Quadratic(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, a: float, b: float, c: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         return a * x**2 + b * x + c
 
@@ -1386,7 +1395,18 @@ class Quadratic(AbstractFitModel):
 
 class PowerLaw(AbstractFitModel):
 
-    """Power-law model.
+    r"""Power-law model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = N x^\Gamma
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            \Gamma \rightarrow \texttt{index}
+            \end{cases}
+        \end{align}
     """
 
     prefactor = FitParameter(1.)
@@ -1394,6 +1414,8 @@ class PowerLaw(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         return prefactor * x**index
 
@@ -1453,7 +1475,19 @@ class PowerLaw(AbstractFitModel):
 
 class Exponential(AbstractFitModel):
 
-    """Exponential model.
+    r"""Exponential model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            X \rightarrow \texttt{scale}\\
+            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+            \end{cases}
+        \end{align}
 
     Note this is an example of a model with a state, i. e., one where ``evaluate()``
     is not a static method, as we have an ``origin`` attribute that needs to be
@@ -1463,6 +1497,20 @@ class Exponential(AbstractFitModel):
     (One might argue that ``origin`` should be a fit parameter as well, but that
     would be degenerate with the ``scale`` parameter, and it would have to be
     fixed in most cases anyway, so a simple attribute seems more appropriate here.)
+
+    Arguments
+    ---------
+    origin : float, optional
+        The origin of the exponential decay (default 0.).
+
+    label : str, optional
+        The model label.
+
+    xlabel : str, optional
+        The label for the x axis.
+
+    ylabel : str, optional
+        The label for the y axis.
     """
 
     prefactor = FitParameter(1.)
@@ -1470,10 +1518,14 @@ class Exponential(AbstractFitModel):
 
     def __init__(self, origin: float = 0., label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:
+        """Constructor.
+        """
         super().__init__(label, xlabel, ylabel)
         self.origin = origin
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         x = x - self.origin
         return prefactor * np.exp(-x / scale)
@@ -1521,15 +1573,28 @@ class Exponential(AbstractFitModel):
         return (self.origin, self.origin + scale_factor * self.scale.value)
 
 
-class ExponentialInverse(Exponential):
+class ExponentialComplement(Exponential):
 
-    """Inverse exponential model.
+    r"""Exponential complement model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            X \rightarrow \texttt{scale}\\
+            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+            \end{cases}
+        \end{align}
     """
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
-        x = x - self.origin
-        return prefactor * (1. - np.exp(-x / scale))
+        return prefactor - Exponential.evaluate(self, x, prefactor, scale)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """This is left empty for the time being, but we might be able to implement it.
@@ -1538,12 +1603,27 @@ class ExponentialInverse(Exponential):
 
 class StretchedExponential(Exponential):
 
-    """Stretched exponential model.
+    r"""Stretched exponential model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            X \rightarrow \texttt{scale}\\
+            \gamma \rightarrow \texttt{stretch}\\
+            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+            \end{cases}
+        \end{align}
     """
 
     stretch = FitParameter(1., minimum=0.)
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         x = x - self.origin
         return prefactor * np.exp(-(x / scale)**stretch)
@@ -1555,15 +1635,29 @@ class StretchedExponential(Exponential):
         self.stretch.init(1.)
 
 
-class StretchedExponentialInverse(StretchedExponential):
+class StretchedExponentialComplement(StretchedExponential):
 
-    """Inverse stretched exponential model.
+    r"""Stretched exponential complement model.
+
+    .. math::
+
+        \begin{align}
+            f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}^\gamma\right\} \right ]
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            X \rightarrow \texttt{scale}\\
+            \gamma \rightarrow \texttt{stretch}\\
+            x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+            \end{cases}
+        \end{align}
     """
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
-        x = x - self.origin
-        return prefactor * (1. - np.exp(-(x / scale)**stretch))
+        return prefactor - StretchedExponential.evaluate(self, x, prefactor, scale, stretch)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """This is left empty for the time being, but we might be able to implement it.
@@ -1626,11 +1720,25 @@ class _GaussianBase(AbstractFitModel):
 
 class Gaussian(_GaussianBase):
 
-    """Gaussian model.
+    r"""Gaussian model.
+
+    .. math::
+        \begin{align}
+            f(x) = \frac{N}{\sigma \sqrt{2 \pi}}
+            \exp\left\{-\frac{(x - \mu)^2}{2 \sigma^2}\right\}
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            \mu \rightarrow \texttt{mean}\\
+            \sigma \rightarrow \texttt{sigma}
+            \end{cases}
+        \end{align}
     """
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
         return prefactor * _GaussianBase._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
@@ -1656,13 +1764,27 @@ class Gaussian(_GaussianBase):
         return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
 
 
-class Erf(_GaussianBase):
+class GaussianCDF(_GaussianBase):
 
-    """Error function model.
-    """
+    r"""Gaussian cumulative distribution function (CDF) model.
+
+    .. math::
+        \begin{align}
+            f(x) = \frac{N}{2} \left [ 1 + \text{erf}
+            \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            \mu \rightarrow \texttt{mean}\\
+            \sigma \rightarrow \texttt{sigma}
+            \end{cases}
+        \end{align}
+        """
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
         z = (x - mean) / sigma
         return prefactor * 0.5 * (1. + scipy.special.erf(z / _GaussianBase._SQRT2))
@@ -1672,15 +1794,29 @@ class Erf(_GaussianBase):
         """
 
 
-class ErfInverse(_GaussianBase):
+class GaussianCDFComplement(_GaussianBase):
 
-    """Inverse error function model.
+    r"""Complement of the gaussian cumulative distribution function (CDF) model.
+
+    .. math::
+        \begin{align}
+            f(x) = \frac{N}{2} \left [ 1 - \text{erf}
+            \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
+            \quad \text{with} \quad
+            \begin{cases}
+            N \rightarrow \texttt{prefactor}\\
+            \mu \rightarrow \texttt{mean}\\
+            \sigma \rightarrow \texttt{sigma}
+            \end{cases}
+        \end{align}
     """
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+        """Overloaded method.
+        """
         # pylint: disable=arguments-differ
-        return prefactor - Erf.evaluate(x, prefactor, mean, sigma)
+        return prefactor - GaussianCDF.evaluate(x, prefactor, mean, sigma)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """This is left empty for the time being, but we might be able to implement it.

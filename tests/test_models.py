@@ -57,7 +57,9 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
     # is not implemented for the model, this will be a no-op, and the fit starts
     # from the ground truth---no need to tweak the test function to handle this case.
     xdata, ydata = model.random_fit_dataset(sigma, seed=313)
+    plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
     model.init_parameters(xdata, ydata, sigma)
+    model.plot(label="Initial guess", ls="--", color="gray")
     initial_values = model.parameter_values()
     print(f"Initial values: {initial_values}")
     model.fit(xdata, ydata, sigma=sigma)
@@ -65,8 +67,6 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
     for param, guess, ground_truth in zip(model, initial_values, parameter_values):
         assert param.compatible_with(guess, num_sigma)
         assert param.compatible_with(ground_truth, num_sigma)
-    # Plotting.
-    plt.errorbar(xdata, ydata, sigma, fmt='o', label='Random data')
     model.plot(fit_output=True)
     plt.legend()
 

@@ -24,7 +24,7 @@ import numpy as np
 import scipy.special
 import uncertainties
 
-from .modeling import AbstractFitModel, FitParameter
+from .modeling import AbstractFitModel, AbstractPeakFitModel, AbstractSigmoidFitModel, FitParameter
 from .plotting import plt
 from .typing_ import ArrayLike
 
@@ -599,3 +599,27 @@ class GaussianCDFComplement(AbstractGaussian):
         """
         # pylint: disable=arguments-differ
         return prefactor - GaussianCDF.evaluate(x, prefactor, mean, sigma)
+
+
+class Gaussian2(AbstractPeakFitModel):
+
+    """Alternative Gaussian model.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * z**2.)
+
+
+class Lorentzian(AbstractPeakFitModel):
+
+    """Lorentzian model.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 1. / np.pi / (1.0 + z**2)

@@ -262,7 +262,7 @@ class FitParameter:
             # the only thing we can do in absence of an error is to use the
             # Python default formatting.
             param = format(self.value, "g")
-        text = f"{self._name.title()}: {param}"
+        text = f"{self._name}: {param}"
         info = []
         if self._frozen:
             info.append("frozen")
@@ -1043,26 +1043,86 @@ class AbstractFitModel(AbstractFitModelBase):
         return self.quadrature(x1, x2)
 
 
-class AbstractLocScaleModel(AbstractFitModel):
+class AbstractLocationScaleFitModel(AbstractFitModel):
 
-    """Abstract base class for fit models with location and scale parameters.
+    r"""Abstract base class for fit models with location and scale parameters.
+
+    This is intended to act as a base class for all the models that are described by
+    a universal shape function :math:`g(z)` in terms of a normalized variable
+
+    .. math::
+        z = \frac{x - \mu}{\sigma}
+
+    where :math:`\mu` is the location parameter, and :math:`\sigma` is the scale
+    parameter. This includes both peak-like models (e.g., gaussian and lorentzian)
+    and sigmoid-like models (e.g., error function and logistic function).
     """
 
     amplitude = FitParameter(1.)
     location = FitParameter(0.)
     scale = FitParameter(1., minimum=0)
 
-    def evaluate(self, x: ArrayLike, *parameter_values: float) -> ArrayLike:
-        """
-        """
-        z = (x - self.location) / self.scale
-        return self.amplitude * self.normalized_shape(z, *parameter_values)
-
-    @staticmethod
     @abstractmethod
-    def normalized_shape(z: ArrayLike, *parameter_values: float) -> ArrayLike:
+    def shape(self, z: ArrayLike, *parameter_values: float) -> ArrayLike:
+        """Abstract method for the normalized shape of the model. Subclasses must
+        implement this method.
         """
+
+    def default_plotting_range(self, normalized_half_width: float = 5.) -> Tuple[float, float]:
+        """Overloaded method.
+
+        By default the plotting range is set to be an interval centered on the
+        location parameter, and extending for a number of scale units on each side.
         """
+        half_width = normalized_half_width * self.scale.value
+        return (self.location.value - half_width, self.location.value + half_width)
+
+
+class AbstractPeakFitModel(AbstractLocationScaleFitModel):
+
+    r"""Abstract base class for peak-like fit models.
+
+    The basic contract, here, is that the shape function is normalized to unit area,
+    and the actual model is given by
+
+    .. math::
+        f(x; A, \mu, \sigma, ...) =
+        \frac{A}{\sigma} g\left(\frac{x - \mu}{\sigma}; ...\right)
+
+    where the dots indicate any additional model parameters.
+    """
+
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float, scale: float,
+                 *parameter_values: float) -> ArrayLike:
+        """Overloaded method for evaluating the model.
+
+        Here we simply scale and shift the input variable, and delegate the actual
+        evaluation to the shape() method. Note that we assume that the shape function
+        is properly normalized, and that the overall area under the actual model
+        is directly proportional to the amplitude / scale ratio.
+        """
+        z = (x - location) / scale
+        return amplitude / scale * self.shape(z, *parameter_values)
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        self.location.init(np.average(xdata, weights=ydata))
+        self.scale.init(np.sqrt(np.average((xdata - self.location.value)**2, weights=ydata)))
+        self.amplitude.init(np.trapz(ydata, xdata))
+
+
+class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):
+
+    """Abstract base class for fit models representing sigmoids.
+    """
+
+    offset = FitParameter(0.5, minimum=-0.5, maximum=0.5)
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        pass
 
 
 class FitModelSum(AbstractFitModelBase):

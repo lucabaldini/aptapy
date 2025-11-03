@@ -38,8 +38,11 @@ __all__ = [
     "StretchedExponential",
     "StretchedExponentialComplement",
     "Gaussian",
-    "GaussianCDF",
-    "GaussianCDFComplement",
+    #"GaussianCDF",
+    #"GaussianCDFComplement",
+    "Lorentzian",
+    "LogNormal",
+    "Moyal",
 ]
 
 
@@ -498,179 +501,172 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-class AbstractGaussian(AbstractFitModel):
+# class AbstractGaussian(AbstractFitModel):
 
-    """Common base class for Gaussian-like models.
+#     """Common base class for Gaussian-like models.
 
-    This provides a couple of convenience methods that are useful for all the
-    models derived from a gaussian (e.g., the gaussian itself, the error function,
-    and its inverse). Note that, for the right method to be picked up,
-    subclasses should derive from this class *before* deriving from
-    AbstractFitModel, so that the method resolution order (MRO) works as expected.
+#     This provides a couple of convenience methods that are useful for all the
+#     models derived from a gaussian (e.g., the gaussian itself, the error function,
+#     and its inverse). Note that, for the right method to be picked up,
+#     subclasses should derive from this class *before* deriving from
+#     AbstractFitModel, so that the method resolution order (MRO) works as expected.
 
-    Note the evaluate() method is not implemented here, which means that the class
-    cannot be instantiated directly.
-    """
+#     Note the evaluate() method is not implemented here, which means that the class
+#     cannot be instantiated directly.
+#     """
 
-    prefactor = FitParameter(1.)
-    mean = FitParameter(0.)
-    sigma = FitParameter(1., minimum=0.)
+#     prefactor = FitParameter(1.)
+#     mean = FitParameter(0.)
+#     sigma = FitParameter(1., minimum=0.)
 
-    # A few useful constants.
-    _SQRT2 = np.sqrt(2.)
-    _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
-    _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
+#     # A few useful constants.
+#     _SQRT2 = np.sqrt(2.)
+#     _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
+#     _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
 
-    def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
-        """Convenience function to return a default plotting range for all the
-        models derived from a gaussian (e.g., the gaussian itself, the error
-        function, and its inverse).
+#     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
+#         """Convenience function to return a default plotting range for all the
+#         models derived from a gaussian (e.g., the gaussian itself, the error
+#         function, and its inverse).
 
-        Arguments
-        ---------
-        num_sigma : int, optional
-            The number of sigmas to use for the plotting range (default 5).
+#         Arguments
+#         ---------
+#         num_sigma : int, optional
+#             The number of sigmas to use for the plotting range (default 5).
 
-        Returns
-        -------
-        Tuple[float, float]
-            The default plotting range for the model.
-        """
-        # pylint: disable=no-member
-        mean, half_width = self.mean.value, num_sigma * self.sigma.value
-        return (mean - half_width, mean + half_width)
+#         Returns
+#         -------
+#         Tuple[float, float]
+#             The default plotting range for the model.
+#         """
+#         # pylint: disable=no-member
+#         mean, half_width = self.mean.value, num_sigma * self.sigma.value
+#         return (mean - half_width, mean + half_width)
 
-    def fwhm(self) -> uncertainties.ufloat:
-        """Return the full-width at half-maximum (FWHM) of the gaussian.
+#     def fwhm(self) -> uncertainties.ufloat:
+#         """Return the full-width at half-maximum (FWHM) of the gaussian.
 
-        Returns
-        -------
-        fwhm : uncertainties.ufloat
-            The FWHM of the gaussian.
-        """
-        # pylint: disable=no-member
-        return self.sigma.ufloat() * self._SIGMA_TO_FWHM
-
-
-class Gaussian(AbstractGaussian):
-
-    r"""Gaussian model.
-
-    .. math::
-
-        f(x) = \frac{N}{\sigma \sqrt{2 \pi}}
-        \exp\left\{-\frac{(x - \mu)^2}{2 \sigma^2}\right\}
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        \mu \rightarrow \texttt{mean}\\
-        \sigma \rightarrow \texttt{sigma}
-        \end{cases}
-    """
-
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-        """Overloaded method.
-        """
-        # pylint: disable=arguments-differ
-        z = (x - mean) / sigma
-        return prefactor * AbstractGaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
-
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
-        """
-        delta = np.diff(xdata)
-        delta = np.append(delta, delta[-1])
-        prefactor = (delta * ydata).sum()
-        mean = np.average(xdata, weights=ydata)
-        variance = np.average((xdata - mean)**2., weights=ydata)
-        self.prefactor.init(prefactor)
-        self.mean.init(mean)
-        self.sigma.init(np.sqrt(variance))
-
-    def integral(self, x1: float, x2: float) -> float:
-        """Overloaded method with the analytical integral.
-        """
-        prefactor, mean, sigma = self.parameter_values()
-        zmin = (x1 - mean) / (sigma * self._SQRT2)
-        zmax = (x2 - mean) / (sigma * self._SQRT2)
-        return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
+#         Returns
+#         -------
+#         fwhm : uncertainties.ufloat
+#             The FWHM of the gaussian.
+#         """
+#         # pylint: disable=no-member
+#         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
 
 
-class GaussianCDF(AbstractGaussian):
+# class Gaussian(AbstractGaussian):
 
-    r"""Gaussian cumulative distribution function (CDF) model.
+#     r"""Gaussian model.
 
-    .. math::
+#     .. math::
 
-        f(x) = \frac{N}{2} \left [ 1 + \text{erf}
-        \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        \mu \rightarrow \texttt{mean}\\
-        \sigma \rightarrow \texttt{sigma}
-        \end{cases}
-    """
+#         f(x) = \frac{N}{\sigma \sqrt{2 \pi}}
+#         \exp\left\{-\frac{(x - \mu)^2}{2 \sigma^2}\right\}
+#         \quad \text{with} \quad
+#         \begin{cases}
+#         N \rightarrow \texttt{prefactor}\\
+#         \mu \rightarrow \texttt{mean}\\
+#         \sigma \rightarrow \texttt{sigma}
+#         \end{cases}
+#     """
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-        """Overloaded method.
-        """
-        # pylint: disable=arguments-differ
-        z = (x - mean) / sigma
-        return prefactor * 0.5 * (1. + scipy.special.erf(z / AbstractGaussian._SQRT2))
+#     @staticmethod
+#     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+#         """Overloaded method.
+#         """
+#         # pylint: disable=arguments-differ
+#         z = (x - mean) / sigma
+#         return prefactor * AbstractGaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
 
+#     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+#         """Overloaded method.
+#         """
+#         delta = np.diff(xdata)
+#         delta = np.append(delta, delta[-1])
+#         prefactor = (delta * ydata).sum()
+#         mean = np.average(xdata, weights=ydata)
+#         variance = np.average((xdata - mean)**2., weights=ydata)
+#         self.prefactor.init(prefactor)
+#         self.mean.init(mean)
+#         self.sigma.init(np.sqrt(variance))
 
-class GaussianCDFComplement(AbstractGaussian):
-
-    r"""Complement of the gaussian cumulative distribution function (CDF) model.
-
-    .. math::
-
-        f(x) = \frac{N}{2} \left [ 1 - \text{erf}
-        \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        \mu \rightarrow \texttt{mean}\\
-        \sigma \rightarrow \texttt{sigma}
-        \end{cases}
-    """
-
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-        """Overloaded method.
-        """
-        # pylint: disable=arguments-differ
-        return prefactor - GaussianCDF.evaluate(x, prefactor, mean, sigma)
+#     def integral(self, x1: float, x2: float) -> float:
+#         """Overloaded method with the analytical integral.
+#         """
+#         prefactor, mean, sigma = self.parameter_values()
+#         zmin = (x1 - mean) / (sigma * self._SQRT2)
+#         zmax = (x2 - mean) / (sigma * self._SQRT2)
+#         return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
 
 
-class Gaussian2(AbstractPeakFitModel):
+# class GaussianCDF(AbstractGaussian):
+
+#     r"""Gaussian cumulative distribution function (CDF) model.
+
+#     .. math::
+
+#         f(x) = \frac{N}{2} \left [ 1 + \text{erf}
+#         \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
+#         \quad \text{with} \quad
+#         \begin{cases}
+#         N \rightarrow \texttt{prefactor}\\
+#         \mu \rightarrow \texttt{mean}\\
+#         \sigma \rightarrow \texttt{sigma}
+#         \end{cases}
+#     """
+
+#     @staticmethod
+#     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+#         """Overloaded method.
+#         """
+#         # pylint: disable=arguments-differ
+#         z = (x - mean) / sigma
+#         return prefactor * 0.5 * (1. + scipy.special.erf(z / AbstractGaussian._SQRT2))
+
+
+# class GaussianCDFComplement(AbstractGaussian):
+
+#     r"""Complement of the gaussian cumulative distribution function (CDF) model.
+
+#     .. math::
+
+#         f(x) = \frac{N}{2} \left [ 1 - \text{erf}
+#         \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
+#         \quad \text{with} \quad
+#         \begin{cases}
+#         N \rightarrow \texttt{prefactor}\\
+#         \mu \rightarrow \texttt{mean}\\
+#         \sigma \rightarrow \texttt{sigma}
+#         \end{cases}
+#     """
+
+#     @staticmethod
+#     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
+#         """Overloaded method.
+#         """
+#         # pylint: disable=arguments-differ
+#         return prefactor - GaussianCDF.evaluate(x, prefactor, mean, sigma)
+
+
+class Gaussian(AbstractPeakFitModel):
 
     """Alternative Gaussian model.
     """
 
     @staticmethod
     def shape(z):
-        """Overloaded method.
-        """
         return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * z**2.)
 
 
 class Lorentzian(AbstractPeakFitModel):
 
     """Lorentzian model.
-
-    Note this is the same as the Cauchy and Breit-Wigner distributions, modulo
-    minor differences in the parametrization.
     """
 
     @staticmethod
     def shape(z):
-        """Overloaded method.
-        """
-        return 1. / np.pi / (1.0 + z**2)
+        return 1. / np.pi / (1. + z**2)
 
 
 class LogNormal(AbstractPeakFitModel):
@@ -681,16 +677,27 @@ class LogNormal(AbstractPeakFitModel):
     @staticmethod
     def shape(z):
         """Overloaded method.
+
+        Note the shape function is only defined for positive z values, which
+        requires a little bit of extra work for making sure that we are returning
+        0 for z <= 0 without causing any RuntimeWarning due to zero-division
+        errors and/or invalid inputs to the logarithm calculation.
         """
         z = np.asarray(z, dtype=float)
-        value = np.zeros_like(z, dtype=float)
+        val = np.zeros_like(z, dtype=float)
         mask = z > 0
         z = z[mask]
-        value[mask] = 1.0 / (z * np.sqrt(2.0 * np.pi)) * np.exp(-0.5 * (np.log(z)) ** 2.0)
-        return value
+        val[mask] = 1. / (z * np.sqrt(2. * np.pi)) * np.exp(-0.5 * np.log(z)**2.)
+        return val
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
+
+        Since the localtion for the Log-normal distribution is the leftmost edge
+        of the distribution support, calling the base class implementation would
+        necessarily oversertimate the location parameter by an amount of the
+        order of the scale parameter. We thus adjust the initial location estimate
+        accordingly.
         """
         super().init_parameters(xdata, ydata, sigma)
         self.location.init(self.location.value - self.scale.value)
@@ -711,8 +718,6 @@ class Moyal(AbstractPeakFitModel):
 
     @staticmethod
     def shape(z):
-        """Overloaded method.
-        """
         return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * (z + np.exp(-z)))
 
     def default_plotting_range(self) -> Tuple[float, float]:

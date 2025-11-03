@@ -145,6 +145,51 @@ class Line(AbstractFitModel):
         return 0.5 * slope * (x2**2 - x1**2) + intercept * (x2 - x1)
 
 
+class Polynomial(AbstractFitModel):
+
+    """Generic polynomial model.
+
+    Note that this is a convenience class to be used when one needs polynomials
+    of arbitrary degree. For common low-order polynomials, consider using the
+    dedicated classes (e.g., Line, Quadratic, etc.), which provide better
+    initial parameter estimation.
+
+    Arguments
+    ---------
+    degree : int
+        The degree of the polynomial.
+
+    label : str, optional
+        The model label.
+
+    xlabel : str, optional
+        The label for the x axis.
+
+    ylabel : str, optional
+        The label for the y axis.
+    """
+
+    def __init__(self, degree: int, label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        """Constructor.
+        """
+        super().__init__(label, xlabel, ylabel)
+        self.degree = degree
+        for i in range(degree + 1):
+            setattr(self, f"c{i}", FitParameter(0.))
+
+    @staticmethod
+    def evaluate(x: ArrayLike, *coefficients: float) -> ArrayLike:
+        """Overloaded method.
+        """
+        # pylint: disable=arguments-differ
+        result = np.zeros_like(x)
+        degree = len(coefficients) - 1
+        for i, c in enumerate(coefficients):
+            result += c * x**(degree - i)
+        return result
+
+
 class Quadratic(AbstractFitModel):
 
     r"""Quadratic model.

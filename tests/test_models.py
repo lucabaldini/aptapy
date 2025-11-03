@@ -23,7 +23,10 @@ import numpy as np
 import pytest
 
 from aptapy.models import (
+    Arctangent,
     Constant,
+    Erf,
+    ErfComplement,
     Exponential,
     ExponentialComplement,
     Gaussian,
@@ -31,6 +34,7 @@ from aptapy.models import (
     GaussianCDF,
     GaussianCDFComplement,
     Line,
+    Logistic,
     Lorentzian,
     PowerLaw,
     Quadratic,
@@ -76,6 +80,13 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float],
         assert param.compatible_with(ground_truth, 5.)
     model.plot(fit_output=True)
     plt.legend()
+
+
+def _test_location_scale_model_base(model_class: type, integral: Callable[[float, float], float] = None,
+                                    sigma: float = 0.1, num_sigma: float = 5.):
+    """Basic tests for location-scale models.
+    """
+    _test_model_base(model_class, (10., 10., 2.), integral, sigma, num_sigma)
 
 
 def test_constant():
@@ -191,23 +202,49 @@ def test_gaussian2():
     """Test the Gaussian2 model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 3., 3.
-    #def integral(xmin, xmax):
-    #    return prefactor * np.arctan((xmax - mean) / gamma) - prefactor * np.arctan((xmin - mean) / gamma)
-    _test_model_base(Gaussian2, (amplitude, location, scale), None, num_sigma=100.)
+    _test_location_scale_model_base(Gaussian2, None, num_sigma=100.)
 
 
 def test_lorentzian():
     """Test the Lorentzian model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 3., 3.
-    #def integral(xmin, xmax):
-    #    return prefactor * np.arctan((xmax - mean) / gamma) - prefactor * np.arctan((xmin - mean) / gamma)
-    _test_model_base(Lorentzian, (amplitude, location, scale), None, num_sigma=100.)
+    _test_location_scale_model_base(Lorentzian, None, num_sigma=100.)
+
+
+def test_erf():
+    """Test the Erf model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_location_scale_model_base(Erf, None)
+
+
+def test_erf_complement():
+    """Test the ErfComplement model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_location_scale_model_base(ErfComplement, None)
+
+
+def test_logistic():
+    """Test the Logistic model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_location_scale_model_base(Logistic, None)
+
+
+def test_arctangent():
+    """Test the Arctangent model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_location_scale_model_base(Arctangent, None)
 
 
 if __name__ == "__main__":
     test_gaussian2()
     test_lorentzian()
+    test_erf()
+    test_erf_complement()
+    test_logistic()
+    test_arctangent()
     plt.show()

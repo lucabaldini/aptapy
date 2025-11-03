@@ -1117,7 +1117,19 @@ class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):
     """Abstract base class for fit models representing sigmoids.
     """
 
-    offset = FitParameter(0.5, minimum=-0.5, maximum=0.5)
+    def __init__(self, baseline: float = 0., label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        """Constructor.
+        """
+        super().__init__(label, xlabel, ylabel)
+        self.baseline = baseline
+
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float, scale: float,
+                 *parameter_values: float) -> ArrayLike:
+        """Overloaded method for evaluating the model.
+        """
+        z = (x - location) / scale
+        return self.baseline + amplitude * self.shape(z, *parameter_values)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.

@@ -616,6 +616,9 @@ class Gaussian2(AbstractPeakFitModel):
 class Lorentzian(AbstractPeakFitModel):
 
     """Lorentzian model.
+
+    Note this is the same as the Cauchy and Breit-Wigner distributions, modulo
+    minor differences in the parametrization.
     """
 
     @staticmethod
@@ -623,3 +626,53 @@ class Lorentzian(AbstractPeakFitModel):
         """Overloaded method.
         """
         return 1. / np.pi / (1.0 + z**2)
+
+
+class Erf(AbstractSigmoidFitModel):
+
+    """Error function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
+
+
+class ErfComplement(AbstractSigmoidFitModel):
+
+    """Complement of the Error function model.
+
+    Consider using Erf with negative amplitude instead.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 1. - Erf.shape(z)
+
+
+class Logistic(AbstractSigmoidFitModel):
+
+    """Logistic function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 1. / (1. + np.exp(-z))
+
+
+class Arctangent(AbstractSigmoidFitModel):
+
+    """Arctangent function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 0.5 + np.arctan(z) / np.pi

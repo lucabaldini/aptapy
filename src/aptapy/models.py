@@ -673,6 +673,34 @@ class Lorentzian(AbstractPeakFitModel):
         return 1. / np.pi / (1.0 + z**2)
 
 
+class LogNormal:
+
+    """Log-normal model.
+    """
+
+    pass
+
+
+class Moyal(AbstractPeakFitModel):
+
+    """Moyal model.
+    """
+
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * (z + np.exp(-z)))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        The Moyal distribution is asymmetric, so we use different ranges on the
+        two sides of the mean.
+        """
+        return super().default_plotting_range((5., 10.))
+
+
 class Erf(AbstractSigmoidFitModel):
 
     """Error function model.

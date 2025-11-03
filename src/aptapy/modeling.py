@@ -1068,14 +1068,22 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
         implement this method.
         """
 
-    def default_plotting_range(self, normalized_half_width: float = 5.) -> Tuple[float, float]:
+    def default_plotting_range(self, half_width: Tuple[float, float] = (5., 5.)) -> Tuple[float, float]:
         """Overloaded method.
 
         By default the plotting range is set to be an interval centered on the
         location parameter, and extending for a number of scale units on each side.
+
+        Arguments
+        ---------
+        half_width : tuple of float, optional
+            The half-width of the plotting range in units of the scale parameter
+            (default (5., 5.)).
         """
-        half_width = normalized_half_width * self.scale.value
-        return (self.location.value - half_width, self.location.value + half_width)
+        left, right = half_width
+        location = self.location.value
+        scale = self.scale.value
+        return (location - left * scale, location + right * scale)
 
 
 class AbstractPeakFitModel(AbstractLocationScaleFitModel):

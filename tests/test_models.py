@@ -35,6 +35,7 @@ from aptapy.models import (
     GaussianCDFComplement,
     Line,
     Logistic,
+    LogNormal,
     Lorentzian,
     Moyal,
     PowerLaw,
@@ -210,6 +211,14 @@ def test_lorentzian():
     _test_model_base(Lorentzian, (amplitude, location, scale), None, sigma=0.05, num_sigma=100.)
 
 
+def test_log_normal():
+    """Test the LogNormal model.
+    """
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    amplitude, location, scale = 10., 10., 2.
+    _test_model_base(LogNormal, (amplitude, location, scale), None, sigma=0.1, num_sigma=100.)
+
+
 def test_moyal():
     """Test the Moyal model.
     """
@@ -251,11 +260,12 @@ def test_arctangent():
 
 
 if __name__ == "__main__":
-    test_gaussian2()
-    test_lorentzian()
+    #test_gaussian2()
+    #test_lorentzian()
+    test_log_normal()
     test_moyal()
     test_erf()
-    test_erf_complement()
-    test_logistic()
-    test_arctangent()
+    #test_erf_complement()
+    #test_logistic()
+    #test_arctangent()
     plt.show()

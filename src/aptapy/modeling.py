@@ -1045,17 +1045,7 @@ class AbstractFitModel(AbstractFitModelBase):
 
 class AbstractLocationScaleFitModel(AbstractFitModel):
 
-    r"""Abstract base class for fit models with location and scale parameters.
-
-    This is intended to act as a base class for all the models that are described by
-    a universal shape function :math:`g(z)` in terms of a normalized variable
-
-    .. math::
-        z = \frac{x - \mu}{\sigma}
-
-    where :math:`\mu` is the location parameter, and :math:`\sigma` is the scale
-    parameter. This includes both peak-like models (e.g., gaussian and lorentzian)
-    and sigmoid-like models (e.g., error function and logistic function).
+    """Abstract base class for fit models with location and scale parameters.
     """
 
     amplitude = FitParameter(1.)
@@ -1088,20 +1078,11 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
 
 class AbstractPeakFitModel(AbstractLocationScaleFitModel):
 
-    r"""Abstract base class for peak-like fit models.
-
-    The basic contract, here, is that the shape function is normalized to unit area,
-    and the actual model is given by
-
-    .. math::
-        f(x; A, \mu, \sigma, ...) =
-        \frac{A}{\sigma} g\left(\frac{x - \mu}{\sigma}; ...\right)
-
-    where the dots indicate any additional model parameters.
+    """Abstract base class for peak-like fit models.
     """
 
-    def evaluate(self, x: ArrayLike, amplitude: float, location: float, scale: float,
-                 *parameter_values: float) -> ArrayLike:
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
+                 scale: float, *parameter_values: float) -> ArrayLike:
         """Overloaded method for evaluating the model.
 
         Here we simply scale and shift the input variable, and delegate the actual
@@ -1125,19 +1106,12 @@ class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):
     """Abstract base class for fit models representing sigmoids.
     """
 
-    def __init__(self, baseline: float = 0., label: str = None, xlabel: str = None,
-                 ylabel: str = None) -> None:
-        """Constructor.
-        """
-        super().__init__(label, xlabel, ylabel)
-        self.baseline = baseline
-
-    def evaluate(self, x: ArrayLike, amplitude: float, location: float, scale: float,
-                 *parameter_values: float) -> ArrayLike:
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
+                 scale: float, *parameter_values: float) -> ArrayLike:
         """Overloaded method for evaluating the model.
         """
         z = (x - location) / scale
-        return self.baseline + amplitude * self.shape(z, *parameter_values)
+        return amplitude * self.shape(z, *parameter_values)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.

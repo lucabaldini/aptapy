@@ -673,12 +673,35 @@ class Lorentzian(AbstractPeakFitModel):
         return 1. / np.pi / (1.0 + z**2)
 
 
-class LogNormal:
+class LogNormal(AbstractPeakFitModel):
 
     """Log-normal model.
     """
 
-    pass
+    @staticmethod
+    def shape(z):
+        """Overloaded method.
+        """
+        z = np.asarray(z, dtype=float)
+        value = np.zeros_like(z, dtype=float)
+        mask = z > 0
+        z = z[mask]
+        value[mask] = 1.0 / (z * np.sqrt(2.0 * np.pi)) * np.exp(-0.5 * (np.log(z)) ** 2.0)
+        return value
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        super().init_parameters(xdata, ydata, sigma)
+        self.location.init(self.location.value - self.scale.value)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        The Log-normal distribution is asymmetric, so we use different ranges on the
+        two sides of the mean.
+        """
+        return super().default_plotting_range((0., 7.5))
 
 
 class Moyal(AbstractPeakFitModel):

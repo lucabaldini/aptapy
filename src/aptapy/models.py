@@ -503,56 +503,6 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-
-# class GaussianCDF(AbstractGaussian):
-
-#     r"""Gaussian cumulative distribution function (CDF) model.
-
-#     .. math::
-
-#         f(x) = \frac{N}{2} \left [ 1 + \text{erf}
-#         \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
-#         \quad \text{with} \quad
-#         \begin{cases}
-#         N \rightarrow \texttt{prefactor}\\
-#         \mu \rightarrow \texttt{mean}\\
-#         \sigma \rightarrow \texttt{sigma}
-#         \end{cases}
-#     """
-
-#     @staticmethod
-#     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-#         """Overloaded method.
-#         """
-#         # pylint: disable=arguments-differ
-#         z = (x - mean) / sigma
-#         return prefactor * 0.5 * (1. + scipy.special.erf(z / AbstractGaussian._SQRT2))
-
-
-# class GaussianCDFComplement(AbstractGaussian):
-
-#     r"""Complement of the gaussian cumulative distribution function (CDF) model.
-
-#     .. math::
-
-#         f(x) = \frac{N}{2} \left [ 1 - \text{erf}
-#         \left\{ \frac{(x - \mu)}{\sigma \sqrt{2}} \right\} \right ]
-#         \quad \text{with} \quad
-#         \begin{cases}
-#         N \rightarrow \texttt{prefactor}\\
-#         \mu \rightarrow \texttt{mean}\\
-#         \sigma \rightarrow \texttt{sigma}
-#         \end{cases}
-#     """
-
-#     @staticmethod
-#     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-#         """Overloaded method.
-#         """
-#         # pylint: disable=arguments-differ
-#         return prefactor - GaussianCDF.evaluate(x, prefactor, mean, sigma)
-
-
 class Gaussian(AbstractPeakFitModel):
 
     """Alternative Gaussian model.
@@ -616,11 +566,6 @@ class LogNormal(AbstractPeakFitModel):
         self.location.init(self.location.value - self.scale.value)
 
     def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method.
-
-        The Log-normal distribution is asymmetric, so we use different ranges on the
-        two sides of the mean.
-        """
         return super().default_plotting_range((0., 7.5))
 
 
@@ -634,14 +579,14 @@ class Moyal(AbstractPeakFitModel):
         return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * (z + np.exp(-z)))
 
     def fwhm(self) -> float:
+        """Overloaded method.
+
+        The underlying equation is trancendental, so we need to resort to a
+        numerical solution.
+        """
         return 3.5632 * self.scale.value
 
     def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method.
-
-        The Moyal distribution is asymmetric, so we use different ranges on the
-        two sides of the mean.
-        """
         return super().default_plotting_range((5., 10.))
 
 

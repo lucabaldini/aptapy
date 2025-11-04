@@ -127,9 +127,49 @@ The model has no additional parameters beyond the standard location-scale ones.
 Sigmoid models
 --------------
 
-* :class:`~aptapy.models.GaussianCDF`
-* :class:`~aptapy.models.GaussianCDFComplement`
+:class:`~aptapy.models.Erf`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+.. math::
+    g(z) = \frac{1}{2} \left(1 + \operatorname{erf}\left(\frac{z}{\sqrt{2}}\right)\right)
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: Erf.shape
+
+
+:class:`~aptapy.models.Logistic`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+    g(z) = \frac{1}{1 + e^{-z}}
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: Logistic.shape
+
+
+:class:`~aptapy.models.Arctangent`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+    g(z) = \frac{1}{2} + \frac{1}{\pi} \arctan(z)
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: Arctangent.shape
+
+
+:class:`~aptapy.models.HyperbolicTangent`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+    g(z) = \frac{1}{2} \left(1 + \tanh(z)\right)
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: HyperbolicTangent.shape
 
 
 Module documentation

@@ -30,9 +30,6 @@ from aptapy.models import (
     Exponential,
     ExponentialComplement,
     Gaussian,
-    Gaussian2,
-    GaussianCDF,
-    GaussianCDFComplement,
     Line,
     Logistic,
     LogNormal,
@@ -167,18 +164,6 @@ def test_stretched_exponential_complement():
     _test_model_base(StretchedExponentialComplement, (prefactor, scale, gamma), None, num_sigma=50.)
 
 
-def test_gaussian():
-    """Test the Gaussian model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    prefactor, mean, sigma = 10., 0., 1.
-    def integral(xmin, xmax):
-        # pylint: disable=unused-argument
-        return prefactor
-    # Note we need to relax the test on the initial parameter guess.
-    _test_model_base(Gaussian, (prefactor, mean, sigma), integral, num_sigma=10.)
-
-
 def test_gaussian_cdf():
     """Test the GaussianCDF model.
     """
@@ -195,12 +180,12 @@ def test_gaussian_cdf_complement():
     _test_model_base(GaussianCDFComplement, (prefactor, mean, sigma), None)
 
 
-def test_gaussian2():
-    """Test the Gaussian2 model.
+def test_gaussian():
+    """Test the Gaussian model.
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Gaussian2, (amplitude, location, scale), None, sigma=0.05, num_sigma=100.)
+    _test_model_base(Gaussian, (amplitude, location, scale), None, sigma=0.05, num_sigma=100.)
 
 
 def test_lorentzian():

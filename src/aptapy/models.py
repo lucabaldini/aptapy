@@ -38,11 +38,13 @@ __all__ = [
     "StretchedExponential",
     "StretchedExponentialComplement",
     "Gaussian",
-    #"GaussianCDF",
-    #"GaussianCDFComplement",
     "Lorentzian",
     "LogNormal",
     "Moyal",
+    "Erf",
+    "Logistic",
+    "Arctangent",
+    "HyperbolicTangent",
 ]
 
 
@@ -501,104 +503,6 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-# class AbstractGaussian(AbstractFitModel):
-
-#     """Common base class for Gaussian-like models.
-
-#     This provides a couple of convenience methods that are useful for all the
-#     models derived from a gaussian (e.g., the gaussian itself, the error function,
-#     and its inverse). Note that, for the right method to be picked up,
-#     subclasses should derive from this class *before* deriving from
-#     AbstractFitModel, so that the method resolution order (MRO) works as expected.
-
-#     Note the evaluate() method is not implemented here, which means that the class
-#     cannot be instantiated directly.
-#     """
-
-#     prefactor = FitParameter(1.)
-#     mean = FitParameter(0.)
-#     sigma = FitParameter(1., minimum=0.)
-
-#     # A few useful constants.
-#     _SQRT2 = np.sqrt(2.)
-#     _NORM_CONSTANT = 1. / np.sqrt(2. * np.pi)
-#     _SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
-
-#     def default_plotting_range(self, num_sigma: int = 5) -> Tuple[float, float]:
-#         """Convenience function to return a default plotting range for all the
-#         models derived from a gaussian (e.g., the gaussian itself, the error
-#         function, and its inverse).
-
-#         Arguments
-#         ---------
-#         num_sigma : int, optional
-#             The number of sigmas to use for the plotting range (default 5).
-
-#         Returns
-#         -------
-#         Tuple[float, float]
-#             The default plotting range for the model.
-#         """
-#         # pylint: disable=no-member
-#         mean, half_width = self.mean.value, num_sigma * self.sigma.value
-#         return (mean - half_width, mean + half_width)
-
-#     def fwhm(self) -> uncertainties.ufloat:
-#         """Return the full-width at half-maximum (FWHM) of the gaussian.
-
-#         Returns
-#         -------
-#         fwhm : uncertainties.ufloat
-#             The FWHM of the gaussian.
-#         """
-#         # pylint: disable=no-member
-#         return self.sigma.ufloat() * self._SIGMA_TO_FWHM
-
-
-# class Gaussian(AbstractGaussian):
-
-#     r"""Gaussian model.
-
-#     .. math::
-
-#         f(x) = \frac{N}{\sigma \sqrt{2 \pi}}
-#         \exp\left\{-\frac{(x - \mu)^2}{2 \sigma^2}\right\}
-#         \quad \text{with} \quad
-#         \begin{cases}
-#         N \rightarrow \texttt{prefactor}\\
-#         \mu \rightarrow \texttt{mean}\\
-#         \sigma \rightarrow \texttt{sigma}
-#         \end{cases}
-#     """
-
-#     @staticmethod
-#     def evaluate(x: ArrayLike, prefactor: float, mean: float, sigma: float) -> ArrayLike:
-#         """Overloaded method.
-#         """
-#         # pylint: disable=arguments-differ
-#         z = (x - mean) / sigma
-#         return prefactor * AbstractGaussian._NORM_CONSTANT / sigma * np.exp(-0.5 * z**2.)
-
-#     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-#         """Overloaded method.
-#         """
-#         delta = np.diff(xdata)
-#         delta = np.append(delta, delta[-1])
-#         prefactor = (delta * ydata).sum()
-#         mean = np.average(xdata, weights=ydata)
-#         variance = np.average((xdata - mean)**2., weights=ydata)
-#         self.prefactor.init(prefactor)
-#         self.mean.init(mean)
-#         self.sigma.init(np.sqrt(variance))
-
-#     def integral(self, x1: float, x2: float) -> float:
-#         """Overloaded method with the analytical integral.
-#         """
-#         prefactor, mean, sigma = self.parameter_values()
-#         zmin = (x1 - mean) / (sigma * self._SQRT2)
-#         zmax = (x2 - mean) / (sigma * self._SQRT2)
-#         return prefactor * 0.5 * (scipy.special.erf(zmax) - scipy.special.erf(zmin))
-
 
 # class GaussianCDF(AbstractGaussian):
 
@@ -658,6 +562,9 @@ class Gaussian(AbstractPeakFitModel):
     def shape(z):
         return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * z**2.)
 
+    def fwhm(self) -> float:
+        return 2. * np.sqrt(2. * np.log(2.)) * self.scale.value
+
 
 class Lorentzian(AbstractPeakFitModel):
 
@@ -667,6 +574,9 @@ class Lorentzian(AbstractPeakFitModel):
     @staticmethod
     def shape(z):
         return 1. / np.pi / (1. + z**2)
+
+    def fwhm(self) -> float:
+        return 2. * self.scale.value
 
 
 class LogNormal(AbstractPeakFitModel):
@@ -689,6 +599,9 @@ class LogNormal(AbstractPeakFitModel):
         z = z[mask]
         val[mask] = 1. / (z * np.sqrt(2. * np.pi)) * np.exp(-0.5 * np.log(z)**2.)
         return val
+
+    def fwhm(self) -> float:
+        return 2. * np.sinh(np.sqrt(2. * np.log(2.))) * np.exp(self.location.value - self.scale.value**2.)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
@@ -720,6 +633,9 @@ class Moyal(AbstractPeakFitModel):
     def shape(z):
         return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * (z + np.exp(-z)))
 
+    def fwhm(self) -> float:
+        return 3.5632 * self.scale.value
+
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
 
@@ -736,23 +652,7 @@ class Erf(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
-        """Overloaded method.
-        """
         return 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
-
-
-class ErfComplement(AbstractSigmoidFitModel):
-
-    """Complement of the Error function model.
-
-    Consider using Erf with negative amplitude instead.
-    """
-
-    @staticmethod
-    def shape(z):
-        """Overloaded method.
-        """
-        return 1. - Erf.shape(z)
 
 
 class Logistic(AbstractSigmoidFitModel):
@@ -762,8 +662,6 @@ class Logistic(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
-        """Overloaded method.
-        """
         return 1. / (1. + np.exp(-z))
 
 
@@ -774,6 +672,14 @@ class Arctangent(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
-        """Overloaded method.
-        """
         return 0.5 + np.arctan(z) / np.pi
+
+
+class HyperbolicTangent(AbstractSigmoidFitModel):
+
+    """Hyperbolic tangent function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        return 0.5 * (1. + np.tanh(z))

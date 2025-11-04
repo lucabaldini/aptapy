@@ -1052,6 +1052,28 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
     location = FitParameter(0.)
     scale = FitParameter(1., minimum=0)
 
+    @staticmethod
+    def standardize(x: ArrayLike, location: float, scale: float) -> ArrayLike:
+        """Calculate the normalized variable z.
+
+        Arguments
+        ---------
+        x : array_like
+            The value(s) of the independent variable.
+
+        location : float
+            The location parameter.
+
+        scale : float
+            The scale parameter.
+
+        Returns
+        -------
+        z : array_like
+            The normalized variable z.
+        """
+        return (x - location) / scale
+
     @abstractmethod
     def shape(self, z: ArrayLike, *parameter_values: float) -> ArrayLike:
         """Abstract method for the normalized shape of the model. Subclasses must
@@ -1090,7 +1112,7 @@ class AbstractPeakFitModel(AbstractLocationScaleFitModel):
         is properly normalized, and that the overall area under the actual model
         is directly proportional to the amplitude / scale ratio.
         """
-        z = (x - location) / scale
+        z = self.standardize(x, location, scale)
         return amplitude / scale * self.shape(z, *parameter_values)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
@@ -1099,6 +1121,31 @@ class AbstractPeakFitModel(AbstractLocationScaleFitModel):
         self.location.init(np.average(xdata, weights=ydata))
         self.scale.init(np.sqrt(np.average((xdata - self.location.value)**2, weights=ydata)))
         self.amplitude.init(np.trapz(ydata, xdata))
+
+    def fwhm(self) -> float:
+        """Return the full-width at half-maximum (FWHM) of the model.
+
+        Subclasses should overload this method with an analytical implementation,
+        when available.
+
+        Returns
+        -------
+        fwhm : float
+            The full-width at half-maximum of the model.
+        """
+        raise NotImplementedError
+
+    def hwhm(self) -> float:
+        """Return the half-width at half-maximum (HWHM) of the model.
+
+        This is simply half the FWHM.
+
+        Returns
+        -------
+        hwhm : float
+            The half-width at half-maximum of the model.
+        """
+        return self.fwhm() / 2.
 
 
 class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):
@@ -1109,9 +1156,14 @@ class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):
     def evaluate(self, x: ArrayLike, amplitude: float, location: float,
                  scale: float, *parameter_values: float) -> ArrayLike:
         """Overloaded method for evaluating the model.
+
+        Note that here we do not scale the output by 1/scale, as sigmoids are not
+        normalized functions. Also, if the amplitude is negative, we take the
+        complement of the sigmoid function.
         """
-        z = (x - location) / scale
-        return amplitude * self.shape(z, *parameter_values)
+        z = self.standardize(x, location, scale)
+        val = amplitude * self.shape(z, *parameter_values)
+        return val if amplitude >= 0. else val - amplitude
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.

@@ -525,9 +525,13 @@ class Lorentzian(AbstractPeakFitModel):
         return 2. * self.scale.value
 
 
+#@wrap_rv_continuous(scipy.stats.lognorm)
 class LogNormal(AbstractPeakFitModel):
 
     """Log-normal model.
+
+    We have to revise this because of some issues wrapping the underlying
+    scipy.stats log-normal distribution.
     """
 
     @staticmethod
@@ -546,19 +550,13 @@ class LogNormal(AbstractPeakFitModel):
         val[mask] = 1. / (z * np.sqrt(2. * np.pi)) * np.exp(-0.5 * np.log(z)**2.)
         return val
 
-    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
-                 scale: float) -> ArrayLike:
-        """Overloaded method.
-        """
-        return super().evaluate(x, amplitude, location, scale) / scale
-
     def fwhm(self) -> float:
         return 2. * np.sinh(np.sqrt(2. * np.log(2.))) * np.exp(self.location.value - self.scale.value**2.)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
 
-        Since the localtion for the Log-normal distribution is the leftmost edge
+        Since the location for the Log-normal distribution is the leftmost edge
         of the distribution support, calling the base class implementation would
         necessarily oversertimate the location parameter by an amount of the
         order of the scale parameter. We thus adjust the initial location estimate

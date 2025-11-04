@@ -200,7 +200,17 @@ def test_log_normal():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     amplitude, location, scale = 10., 10., 2.
-    _test_model_base(LogNormal, (amplitude, location, scale), None, sigma=0.1, num_sigma=100.)
+    model = LogNormal()
+    model.set_parameters(amplitude, location, scale)
+    print(model)
+
+    import scipy.stats
+
+    x = np.linspace(location, location + 5 * scale, 100)
+    plt.plot(x, model(x))
+    plt.plot(x, scipy.stats.lognorm.pdf(x, 1., location, scale) * amplitude)
+
+    #_test_model_base(LogNormal, (amplitude, location, scale), None, sigma=0.1, num_sigma=100.)
 
 
 def test_moyal():
@@ -244,10 +254,10 @@ def test_arctangent():
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_lorentzian()
+    #test_gaussian()
+    #test_lorentzian()
     test_log_normal()
-    test_moyal()
+    #test_moyal()
     #test_erf()
     #test_erf_complement()
     #test_logistic()

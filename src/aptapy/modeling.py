@@ -1147,7 +1147,7 @@ class AbstractPeakFitModel(AbstractLocationScaleFitModel):
         """Need to think about this one.
         """
         z = self.standardize(x, location, scale)
-        return amplitude * self.shape(z, *parameter_values)
+        return amplitude / scale * self.shape(z, *parameter_values)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.

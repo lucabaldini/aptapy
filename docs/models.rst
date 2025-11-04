@@ -3,26 +3,44 @@
 :mod:`~aptapy.models` --- Fitting models
 ========================================
 
-Readily available fit models include
+This page documents the various fitting models readily available in the package.
 
 
+Polynomials
+-----------
 
-Polynomial models
------------------
+:class:`~aptapy.models.Constant`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* :class:`~aptapy.models.Constant`
-* :class:`~aptapy.models.Line`
-* :class:`~aptapy.models.Quadratic`
+
+:class:`~aptapy.models.Line`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:class:`~aptapy.models.Quadratic`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Exponentials and power-laws
 ---------------------------
 
-* :class:`~aptapy.models.PowerLaw`
-* :class:`~aptapy.models.Exponential`
-* :class:`~aptapy.models.ExponentialComplement`
-* :class:`~aptapy.models.StretchedExponential`
-* :class:`~aptapy.models.StretchedExponentialComplement`
+:class:`~aptapy.models.PowerLaw`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:class:`~aptapy.models.Exponential`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:class:`~aptapy.models.ExponentialComplement`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`~aptapy.models.StretchedExponential`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+:class:`~aptapy.models.StretchedExponentialComplement`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Peak-like models
@@ -126,6 +144,18 @@ The model has no additional parameters beyond the standard location-scale ones.
 
 Sigmoid models
 --------------
+
+Sigmoid models are location-scale models defined in terms of a standardized
+shape function :math:`g(z)` that is a monotonically increasing function,
+ranging from 0 to 1 as its argument goes from -infinity to +infinity.
+
+.. note::
+
+   In this case the amplitude parameter does not represent an area (as in peak-like
+   models), but rather the total increase of the function from its lower asymptote
+   to its upper asymptote. When the amplitude is negative we switch to the
+   complement.
+
 
 :class:`~aptapy.models.Erf`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

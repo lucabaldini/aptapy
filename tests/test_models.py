@@ -26,7 +26,6 @@ from aptapy.models import (
     Arctangent,
     Constant,
     Erf,
-    ErfComplement,
     Exponential,
     ExponentialComplement,
     Gaussian,
@@ -245,11 +244,11 @@ def test_arctangent():
 
 
 if __name__ == "__main__":
-    #test_gaussian2()
-    #test_lorentzian()
+    test_gaussian()
+    test_lorentzian()
     test_log_normal()
     test_moyal()
-    test_erf()
+    #test_erf()
     #test_erf_complement()
     #test_logistic()
     #test_arctangent()

@@ -19,7 +19,7 @@
 import enum
 import functools
 import inspect
-from abc import abstractmethod
+from abc import abstractmethod, update_abstractmethods
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number
@@ -1098,6 +1098,45 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
         return (location - left * scale, location + right * scale)
 
 
+def wrap_rv_continuous(rv):
+
+    def _wrapper(cls: type):
+
+        def shape(z, location, scale):
+            return rv.pdf(z, location, scale)
+
+        def evaluate(x, amplitude, location, scale):
+            return amplitude * rv.pdf(x, location, scale)
+
+        def primitive(x, amplitude, location, scale):
+            return amplitude * rv.cdf(x, location, scale)
+
+        def rvs(location, scale, size=1, random_state=None):
+            return rv.rvs(location, scale, size=size, random_state=random_state)
+
+        def median(location, scale):
+            return rv.median(location, scale)
+
+        def mean(location, scale):
+            return rv.mean(location, scale)
+
+        def std(location, scale):
+            return rv.std(location, scale)
+
+        cls.shape = staticmethod(shape)
+        cls.evaluate = staticmethod(evaluate)
+        cls.primitive = staticmethod(primitive)
+        cls.rvs = staticmethod(rvs)
+        cls.median = staticmethod(median)
+        cls.mean = staticmethod(mean)
+        cls.std = staticmethod(std)
+
+        update_abstractmethods(cls)
+        return cls
+
+    return _wrapper
+
+
 class AbstractPeakFitModel(AbstractLocationScaleFitModel):
 
     """Abstract base class for peak-like fit models.
@@ -1105,15 +1144,10 @@ class AbstractPeakFitModel(AbstractLocationScaleFitModel):
 
     def evaluate(self, x: ArrayLike, amplitude: float, location: float,
                  scale: float, *parameter_values: float) -> ArrayLike:
-        """Overloaded method for evaluating the model.
-
-        Here we simply scale and shift the input variable, and delegate the actual
-        evaluation to the shape() method. Note that we assume that the shape function
-        is properly normalized, and that the overall area under the actual model
-        is directly proportional to the amplitude / scale ratio.
+        """Need to think about this one.
         """
         z = self.standardize(x, location, scale)
-        return amplitude / scale * self.shape(z, *parameter_values)
+        return amplitude * self.shape(z, *parameter_values)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.

@@ -22,9 +22,11 @@ from typing import Tuple
 import matplotlib
 import numpy as np
 import scipy.special
+import scipy.stats
 import uncertainties
 
-from .modeling import AbstractFitModel, AbstractPeakFitModel, AbstractSigmoidFitModel, FitParameter
+from .modeling import AbstractFitModel, AbstractPeakFitModel, AbstractSigmoidFitModel,\
+    FitParameter, wrap_rv_continuous
 from .plotting import plt
 from .typing_ import ArrayLike
 
@@ -503,27 +505,21 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
+@wrap_rv_continuous(scipy.stats.norm)
 class Gaussian(AbstractPeakFitModel):
 
-    """Alternative Gaussian model.
+    """Gaussian model.
     """
-
-    @staticmethod
-    def shape(z):
-        return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * z**2.)
 
     def fwhm(self) -> float:
         return 2. * np.sqrt(2. * np.log(2.)) * self.scale.value
 
 
+@wrap_rv_continuous(scipy.stats.cauchy)
 class Lorentzian(AbstractPeakFitModel):
 
     """Lorentzian model.
     """
-
-    @staticmethod
-    def shape(z):
-        return 1. / np.pi / (1. + z**2)
 
     def fwhm(self) -> float:
         return 2. * self.scale.value
@@ -550,6 +546,12 @@ class LogNormal(AbstractPeakFitModel):
         val[mask] = 1. / (z * np.sqrt(2. * np.pi)) * np.exp(-0.5 * np.log(z)**2.)
         return val
 
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
+                 scale: float) -> ArrayLike:
+        """Overloaded method.
+        """
+        return super().evaluate(x, amplitude, location, scale) / scale
+
     def fwhm(self) -> float:
         return 2. * np.sinh(np.sqrt(2. * np.log(2.))) * np.exp(self.location.value - self.scale.value**2.)
 
@@ -569,14 +571,11 @@ class LogNormal(AbstractPeakFitModel):
         return super().default_plotting_range((0., 7.5))
 
 
+@wrap_rv_continuous(scipy.stats.moyal)
 class Moyal(AbstractPeakFitModel):
 
     """Moyal model.
     """
-
-    @staticmethod
-    def shape(z):
-        return 1. / np.sqrt(2. * np.pi) * np.exp(-0.5 * (z + np.exp(-z)))
 
     def fwhm(self) -> float:
         """Overloaded method.

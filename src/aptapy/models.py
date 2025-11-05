@@ -505,34 +505,68 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
+@wrap_rv_continuous(scipy.stats.alpha)
+class Alpha(AbstractPeakFitModel):
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        super().init_parameters(xdata, ydata, sigma)
+        self.location.init(self.location.value - self.scale.value)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        return super().default_plotting_range((0., 7.5))
+
+
+@wrap_rv_continuous(scipy.stats.anglit)
+class Anglit(AbstractPeakFitModel):
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        super().init_parameters(xdata, ydata, sigma)
+        self.scale.init(3. * self.scale.value)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        return super().default_plotting_range((1., 1.))
+
+
+@wrap_rv_continuous(scipy.stats.argus)
+class Argus(AbstractPeakFitModel):
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        super().init_parameters(xdata, ydata, sigma)
+        self.scale.init(4. * self.scale.value)
+        self.location.init(self.location.value - 0.5 * self.scale.value)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        return super().default_plotting_range((0., 1.))
+
+
+@wrap_rv_continuous(scipy.stats.beta)
+class Beta(AbstractPeakFitModel):
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        return super().default_plotting_range((0., 1.))
+
+
+
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mean", scale_alias="sigma")
 class Gaussian(AbstractPeakFitModel):
 
-    """Gaussian model.
-    """
-
-    def fwhm(self) -> float:
-        return 2. * np.sqrt(2. * np.log(2.)) * self.scale.value
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.cauchy)
 class Lorentzian(AbstractPeakFitModel):
 
-    """Lorentzian model.
-    """
-
-    def fwhm(self) -> float:
-        return 2. * self.scale.value
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.lognorm)
 class LogNormal(AbstractPeakFitModel):
-
-    """Log-normal model.
-    """
-
-    def fwhm(self) -> float:
-        return 2. * np.sinh(np.sqrt(2. * np.log(2.))) * np.exp(self.location.value - self.scale.value**2.)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
@@ -547,19 +581,12 @@ class LogNormal(AbstractPeakFitModel):
 @wrap_rv_continuous(scipy.stats.moyal)
 class Moyal(AbstractPeakFitModel):
 
-    """Moyal model.
-    """
-
-    def fwhm(self) -> float:
-        """Overloaded method.
-
-        The underlying equation is trancendental, so we need to resort to a
-        numerical solution.
-        """
-        return 3.5632 * self.scale.value
-
     def default_plotting_range(self) -> Tuple[float, float]:
         return super().default_plotting_range((5., 10.))
+
+
+
+
 
 
 class Erf(AbstractSigmoidFitModel):

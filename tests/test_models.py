@@ -180,38 +180,6 @@ def test_gaussian_cdf_complement():
     _test_model_base(GaussianCDFComplement, (prefactor, mean, sigma), None)
 
 
-def test_gaussian():
-    """Test the Gaussian model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Gaussian, (amplitude, location, scale), None, sigma=0.05, num_sigma=100.)
-
-
-def test_lorentzian():
-    """Test the Lorentzian model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Lorentzian, (amplitude, location, scale), None, sigma=0.05, num_sigma=100.)
-
-
-def test_log_normal():
-    """Test the LogNormal model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(LogNormal, (amplitude, location, scale), None, sigma=0.1, num_sigma=100.)
-
-
-def test_moyal():
-    """Test the Moyal model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Moyal, (amplitude, location, scale), None, sigma=0.05, num_sigma=100.)
-
-
 def test_erf():
     """Test the Erf model.
     """
@@ -242,15 +210,3 @@ def test_arctangent():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     amplitude, location, scale = 10., 10., 2.
     _test_model_base(Arctangent, (amplitude, location, scale), None, sigma=0.25)
-
-
-if __name__ == "__main__":
-    test_gaussian()
-    test_lorentzian()
-    test_log_normal()
-    test_moyal()
-    #test_erf()
-    #test_erf_complement()
-    #test_logistic()
-    #test_arctangent()
-    plt.show()

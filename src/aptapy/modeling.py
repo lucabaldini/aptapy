@@ -1144,8 +1144,12 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
         def primitive(x, amplitude, location, scale, *args):
              return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
 
-        def rvs(location, scale, *args, size=1, random_state=None):
+        def _rvs(location, scale, *args, size=1, random_state=None):
             return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
+
+        def random_sample(self, size=1, random_state=None):
+            _, *params = self.parameter_values()
+            return self._rvs(*params, size=size, random_state=random_state)
 
         # def median(location, scale):
         #     return rv.median(location, scale)
@@ -1158,7 +1162,8 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
 
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
-        cls.rvs = staticmethod(rvs)
+        cls._rvs = staticmethod(_rvs)
+        cls.random_sample = random_sample
         # cls.median = staticmethod(median)
         # cls.mean = staticmethod(mean)
         # cls.std = staticmethod(std)

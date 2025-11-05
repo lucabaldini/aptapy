@@ -505,7 +505,7 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-@wrap_rv_continuous(scipy.stats.norm)
+@wrap_rv_continuous(scipy.stats.norm, location_alias="mean", scale_alias="sigma")
 class Gaussian(AbstractPeakFitModel):
 
     """Gaussian model.

@@ -1098,7 +1098,7 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
         return (location - left * scale, location + right * scale)
 
 
-def wrap_rv_continuous(rv) -> Callable:
+def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
@@ -1113,19 +1113,27 @@ def wrap_rv_continuous(rv) -> Callable:
     rv : scipy.stats.rv_continuous
         The scipy.stats.rv_continuous object to wrap.
 
-    location_name : str, optional
-        The name to use for the location parameter (default "location").
+    location_alias : str, optional
+        The name to use for the location parameter (if None defaults to "location").
 
-    scale_name : str, optional
-        The name to use for the scale parameter (default "scale").
+    scale_alias : str, optional
+        The name to use for the scale parameter (if None defaults to "scale").
     """
 
     def _wrapper(cls: type):
 
         # Set all the class fit-parameter attributes.
         setattr(cls, "amplitude", FitParameter(1.))
-        setattr(cls, "location", FitParameter(0.))
-        setattr(cls, "scale", FitParameter(1., minimum=0))
+        if location_alias is not None:
+            setattr(cls, location_alias, FitParameter(0.))
+            cls.location = property(lambda self: getattr(self, location_alias))
+        else:
+            setattr(cls, "location", FitParameter(0.))
+        if scale_alias is not None:
+            setattr(cls, scale_alias, FitParameter(1., minimum=0))
+            cls.scale = property(lambda self: getattr(self, scale_alias))
+        else:
+            setattr(cls, "scale", FitParameter(1., minimum=0))
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):
                 setattr(cls, name, FitParameter(1.))

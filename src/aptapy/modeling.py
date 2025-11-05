@@ -1098,7 +1098,7 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
         return (location - left * scale, location + right * scale)
 
 
-def wrap_rv_continuous(rv):
+def wrap_rv_continuous(rv) -> Callable:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
@@ -1107,21 +1107,36 @@ def wrap_rv_continuous(rv):
     This decorator creates a fit model class with the appropriate methods to
     Read dist.shapes (and numargs) to know the positional shape args.
     Assume loc and scale keywords are always supported.
+
+    Arguments
+    ---------
+    rv : scipy.stats.rv_continuous
+        The scipy.stats.rv_continuous object to wrap.
+
+    location_name : str, optional
+        The name to use for the location parameter (default "location").
+
+    scale_name : str, optional
+        The name to use for the scale parameter (default "scale").
     """
 
     def _wrapper(cls: type):
 
-        args = rv.shapes.split(", ") if rv.shapes else []
-        args += ["loc", "scale"]
+        args = ["amplitude", "location", "scale"]
+        if rv.numargs > 0:
+            args += rv.shapes.split(", ")
+
+        arg_map = dict(loc=("location", 0.), scale=("scale", 1.))
 
         for arg in args:
-            setattr(cls, arg, FitParameter(1.))
+            if arg in arg_map:
+                name, default = arg_map[arg]
+                setattr(cls, name, FitParameter(default))
+            else:
+                setattr(cls, arg, FitParameter(1.))
 
-        #def shape(z, location, scale):
-        #    return rv.pdf(z, location, scale)
-
-        def evaluate(x, amplitude, location, scale):
-            return amplitude * rv.pdf(x, location, scale)
+        def evaluate(x, amplitude, location, scale, *args):
+            return amplitude * rv.pdf(x, *args, loc=location, scale=scale)
 
         # def primitive(x, amplitude, location, scale):
         #     return amplitude * rv.cdf(x, location, scale)
@@ -1152,24 +1167,34 @@ def wrap_rv_continuous(rv):
     return _wrapper
 
 
-class AbstractPeakFitModel(AbstractLocationScaleFitModel):
+class AbstractPeakFitModel(AbstractFitModel):
 
     """Abstract base class for peak-like fit models.
     """
 
-    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
-                 scale: float, *parameter_values: float) -> ArrayLike:
-        """Need to think about this one.
-        """
-        z = self.standardize(x, location, scale)
-        return amplitude / scale * self.shape(z, *parameter_values)
-
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
         self.location.init(np.average(xdata, weights=ydata))
         self.scale.init(np.sqrt(np.average((xdata - self.location.value)**2, weights=ydata)))
         self.amplitude.init(np.trapz(ydata, xdata))
+
+    def default_plotting_range(self, half_width: Tuple[float, float] = (5., 5.)) -> Tuple[float, float]:
+        """Overloaded method.
+
+        By default the plotting range is set to be an interval centered on the
+        location parameter, and extending for a number of scale units on each side.
+
+        Arguments
+        ---------
+        half_width : tuple of float, optional
+            The half-width of the plotting range in units of the scale parameter
+            (default (5., 5.)).
+        """
+        left, right = half_width
+        location = self.location.value
+        scale = self.scale.value
+        return (location - left * scale, location + right * scale)
 
     def fwhm(self) -> float:
         """Return the full-width at half-maximum (FWHM) of the model.

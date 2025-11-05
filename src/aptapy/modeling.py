@@ -1122,27 +1122,22 @@ def wrap_rv_continuous(rv) -> Callable:
 
     def _wrapper(cls: type):
 
-        args = ["amplitude", "location", "scale"]
+        # Set all the class fit-parameter attributes.
+        setattr(cls, "amplitude", FitParameter(1.))
+        setattr(cls, "location", FitParameter(0.))
+        setattr(cls, "scale", FitParameter(1., minimum=0))
         if rv.numargs > 0:
-            args += rv.shapes.split(", ")
-
-        arg_map = dict(loc=("location", 0.), scale=("scale", 1.))
-
-        for arg in args:
-            if arg in arg_map:
-                name, default = arg_map[arg]
-                setattr(cls, name, FitParameter(default))
-            else:
-                setattr(cls, arg, FitParameter(1.))
+            for name in rv.shapes.split(", "):
+                setattr(cls, name, FitParameter(1.))
 
         def evaluate(x, amplitude, location, scale, *args):
             return amplitude * rv.pdf(x, *args, loc=location, scale=scale)
 
-        # def primitive(x, amplitude, location, scale):
-        #     return amplitude * rv.cdf(x, location, scale)
+        def primitive(x, amplitude, location, scale, *args):
+             return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
 
-        # def rvs(location, scale, size=1, random_state=None):
-        #     return rv.rvs(location, scale, size=size, random_state=random_state)
+        def rvs(location, scale, *args, size=1, random_state=None):
+            return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
         # def median(location, scale):
         #     return rv.median(location, scale)
@@ -1153,10 +1148,9 @@ def wrap_rv_continuous(rv) -> Callable:
         # def std(location, scale):
         #     return rv.std(location, scale)
 
-        #cls.shape = staticmethod(shape)
         cls.evaluate = staticmethod(evaluate)
-        # cls.primitive = staticmethod(primitive)
-        # cls.rvs = staticmethod(rvs)
+        cls.primitive = staticmethod(primitive)
+        cls.rvs = staticmethod(rvs)
         # cls.median = staticmethod(median)
         # cls.mean = staticmethod(mean)
         # cls.std = staticmethod(std)

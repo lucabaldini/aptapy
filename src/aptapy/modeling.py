@@ -1100,36 +1100,51 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
 
 def wrap_rv_continuous(rv):
 
+    """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
+
+    The general rule for the signature of scipy distributions is that they accept
+    all the shape parameters first, and then loc and scale.
+    This decorator creates a fit model class with the appropriate methods to
+    Read dist.shapes (and numargs) to know the positional shape args.
+    Assume loc and scale keywords are always supported.
+    """
+
     def _wrapper(cls: type):
 
-        def shape(z, location, scale):
-            return rv.pdf(z, location, scale)
+        args = rv.shapes.split(", ") if rv.shapes else []
+        args += ["loc", "scale"]
+
+        for arg in args:
+            setattr(cls, arg, FitParameter(1.))
+
+        #def shape(z, location, scale):
+        #    return rv.pdf(z, location, scale)
 
         def evaluate(x, amplitude, location, scale):
             return amplitude * rv.pdf(x, location, scale)
 
-        def primitive(x, amplitude, location, scale):
-            return amplitude * rv.cdf(x, location, scale)
+        # def primitive(x, amplitude, location, scale):
+        #     return amplitude * rv.cdf(x, location, scale)
 
-        def rvs(location, scale, size=1, random_state=None):
-            return rv.rvs(location, scale, size=size, random_state=random_state)
+        # def rvs(location, scale, size=1, random_state=None):
+        #     return rv.rvs(location, scale, size=size, random_state=random_state)
 
-        def median(location, scale):
-            return rv.median(location, scale)
+        # def median(location, scale):
+        #     return rv.median(location, scale)
 
-        def mean(location, scale):
-            return rv.mean(location, scale)
+        # def mean(location, scale):
+        #     return rv.mean(location, scale)
 
-        def std(location, scale):
-            return rv.std(location, scale)
+        # def std(location, scale):
+        #     return rv.std(location, scale)
 
-        cls.shape = staticmethod(shape)
+        #cls.shape = staticmethod(shape)
         cls.evaluate = staticmethod(evaluate)
-        cls.primitive = staticmethod(primitive)
-        cls.rvs = staticmethod(rvs)
-        cls.median = staticmethod(median)
-        cls.mean = staticmethod(mean)
-        cls.std = staticmethod(std)
+        # cls.primitive = staticmethod(primitive)
+        # cls.rvs = staticmethod(rvs)
+        # cls.median = staticmethod(median)
+        # cls.mean = staticmethod(mean)
+        # cls.std = staticmethod(std)
 
         update_abstractmethods(cls)
         return cls

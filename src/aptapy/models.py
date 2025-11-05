@@ -505,7 +505,10 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-@wrap_rv_continuous(scipy.stats.alpha)
+
+
+
+@wrap_rv_continuous(scipy.stats.alpha, plotting_range=(0., 7.5))
 class Alpha(AbstractPeakFitModel):
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
@@ -514,11 +517,8 @@ class Alpha(AbstractPeakFitModel):
         super().init_parameters(xdata, ydata, sigma)
         self.location.init(self.location.value - self.scale.value)
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        return super().default_plotting_range((0., 7.5))
 
-
-@wrap_rv_continuous(scipy.stats.anglit)
+@wrap_rv_continuous(scipy.stats.anglit, plotting_range=(1., 1.))
 class Anglit(AbstractPeakFitModel):
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
@@ -527,11 +527,8 @@ class Anglit(AbstractPeakFitModel):
         super().init_parameters(xdata, ydata, sigma)
         self.scale.init(3. * self.scale.value)
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        return super().default_plotting_range((1., 1.))
 
-
-@wrap_rv_continuous(scipy.stats.argus)
+@wrap_rv_continuous(scipy.stats.argus, plotting_range=(0., 1.))
 class Argus(AbstractPeakFitModel):
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
@@ -541,16 +538,11 @@ class Argus(AbstractPeakFitModel):
         self.scale.init(4. * self.scale.value)
         self.location.init(self.location.value - 0.5 * self.scale.value)
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        return super().default_plotting_range((0., 1.))
 
-
-@wrap_rv_continuous(scipy.stats.beta)
+@wrap_rv_continuous(scipy.stats.beta, plotting_range=(0., 1.))
 class Beta(AbstractPeakFitModel):
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        return super().default_plotting_range((0., 1.))
-
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mean", scale_alias="sigma")
@@ -565,7 +557,7 @@ class Lorentzian(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.lognorm)
+@wrap_rv_continuous(scipy.stats.lognorm, plotting_range=(0., 7.5))
 class LogNormal(AbstractPeakFitModel):
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
@@ -574,17 +566,11 @@ class LogNormal(AbstractPeakFitModel):
         super().init_parameters(xdata, ydata, sigma)
         self.location.init(self.location.value - self.scale.value)
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        return super().default_plotting_range((0., 7.5))
 
-
-@wrap_rv_continuous(scipy.stats.moyal)
+@wrap_rv_continuous(scipy.stats.moyal, plotting_range=(5., 10.))
 class Moyal(AbstractPeakFitModel):
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        return super().default_plotting_range((5., 10.))
-
-
+    pass
 
 
 

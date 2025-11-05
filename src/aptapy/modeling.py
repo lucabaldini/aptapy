@@ -1180,6 +1180,8 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         # cls.mean = staticmethod(mean)
         # cls.std = staticmethod(std)
 
+        #cls.__doc__ = rv.__doc__
+
         update_abstractmethods(cls)
         return cls
 

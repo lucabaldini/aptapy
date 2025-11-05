@@ -31,6 +31,10 @@ from .plotting import plt
 from .typing_ import ArrayLike
 
 __all__ = [
+    "Alpha",
+    "Anglit",
+    "Argus",
+    "Beta",
     "Constant",
     "Line",
     "Quadratic",

@@ -27,6 +27,10 @@ from aptapy.models import (
     Anglit,
     Argus,
     Beta,
+    BetaPrime,
+    Bradford,
+    Burr,
+    Burr12,
     Gaussian,
     LogNormal,
     Lorentzian,
@@ -105,9 +109,24 @@ def test_argus():
     _test_model_base(Argus)
 
 
-#def test_beta():
-#    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#    _test_model_base(Beta, (1., 10., 2., 2.31, 0.627))
+def test_beta():
+   plt.figure(f"{inspect.currentframe().f_code.co_name}")
+   _test_model_base(Beta, (1., 10., 2., 2.31, 0.627))
+
+
+def test_beta_prime():
+   plt.figure(f"{inspect.currentframe().f_code.co_name}")
+   _test_model_base(BetaPrime, (1., 10., 2., 2.31, 0.627))
+
+
+def test_bradford():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(Bradford)
+
+
+def test_burr():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(Burr)
 
 
 def test_gaussian():

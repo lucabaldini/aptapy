@@ -536,6 +536,30 @@ class Beta(AbstractPeakFitModel):
     pass
 
 
+@wrap_rv_continuous(scipy.stats.betaprime, plotting_range=(0., 8.))
+class BetaPrime(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.bradford, plotting_range=(0., 1.))
+class Bradford(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.burr, plotting_range=(0., 5.))
+class Burr(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.burr12, plotting_range=(0., 5.))
+class Burr12(AbstractPeakFitModel):
+
+    pass
+
+
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
 class Gaussian(AbstractPeakFitModel):
 

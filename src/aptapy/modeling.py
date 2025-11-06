@@ -1133,17 +1133,17 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             raise ValueError("location_alias cannot be 'mean'")
 
         # Set all the class fit-parameter attributes.
-        setattr(cls, "amplitude", FitParameter(1.))
-        if location_alias is not None:
+        cls.amplitude = FitParameter(1.)
+        if location_alias is None:
+            cls.location = FitParameter(0.)
+        else:
             setattr(cls, location_alias, FitParameter(0.))
             cls.location = property(lambda self: getattr(self, location_alias))
+        if scale_alias is None:
+            cls.scale = FitParameter(1., minimum=0)
         else:
-            setattr(cls, "location", FitParameter(0.))
-        if scale_alias is not None:
             setattr(cls, scale_alias, FitParameter(1., minimum=0))
             cls.scale = property(lambda self: getattr(self, scale_alias))
-        else:
-            setattr(cls, "scale", FitParameter(1., minimum=0))
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):
                 setattr(cls, name, FitParameter(1.))

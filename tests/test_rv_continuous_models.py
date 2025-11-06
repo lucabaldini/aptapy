@@ -124,15 +124,3 @@ def test_lorentzian():
 def test_moyal():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Moyal)
-
-
-if __name__ == "__main__":
-    #test_alpha()
-    test_anglit()
-    #test_argus()
-    #test_beta()
-    #test_gaussian()
-    #test_log_normal()
-    #test_lorentzian()
-    #test_moyal()
-    plt.show()

@@ -560,6 +560,13 @@ class Burr12(AbstractPeakFitModel):
     pass
 
 
+
+@wrap_rv_continuous(scipy.stats.chi, plotting_range=(0., 5.))
+class Chi(AbstractPeakFitModel):
+
+    pass
+
+
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
 class Gaussian(AbstractPeakFitModel):
 

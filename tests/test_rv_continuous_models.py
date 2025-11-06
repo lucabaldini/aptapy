@@ -31,6 +31,7 @@ from aptapy.models import (
     Bradford,
     Burr,
     Burr12,
+    Chi,
     Gaussian,
     LogNormal,
     Lorentzian,
@@ -127,6 +128,11 @@ def test_bradford():
 def test_burr():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Burr)
+
+
+def test_chi():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(Chi)
 
 
 def test_gaussian():

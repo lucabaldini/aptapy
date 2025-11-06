@@ -26,6 +26,7 @@ from numbers import Number
 from typing import Callable, Dict, Iterator, Tuple
 
 import matplotlib
+from matplotlib.pylab import norm
 import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
@@ -1099,7 +1100,7 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
 
 
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
-                       plotting_range: Tuple[float, float] = (5., 5.)) -> type:
+                       plotting_range: Tuple[float, float] = None) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
@@ -1121,8 +1122,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         The name to use for the scale parameter (if None defaults to "scale").
 
     plotting_range : tuple of float, optional
-        The half-width of the plotting range in units of the scale parameter
-        (default (5., 5.)).
+        The half-width of the plotting range in units of the scale parameter.
     """
 
     def _wrapper(cls: type):
@@ -1166,14 +1166,60 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             _, location, scale, *args = self.parameter_values()
             return rv.std(*args, loc=location, scale=scale)
 
+        def skewness(self):
+            _, location, scale, *args = self.parameter_values()
+            return rv.stats(*args, loc=location, scale=scale, moments='s')
+
         def random_sample(self, size=1, random_state=None):
             _, location, scale, *args = self.parameter_values()
             return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
+        def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+            """Overloaded method.
+            """
+            # Calculate the average, standard deviation, and integral of the input data.
+            location = np.average(xdata, weights=ydata)
+            scale = np.sqrt(np.average((xdata - location)**2, weights=ydata))
+            amplitude = np.trapz(ydata, xdata)
+            # If the underlying distribution has a finite standard deviation
+            # we can rescale the scale parameter accordingly. Note that this is
+            # independent of the current location and scale, and only depends on the
+            # shape of the distribution.
+            std = self.std()
+            if not np.isinf(std) and not np.isnan(std):
+                scale = scale * self.scale.value / std
+            # If the underlying distribution has a finite mean we can shift
+            # the location parameter accordingly. Note this depends on the
+            # current value of the scale parameter, which is why we do this after
+            # rescaling it.
+            mean = self.mean()
+            if not np.isinf(mean) and not np.isnan(mean):
+                delta = (mean - self.location.value) * scale / self.scale.value
+                location -= delta
+            # And we are good to go!
+            self.location.init(location)
+            self.scale.init(scale)
+            self.amplitude.init(amplitude)
+
         def default_plotting_range(self) -> Tuple[float, float]:
-            left, right = plotting_range
-            center = self.location.value
-            half_width = self.scale.value
+            """Overloaded method.
+
+            If we provide a plotting_range argument to the decorator, we use that
+            to define the default plotting range in terms of the location and scale
+            parameters. Otherwise, we try and do something sensible based on the mean and
+            standard deviation of the distribution.
+            """
+            if plotting_range is not None:
+                left, right = plotting_range
+                location, scale = self.location.value, self.scale.value
+                return (location - left * scale, location + right * scale)
+            left, right = (5., 5.)
+            center = self.mean()
+            if np.isinf(center) or np.isnan(center):
+                center = self.location.value
+            half_width = self.std()
+            if np.isinf(half_width) or np.isnan(half_width):
+                half_width = self.scale.value
             return (center - left * half_width, center + right * half_width)
 
         cls.evaluate = staticmethod(evaluate)
@@ -1181,7 +1227,9 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         cls.median = median
         cls.mean = mean
         cls.std = std
+        cls.skewness = skewness
         cls.random_sample = random_sample
+        cls.init_parameters = init_parameters
         cls.default_plotting_range = default_plotting_range
 
         #cls.__doc__ = rv.__doc__

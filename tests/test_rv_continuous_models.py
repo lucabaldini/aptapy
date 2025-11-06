@@ -61,6 +61,7 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]")
     model.set_parameters(*parameter_values)
     xmin, xmax = model.plotting_range()
+    print(model)
 
     # Generate a random sample and fill a histogram.
     sample = model.random_sample(100000, 313)
@@ -68,7 +69,10 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
     histogram.plot(label="Random sample")
 
     # Run the parameter initialization on the histogram data and plot the
-    # initial guess for the model.
+    # initial guess for the model. Note we reset the parameters to their default
+    # values before running the initialization, so that we are effectively testing
+    # what happens in real life.
+    model.set_parameters(1., 0., 1.)
     model.init_parameters(histogram.bin_centers(), histogram.content, histogram.errors)
     model.plot(label="Initial guess", ls="--", color="gray")
 
@@ -124,3 +128,8 @@ def test_lorentzian():
 def test_moyal():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Moyal)
+
+
+if __name__ == "__main__":
+    test_lorentzian()
+    plt.show()

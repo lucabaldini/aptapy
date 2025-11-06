@@ -512,35 +512,22 @@ class StretchedExponentialComplement(StretchedExponential):
 
 
 
-@wrap_rv_continuous(scipy.stats.alpha, plotting_range=(0., 7.5))
+@wrap_rv_continuous(scipy.stats.alpha, plotting_range=(0., 5.))
 class Alpha(AbstractPeakFitModel):
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
-        """Overloaded method.
-        """
-        super().init_parameters(xdata, ydata, sigma)
-        self.location.init(self.location.value - self.scale.value)
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.anglit, plotting_range=(1., 1.))
 class Anglit(AbstractPeakFitModel):
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
-        """Overloaded method.
-        """
-        super().init_parameters(xdata, ydata, sigma)
-        self.scale.init(3. * self.scale.value)
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.argus, plotting_range=(0., 1.))
 class Argus(AbstractPeakFitModel):
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
-        """Overloaded method.
-        """
-        super().init_parameters(xdata, ydata, sigma)
-        self.scale.init(4. * self.scale.value)
-        self.location.init(self.location.value - 0.5 * self.scale.value)
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.beta, plotting_range=(0., 1.))
@@ -564,14 +551,10 @@ class Lorentzian(AbstractPeakFitModel):
 @wrap_rv_continuous(scipy.stats.lognorm, plotting_range=(0., 7.5))
 class LogNormal(AbstractPeakFitModel):
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
-        """Overloaded method.
-        """
-        super().init_parameters(xdata, ydata, sigma)
-        self.location.init(self.location.value - self.scale.value)
+    pass
 
 
-@wrap_rv_continuous(scipy.stats.moyal, plotting_range=(5., 10.))
+@wrap_rv_continuous(scipy.stats.moyal, plotting_range=(4., 10.))
 class Moyal(AbstractPeakFitModel):
 
     pass

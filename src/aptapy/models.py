@@ -564,11 +564,68 @@ class Burr12(AbstractPeakFitModel):
 @wrap_rv_continuous(scipy.stats.chi, plotting_range=(0., 5.))
 class Chi(AbstractPeakFitModel):
 
+    """Check if df needs to be integer.
+    """
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.chi2, plotting_range=(0., 5.))
+class Chisquare(AbstractPeakFitModel):
+
+    """Check if df needs to be integer.
+    """
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.cosine)
+class Cosine(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.crystalball)
+class CrystalBall(AbstractPeakFitModel):
+
+    """Note the shape parameter m needs to be > 1.
+    """
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.dgamma)
+class DoubleGamma(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.fisk, plotting_range=(0., 5.))
+class Fisk(AbstractPeakFitModel):
+
     pass
 
 
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
 class Gaussian(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.genlogistic)
+class GeneralizedLogistic(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.gennorm)
+class GeneralizedNormal(AbstractPeakFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.landau, plotting_range=(3., 10.))
+class Landau(AbstractPeakFitModel):
 
     pass
 

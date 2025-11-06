@@ -32,7 +32,15 @@ from aptapy.models import (
     Burr,
     Burr12,
     Chi,
+    Chisquare,
+    Cosine,
+    CrystalBall,
+    DoubleGamma,
+    Fisk,
     Gaussian,
+    GeneralizedLogistic,
+    GeneralizedNormal,
+    Landau,
     LogNormal,
     Lorentzian,
     Moyal,
@@ -135,9 +143,49 @@ def test_chi():
     _test_model_base(Chi)
 
 
+def test_chisquare():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(Chisquare)
+
+
+def test_cosine():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(Cosine)
+
+
+def test_crystal_ball():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(CrystalBall, (10., 10., 2., 1., 2.))
+
+
+def test_double_gamma():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(DoubleGamma)
+
+
+# def test_fisk():
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     _test_model_base(Fisk)
+
+
 def test_gaussian():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Gaussian)
+
+
+def test_generalized_logistic():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(GeneralizedLogistic)
+
+
+def test_generalized_normal():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(GeneralizedNormal)
+
+
+def test_landau():
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(Landau)
 
 
 def test_log_normal():
@@ -156,5 +204,5 @@ def test_moyal():
 
 
 if __name__ == "__main__":
-    test_lorentzian()
+    test_crystal_ball()
     plt.show()

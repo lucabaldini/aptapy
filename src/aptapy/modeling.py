@@ -16,6 +16,7 @@
 """Modeling core facilities.
 """
 
+from email.mime import base
 import enum
 import functools
 import inspect
@@ -1098,6 +1099,28 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
         scale = self.scale.value
         return (location - left * scale, location + right * scale)
 
+def _parse_rv_docstring(rv):
+    """Parse the docstring of a scipy.stats.rv_continuous object to extract
+    information about its parameters.
+
+    Arguments
+    ---------
+    rv : scipy.stats.rv_continuous
+        The scipy.stats.rv_continuous object to parse.
+    """
+    docstring = rv.__doc__
+    text = ""
+    adding = False
+    for line in docstring.split("\n"):
+        if line.startswith("Notes"):
+            adding = True
+        if adding:
+            text = f"{text}\n{line}\n"
+        if line.startswith("Examples"):
+            break
+    print(text)
+    return text
+
 
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
                        plotting_range: Tuple[float, float] = None) -> type:
@@ -1175,7 +1198,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
         def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-            """Overloaded method.
+            """Overloaded method---consider moving this into the class AbstractPeakFitModel.
             """
             # Calculate the average, standard deviation, and integral of the input data.
             location = np.average(xdata, weights=ydata)
@@ -1202,7 +1225,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             self.amplitude.init(amplitude)
 
         def default_plotting_range(self) -> Tuple[float, float]:
-            """Overloaded method.
+            """Overloaded method---consider moving this into the class AbstractPeakFitModel.
 
             If we provide a plotting_range argument to the decorator, we use that
             to define the default plotting range in terms of the location and scale
@@ -1232,7 +1255,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         cls.init_parameters = init_parameters
         cls.default_plotting_range = default_plotting_range
 
-        #cls.__doc__ = rv.__doc__
+        # cls.__doc__ = f"{cls.__doc__}\n{_parse_rv_docstring(rv)}\n"
 
         update_abstractmethods(cls)
         return cls

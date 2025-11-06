@@ -1127,6 +1127,11 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
 
     def _wrapper(cls: type):
 
+        # Check for conflicting aliases---we want to overload the mean() function
+        # later on, so we cannot have location_alias == "mean".
+        if location_alias == ("mean"):
+            raise ValueError("location_alias cannot be 'mean'")
+
         # Set all the class fit-parameter attributes.
         setattr(cls, "amplitude", FitParameter(1.))
         if location_alias is not None:
@@ -1149,36 +1154,35 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         def primitive(x, amplitude, location, scale, *args):
              return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
 
-        def _rvs(location, scale, *args, size=1, random_state=None):
-            return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
+        def median(self):
+            _, location, scale, *args = self.parameter_values()
+            return rv.median(*args, loc=location, scale=scale)
+
+        def mean(self):
+            _, location, scale, *args = self.parameter_values()
+            return rv.mean(*args, loc=location, scale=scale)
+
+        def std(self):
+            _, location, scale, *args = self.parameter_values()
+            return rv.std(*args, loc=location, scale=scale)
 
         def random_sample(self, size=1, random_state=None):
-            _, *params = self.parameter_values()
-            return self._rvs(*params, size=size, random_state=random_state)
+            _, location, scale, *args = self.parameter_values()
+            return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
         def default_plotting_range(self) -> Tuple[float, float]:
             left, right = plotting_range
-            location = self.location.value
-            scale = self.scale.value
-            return (location - left * scale, location + right * scale)
-
-        # def median(location, scale):
-        #     return rv.median(location, scale)
-
-        # def mean(location, scale):
-        #     return rv.mean(location, scale)
-
-        # def std(location, scale):
-        #     return rv.std(location, scale)
+            center = self.location.value
+            half_width = self.scale.value
+            return (center - left * half_width, center + right * half_width)
 
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
-        cls._rvs = staticmethod(_rvs)
+        cls.median = median
+        cls.mean = mean
+        cls.std = std
         cls.random_sample = random_sample
         cls.default_plotting_range = default_plotting_range
-        # cls.median = staticmethod(median)
-        # cls.mean = staticmethod(mean)
-        # cls.std = staticmethod(std)
 
         #cls.__doc__ = rv.__doc__
 

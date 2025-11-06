@@ -549,7 +549,7 @@ class Beta(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.norm, location_alias="mean", scale_alias="sigma")
+@wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
 class Gaussian(AbstractPeakFitModel):
 
     pass

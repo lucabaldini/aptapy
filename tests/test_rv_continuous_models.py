@@ -81,6 +81,8 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
     assert status.pvalue > threshold
     model.plot(fit_output=True)
     setup_gca(xmin=xmin, xmax=xmax)
+    plt.axvline(model.mean(), color="gray", ls="--")
+    plt.axvline(model.mean() + model.std(), color="gray", ls="--")
     plt.legend()
 
 
@@ -122,3 +124,15 @@ def test_lorentzian():
 def test_moyal():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Moyal)
+
+
+if __name__ == "__main__":
+    #test_alpha()
+    test_anglit()
+    #test_argus()
+    #test_beta()
+    #test_gaussian()
+    #test_log_normal()
+    #test_lorentzian()
+    #test_moyal()
+    plt.show()

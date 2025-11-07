@@ -130,24 +130,20 @@ specifying the peak width).
 :class:`~aptapy.models.Alpha`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wrapped from :scipy_rv_wrap:`alpha`.
+Wrapped from :scipy_rv_wrap:`alpha`;
+support: :math:`z > 0`;
+shape parameter(s): :math:`a > 0`.
 
-Support: :math:`x > 0`; shape parameter(s): :math:`a > 0`.
+(Note the mean and the standard deviation of the distribution are always infinite.)
 
 .. image:: /_static/plots/alpha_shape.png
-
-The is an asymmetric peak-like model, with a a long tail on the right. The mean and the
-standard deviation of the distribution are always infinite. As the shape parameter
-``a`` increases, the distribution tends to be more and more peaked in proximity of the
-origin.
 
 
 :class:`~aptapy.models.Anglit`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wrapped from :scipy_rv_wrap:`anglit`.
-
-Support: :math:`-\pi/4 \le x \le \pi/4`.
+Wrapped from :scipy_rv_wrap:`anglit`;
+support: :math:`-\pi/4 \le z \le \pi/4`.
 
 .. image:: /_static/plots/anglit_shape.png
 
@@ -155,23 +151,19 @@ Support: :math:`-\pi/4 \le x \le \pi/4`.
 :class:`~aptapy.models.Argus`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wrapped from :scipy_rv_wrap:`argus`.
-
-Support: :math:`0 < x < 1`; shape parameter(s): :math:`\chi > 0`.
+Wrapped from :scipy_rv_wrap:`argus`;
+support: :math:`0 < z < 1`;
+shape parameter(s): :math:`\chi > 0`.
 
 .. image:: /_static/plots/argus_shape.png
-
-The distribution is asymmetric, with a a longer tail on the left. As the shape parameter
-:math:`\chi` increases, the distribution tends to be more and more peaked in proximity
-of 1.
 
 
 :class:`~aptapy.models.Bradford`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wrapped from :scipy_rv_wrap:`bradford`.
-
-Support: :math:`0 < x < 1`; shape parameter(s): :math:`c > 0`.
+Wrapped from :scipy_rv_wrap:`bradford`;
+support: :math:`0 < z < 1`;
+shape parameter(s): :math:`c > 0`.
 
 .. image:: /_static/plots/bradford_shape.png
 
@@ -179,11 +171,71 @@ Support: :math:`0 < x < 1`; shape parameter(s): :math:`c > 0`.
 :class:`~aptapy.models.Burr`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wrapped from :scipy_rv_wrap:`burr`.
-
-Support: :math:`x > 0`; shape parameter(s): :math:`c, d > 0`.
+Wrapped from :scipy_rv_wrap:`burr`;
+support: :math:`z > 0`;
+shape parameter(s): :math:`c, d > 0`.
 
 .. image:: /_static/plots/burr_shape.png
+
+
+:class:`~aptapy.models.Burr12`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`burr12`;
+support: :math:`z > 0`;
+shape parameter(s): :math:`c, d > 0`.
+
+.. image:: /_static/plots/burr12_shape.png
+
+
+:class:`~aptapy.models.Cauchy`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`cauchy`;
+support: :math:`z > 0`.
+
+.. image:: /_static/plots/cauchy_shape.png
+
+
+:class:`~aptapy.models.Chi`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`chi`;
+support: :math:`z > 0`;
+shape parameter(s): :math:`\text{df} > 0`.
+
+.. image:: /_static/plots/chi_shape.png
+
+
+:class:`~aptapy.models.Chisquare`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`chi2`;
+support: :math:`z > 0`
+shape parameter(s): :math:`\text{df} > 0`.
+
+.. image:: /_static/plots/chisquare_shape.png
+
+
+:class:`~aptapy.models.Cosine`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`cosine`;
+support: :math:`-\pi \le z \le \pi`.
+
+.. image:: /_static/plots/cosine_shape.png
+
+
+:class:`~aptapy.models.CrystalBall`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`crystalball`;
+support: :math:`-\infty < z < \infty`;
+shape parameter(s): :math:`m > 1`, :math:`\beta > 0`.
+
+.. image:: /_static/plots/crystalball_shape.png
+
+
 
 
 :class:`~aptapy.models.Gaussian`

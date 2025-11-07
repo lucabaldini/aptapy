@@ -86,6 +86,8 @@ def plot_rv_shape(model_class, shape_parameters=None, output_folder=None, **kwar
                 label = f"{param_names} = {shape}"
         else:
             label = ", ".join(f"{name} = {value}" for name, value in zip(param_names, shape))
+
+        #z = np.linspace(*model.plotting_range(), 250)
         plt.plot(z, model(z), label=label)
         plot_mean_marker(model)
     param_names = ", ".join(param_names)
@@ -107,7 +109,12 @@ def create_figures():
     plot_rv_shape(models.BetaPrime, ((1., 1.), (1., 4.), (4., 1.), (2., 4.), (4., 2.), (4., 4.)))
     plot_rv_shape(models.Bradford)
     plot_rv_shape(models.Burr, ((1., 1.), (1., 4.), (4., 1.), (2., 4.), (4., 2.), (4., 4.)))
-
+    plot_rv_shape(models.Burr12, ((1., 1.), (1., 4.), (4., 1.), (2., 4.), (4., 2.), (4., 4.)))
+    plot_rv_shape(models.Cauchy)
+    plot_rv_shape(models.Chi, (1., 2., 4., 10.))
+    plot_rv_shape(models.Chisquare, (1., 2., 4., 10.))
+    plot_rv_shape(models.Cosine)
+    plot_rv_shape(models.CrystalBall, ((1., 1.), (1., 2.), (2., 1.), (2., 2.), (3., 3.)))
 
 if __name__ == "__main__":
     create_figures()

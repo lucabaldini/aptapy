@@ -441,35 +441,40 @@ class Bradford(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.burr, plotting_range=(0., 5.))
+@wrap_rv_continuous(scipy.stats.burr)
 class Burr(AbstractPeakFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.burr12, plotting_range=(0., 5.))
+@wrap_rv_continuous(scipy.stats.burr12)
 class Burr12(AbstractPeakFitModel):
 
     pass
 
 
+@wrap_rv_continuous(scipy.stats.cauchy)
+class Cauchy(AbstractPeakFitModel):
 
-@wrap_rv_continuous(scipy.stats.chi, plotting_range=(0., 5.))
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.chi)
 class Chi(AbstractPeakFitModel):
 
-    """Check if df needs to be integer.
-    """
-
     pass
 
 
-@wrap_rv_continuous(scipy.stats.chi2, plotting_range=(0., 5.))
+@wrap_rv_continuous(scipy.stats.chi2)
 class Chisquare(AbstractPeakFitModel):
 
-    """Check if df needs to be integer.
-    """
-
-    pass
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method
+        """
+        location, scale, dof = self.location.value, self.scale.value, self.df
+        left = min(0., location + dof - 5. * scale)
+        right = location + dof + 5. * scale
+        return (left, right)
 
 
 @wrap_rv_continuous(scipy.stats.cosine)
@@ -523,10 +528,7 @@ class Landau(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.cauchy)
-class Lorentzian(AbstractPeakFitModel):
-
-    pass
+Lorentzian = Cauchy
 
 
 @wrap_rv_continuous(scipy.stats.lognorm, plotting_range=(0., 7.5))

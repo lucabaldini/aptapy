@@ -1115,10 +1115,11 @@ def _parse_rv_docstring(rv):
         if line.startswith("Notes"):
             adding = True
         if adding:
-            text = f"{text}\n{line}\n"
+            text = f"{text}\n{line}"
         if line.startswith("Examples"):
             break
     print(text)
+    #input()
     return text
 
 
@@ -1169,7 +1170,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             cls.scale = property(lambda self: getattr(self, scale_alias))
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):
-                setattr(cls, name, FitParameter(1.))
+                setattr(cls, name, FitParameter(1., minimum=0.))
 
         def evaluate(x, amplitude, location, scale, *args):
             return amplitude * rv.pdf(x, *args, loc=location, scale=scale)
@@ -1235,15 +1236,15 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             if plotting_range is not None:
                 left, right = plotting_range
                 location, scale = self.location.value, self.scale.value
-                return (location - left * scale, location + right * scale)
-            left, right = (5., 5.)
+                return (location + left * scale, location + right * scale)
+            left, right = (-5., 5.)
             center = self.mean()
             if np.isinf(center) or np.isnan(center):
                 center = self.location.value
             half_width = self.std()
             if np.isinf(half_width) or np.isnan(half_width):
                 half_width = self.scale.value
-            return (center - left * half_width, center + right * half_width)
+            return (center + left * half_width, center + right * half_width)
 
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
@@ -1255,7 +1256,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         cls.init_parameters = init_parameters
         cls.default_plotting_range = default_plotting_range
 
-        # cls.__doc__ = f"{cls.__doc__}\n{_parse_rv_docstring(rv)}\n"
+        #cls.__doc__ = f"{cls.__doc__}\n{_parse_rv_docstring(rv)}\n"
 
         update_abstractmethods(cls)
         return cls

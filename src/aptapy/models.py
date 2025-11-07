@@ -400,16 +400,13 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-
-
-
 @wrap_rv_continuous(scipy.stats.alpha, plotting_range=(0., 5.))
 class Alpha(AbstractPeakFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.anglit, plotting_range=(1., 1.))
+@wrap_rv_continuous(scipy.stats.anglit, plotting_range=(-np.pi / 4., np.pi / 4.))
 class Anglit(AbstractPeakFitModel):
 
     pass
@@ -515,7 +512,7 @@ class GeneralizedNormal(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.landau, plotting_range=(3., 10.))
+@wrap_rv_continuous(scipy.stats.landau, plotting_range=(-3., 10.))
 class Landau(AbstractPeakFitModel):
 
     pass
@@ -533,7 +530,7 @@ class LogNormal(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.moyal, plotting_range=(4., 10.))
+@wrap_rv_continuous(scipy.stats.moyal, plotting_range=(-4., 10.))
 class Moyal(AbstractPeakFitModel):
 
     pass

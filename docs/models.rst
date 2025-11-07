@@ -127,6 +127,65 @@ specifying the peak width).
 .. seealso:: :ref:`modeling`
 
 
+:class:`~aptapy.models.Alpha`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from `SciPy.stats.alpha <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.alpha.html>`_.
+
+This is a peak-like model defined in terms of a standardized shape function
+
+.. math::
+
+    f(x, a) = \frac{1}{x^2 \Phi(a) \sqrt{2\pi}} \; \exp(-\frac{1}{2} (a-1/x)^2)
+
+where :math:`\Phi` is the normal CDF, :math:`x > 0`, and :math:`a > 0`.
+
+The distribution is asymmetric, with a a long tail on the right. The mean and the
+standard deviation of the distribution are always infinite. As the shape parameter
+``a`` increases, the distribution tends to be more and more peaked in proximity of the
+origin.
+
+
+:class:`~aptapy.models.Anglit`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from `SciPy.stats.anglit <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.anglit.html>`_.
+
+This is a peak-like model defined in terms of a standardized shape function
+
+.. math::
+
+    f(x) = \sin(2x + \pi/2) = \cos(2x)
+
+for :math:`-\pi/4 \le x \le \pi/4`.
+
+
+:class:`~aptapy.models.Argus`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from `SciPy.stats.argus <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.argus.html>`_.
+
+This is a peak-like model defined in terms of a standardized shape function
+
+.. math::
+
+    f(x, \chi) = \frac{\chi^3}{\sqrt{2\pi} \Psi(\chi)} x \sqrt{1-x^2}
+                    \exp(-\chi^2 (1 - x^2)/2)
+
+for :math:`0 < x < 1` and :math:`\chi > 0`, where
+
+.. math::
+
+    \Psi(\chi) = \Phi(\chi) - \chi \phi(\chi) - 1/2
+
+with :math:`\Phi` and :math:`\phi` being the CDF and PDF of a standard
+normal distribution, respectively.
+
+The distribution is asymmetric, with a a longer tail on the left. As the shape parameter
+:math:`\chi` increases, the distribution tends to be more and more peaked in proximity
+of 1.
+
+
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

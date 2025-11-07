@@ -26,6 +26,7 @@ release = version
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.extlinks",
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
@@ -40,6 +41,11 @@ autodoc_default_options = {
 }
 todo_include_todos = True
 
+
+extlinks = {
+    "scipy_rv_wrap": ("https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.%s.html",
+                      "scipy.stats.%s"),
+}
 
 sphinx_gallery_conf = {
     "examples_dirs": ["examples"],      # source example scripts (relative to conf.py)

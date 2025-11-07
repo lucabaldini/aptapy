@@ -31,22 +31,16 @@ from .plotting import plt
 from .typing_ import ArrayLike
 
 __all__ = [
-    "Alpha",
-    "Anglit",
-    "Argus",
-    "Beta",
     "Constant",
     "Line",
+    "Polynomial",
     "Quadratic",
+    "Cubic",
     "PowerLaw",
     "Exponential",
     "ExponentialComplement",
     "StretchedExponential",
     "StretchedExponentialComplement",
-    "Gaussian",
-    "Lorentzian",
-    "LogNormal",
-    "Moyal",
     "Erf",
     "Logistic",
     "Arctangent",
@@ -56,21 +50,13 @@ __all__ = [
 
 class Constant(AbstractFitModel):
 
-    r"""Constant model.
-
-    .. math::
-
-        f(x) = c
-        \quad \text{with} \quad
-        c \rightarrow \texttt{value}
+    """Constant model.
     """
 
     value = FitParameter(1.)
 
     @staticmethod
     def evaluate(x: ArrayLike, value: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         if isinstance(x, Number):
             return value
@@ -93,24 +79,13 @@ class Constant(AbstractFitModel):
             sigma = np.full(ydata.shape, sigma)
         self.value.init(np.average(ydata, weights=1. / sigma**2.))
 
-    def integral(self, x1: float, x2: float) -> float:
-        """Overloaded method with the analytical integral.
-        """
-        return self.value.value * (x2 - x1)
+    def primitive(self, x: ArrayLike) -> ArrayLike:
+        return self.value.value * x
 
 
 class Line(AbstractFitModel):
 
-    r"""Linear model.
-
-    .. math::
-
-        f(x) = mx + q
-        \quad \text{with} \quad
-        \begin{cases}
-        m \rightarrow \texttt{slope} \\
-        q \rightarrow \texttt{intercept}
-        \end{cases}
+    """Linear model.
     """
 
     slope = FitParameter(1.)
@@ -118,8 +93,6 @@ class Line(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, slope: float, intercept: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         return slope * x + intercept
 
@@ -149,11 +122,9 @@ class Line(AbstractFitModel):
             self.slope.init((S0x * S1xy - S1x * S0xy) / D)
             self.intercept.init((S2x * S0xy - S1x * S1xy) / D)
 
-    def integral(self, x1: float, x2: float) -> float:
-        """Overloaded method with the analytical integral.
-        """
+    def primitive(self, x: ArrayLike) -> ArrayLike:
         slope, intercept = self.parameter_values()
-        return 0.5 * slope * (x2**2 - x1**2) + intercept * (x2 - x1)
+        return 0.5 * slope * x**2 + intercept * x
 
 
 class Polynomial(AbstractFitModel):
@@ -182,8 +153,6 @@ class Polynomial(AbstractFitModel):
 
     def __init__(self, degree: int, label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:
-        """Constructor.
-        """
         super().__init__(label, xlabel, ylabel)
         self.degree = degree
         for i in range(degree + 1):
@@ -191,8 +160,6 @@ class Polynomial(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, *coefficients: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         result = np.zeros_like(x)
         degree = len(coefficients) - 1
@@ -200,52 +167,39 @@ class Polynomial(AbstractFitModel):
             result += c * x**(degree - i)
         return result
 
+    def primitive(self, x: ArrayLike) -> ArrayLike:
+        raise NotImplementedError("Analytical primitive not implemented for generic Polynomial.")
 
-class Quadratic(AbstractFitModel):
 
-    r"""Quadratic model.
+class Quadratic(Polynomial):
 
-    .. math::
+    """Quadratic model.
 
-        f(x) = ax^2 + bx + c
-        \quad \text{with} \quad
-        \begin{cases}
-        a \rightarrow \texttt{a}\\
-        b \rightarrow \texttt{b}\\
-        c \rightarrow \texttt{c}
-        \end{cases}
+    This is just a convenience subclass of the generic Polynomial model with
+    degree fixed to 2.
     """
 
-    a = FitParameter(1.)
-    b = FitParameter(1.)
-    c = FitParameter(0.)
+    def __init__(self, label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        super().__init__(degree=2, label=label, xlabel=xlabel, ylabel=ylabel)
 
-    @staticmethod
-    def evaluate(x: ArrayLike, a: float, b: float, c: float) -> ArrayLike:
-        """Overloaded method.
-        """
-        # pylint: disable=arguments-differ
-        return a * x**2 + b * x + c
 
-    def integral(self, x1: float, x2: float) -> float:
-        """Overloaded method with the analytical integral.
-        """
-        a, b, c = self.parameter_values()
-        return a * (x2**3 - x1**3) / 3. + b * (x2**2 - x1**2) / 2. + c * (x2 - x1)
+class Cubic(Polynomial):
+
+    """Cubic model.
+
+    This is just a convenience subclass of the generic Polynomial model with
+    degree fixed to 3.
+    """
+
+    def __init__(self, label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        super().__init__(degree=3, label=label, xlabel=xlabel, ylabel=ylabel)
 
 
 class PowerLaw(AbstractFitModel):
 
-    r"""Power-law model.
-
-    .. math::
-
-        f(x) = N x^\Gamma
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        \Gamma \rightarrow \texttt{index}
-        \end{cases}
+    """Power-law model.
     """
 
     prefactor = FitParameter(1.)
@@ -253,8 +207,6 @@ class PowerLaw(AbstractFitModel):
 
     @staticmethod
     def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         return prefactor * x**index
 
@@ -284,13 +236,11 @@ class PowerLaw(AbstractFitModel):
             self.index.init(Sxy / Sxx)
             self.prefactor.init(np.exp(Y0 - self.index.value * X0))
 
-    def integral(self, x1: float, x2: float) -> float:
-        """Overloaded method with the analytical integral.
-        """
+    def primitive(self, x: ArrayLike) -> ArrayLike:
         prefactor, index = self.parameter_values()
         if index == -1.:
-            return prefactor * np.log(x2 / x1)
-        return prefactor / (index + 1.) * (x2**(index + 1.) - x1**(index + 1.))
+            return prefactor * np.log(x)
+        return prefactor / (index + 1.) * (x**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
@@ -314,17 +264,7 @@ class PowerLaw(AbstractFitModel):
 
 class Exponential(AbstractFitModel):
 
-    r"""Exponential model.
-
-    .. math::
-
-        f(x) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        X \rightarrow \texttt{scale}\\
-        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-        \end{cases}
+    """Exponential model.
 
     Note this is an example of a model with a state, i.e., one where ``evaluate()``
     is not a static method, as we have an ``origin`` attribute that needs to be
@@ -355,14 +295,10 @@ class Exponential(AbstractFitModel):
 
     def __init__(self, origin: float = 0., label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:
-        """Constructor.
-        """
         super().__init__(label, xlabel, ylabel)
         self.origin = origin
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         x = x - self.origin
         return prefactor * np.exp(-x / scale)
@@ -396,38 +332,20 @@ class Exponential(AbstractFitModel):
             if not np.isclose(b, 0.):
                 self.scale.init(1. / b)
 
-    def integral(self, x1: float, x2: float) -> float:
-        """Overloaded method with the analytical integral.
-        """
+    def primitive(self, x: ArrayLike) -> ArrayLike:
         prefactor, scale = self.parameter_values()
-        x1 = x1 - self.origin
-        x2 = x2 - self.origin
-        return prefactor * scale * (np.exp(-x1 / scale) - np.exp(-x2 / scale))
+        return prefactor * scale * (np.exp(-(x - self.origin) / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
-        """Overloaded method.
-        """
         return (self.origin, self.origin + scale_factor * self.scale.value)
 
 
 class ExponentialComplement(Exponential):
 
-    r"""Exponential complement model.
-
-    .. math::
-
-        f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        X \rightarrow \texttt{scale}\\
-        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-        \end{cases}
+    """Exponential complement model.
     """
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         return prefactor - Exponential.evaluate(self, x, prefactor, scale)
 
@@ -443,25 +361,12 @@ class ExponentialComplement(Exponential):
 
 class StretchedExponential(Exponential):
 
-    r"""Stretched exponential model.
-
-    .. math::
-
-        f(x) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        X \rightarrow \texttt{scale}\\
-        \gamma \rightarrow \texttt{stretch}\\
-        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-        \end{cases}
+    """Stretched exponential model.
     """
 
     stretch = FitParameter(1., minimum=0.)
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         x = x - self.origin
         return prefactor * np.exp(-(x / scale)**stretch)
@@ -480,31 +385,17 @@ class StretchedExponential(Exponential):
 
 class StretchedExponentialComplement(StretchedExponential):
 
-    r"""Stretched exponential complement model.
-
-    .. math::
-
-        f(x) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
-        \quad \text{with} \quad
-        \begin{cases}
-        N \rightarrow \texttt{prefactor}\\
-        X \rightarrow \texttt{scale}\\
-        \gamma \rightarrow \texttt{stretch}\\
-        x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
-        \end{cases}
+    """Stretched exponential complement model.
     """
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
-        """Overloaded method.
-        """
         # pylint: disable=arguments-differ
         return prefactor - StretchedExponential.evaluate(self, x, prefactor, scale, stretch)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
 
-        See the comment in the corresponding docstrings of the ExponentialComplement
-        class.
+        See the comment in the corresponding docstrings of the ExponentialComplement class.
         """
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 

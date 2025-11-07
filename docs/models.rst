@@ -12,9 +12,24 @@ Polynomials
 :class:`~aptapy.models.Constant`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. math::
+
+    f(x) = c
+    \quad \text{with} \quad
+    c \rightarrow \texttt{value}
+
 
 :class:`~aptapy.models.Line`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+
+    f(x) = mx + q
+    \quad \text{with} \quad
+    \begin{cases}
+    m \rightarrow \texttt{slope} \\
+    q \rightarrow \texttt{intercept}
+    \end{cases}
 
 
 :class:`~aptapy.models.Quadratic`
@@ -27,20 +42,73 @@ Exponentials and power-laws
 :class:`~aptapy.models.PowerLaw`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. math::
+
+    f(x) = N x^\Gamma
+    \quad \text{with} \quad
+    \begin{cases}
+    N \rightarrow \texttt{prefactor}\\
+    \Gamma \rightarrow \texttt{index}
+    \end{cases}
+
 
 :class:`~aptapy.models.Exponential`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+
+    f(x) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
+    \quad \text{with} \quad
+    \begin{cases}
+    N \rightarrow \texttt{prefactor}\\
+    X \rightarrow \texttt{scale}\\
+    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    \end{cases}
+
 
 
 :class:`~aptapy.models.ExponentialComplement`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. math::
+
+    f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
+    \quad \text{with} \quad
+    \begin{cases}
+    N \rightarrow \texttt{prefactor}\\
+    X \rightarrow \texttt{scale}\\
+    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    \end{cases}
+
 :class:`~aptapy.models.StretchedExponential`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+
+    f(x) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
+    \quad \text{with} \quad
+    \begin{cases}
+    N \rightarrow \texttt{prefactor}\\
+    X \rightarrow \texttt{scale}\\
+    \gamma \rightarrow \texttt{stretch}\\
+    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    \end{cases}
 
 
 :class:`~aptapy.models.StretchedExponentialComplement`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+
+    f(x) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
+    \quad \text{with} \quad
+    \begin{cases}
+    N \rightarrow \texttt{prefactor}\\
+    X \rightarrow \texttt{scale}\\
+    \gamma \rightarrow \texttt{stretch}\\
+    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    \end{cases}
+
 
 
 Peak-like models
@@ -62,84 +130,21 @@ specifying the peak width).
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Gaussian (normal) distribution. This is the prototypical example of
-location-scale peak-like model, where the location parameter is the mean and
-the scale parameter is the standard deviation. The shape function is given by
-
-.. math::
-    g(z) = \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} z^2}
-
-and the corresponding Python implementation is
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Gaussian.shape
-
-The model has no additional parameters beyond the standard location-scale ones.
 
 
 :class:`~aptapy.models.Lorentzian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Lorentzian model. This is the same as the Cauchy and Breit-Wigner distributions,
-modulo minor differences in the parametrization. The shape function is given by
-
-.. math::
-    g(z) = \frac{1}{\pi (1 + z^2)}
-
-and the corresponding Python implementation is
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Lorentzian.shape
-
-The distribution is symmetric with respect to the location parameter and is
-noted for not having finite moments of any order beyond the mean (that is, the
-tails are fairly prominent).
-
-The model has no additional parameters beyond the standard location-scale ones.
 
 
 :class:`~aptapy.models.LogNormal`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is a location-scale model in logarithmic space, i.e., the logarithm of the
-variable is distributed according to a normal (Gaussian) distribution. The shape
-function is given by
-
-.. math::
-    g(z) = \frac{1}{z \sqrt{2 \pi}} e^{-\frac{1}{2} (\ln z)^2}, \quad z > 0
-
-and the corresponding Python implementation is
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: LogNormal.shape
-
-The support of the distribution is :math:`z > 0` in the reduced variable,
-i.e., :math:`x > m` in the original variable. It is asymmetric, with a prominent
-right tail.
-
-The model has no additional parameters beyond the standard location-scale ones.
 
 
 :class:`~aptapy.models.Moyal`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Moyal distribution is often used in high-energy physics to describe energy
-loss spectra as a poor-man approximation to the Landau distribution. The shape
-function is given by
-
-.. math::
-    g(z) = \frac{1}{\sqrt{2 \pi}} e^{-\frac{1}{2} (z + e^{-z})}
-
-and the corresponding Python implementation is
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Moyal.shape
-
-The model has no additional parameters beyond the standard location-scale ones.
 
 
 Sigmoid models

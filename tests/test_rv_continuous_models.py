@@ -103,9 +103,30 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
     plt.legend()
 
 
+def _test_model_shape(model_class: type, shape_parameters):
+    """Test the shape of a given fit model.
+
+    This creates a model of the given class, and plots its shape for different
+    values of its shape parameters.
+
+    Arguments
+    ----------
+    model_class: type
+        The model class to be tested.
+    """
+    model = model_class()
+    x = np.linspace(*model.plotting_range(), 250)
+    for shape in shape_parameters:
+        model.set_parameters(1., 0., 1., shape)
+        plt.plot(x, model(x), label=f"shape = {shape}")
+    plt.legend()
+
+
 def test_alpha():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Alpha)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} shape")
+    _test_model_shape(Alpha, (1.e-20, 1., 2., 5.))
 
 
 def test_anglit():
@@ -116,6 +137,8 @@ def test_anglit():
 def test_argus():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Argus)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} shape")
+    _test_model_shape(Argus, (1.e-20, 1., 2., 5.))
 
 
 def test_beta():
@@ -204,5 +227,6 @@ def test_moyal():
 
 
 if __name__ == "__main__":
-    test_crystal_ball()
+    test_alpha()
+    test_argus()
     plt.show()

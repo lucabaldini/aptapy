@@ -1178,6 +1178,10 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         def primitive(x, amplitude, location, scale, *args):
              return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
 
+        def support(self):
+            _, location, scale, *args = self.parameter_values()
+            return rv.support(*args, loc=location, scale=scale)
+
         def median(self):
             _, location, scale, *args = self.parameter_values()
             return rv.median(*args, loc=location, scale=scale)
@@ -1233,11 +1237,17 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             parameters. Otherwise, we try and do something sensible based on the mean and
             standard deviation of the distribution.
             """
+            location, scale = self.location.value, self.scale.value
             if plotting_range is not None:
                 left, right = plotting_range
-                location, scale = self.location.value, self.scale.value
                 return (location + left * scale, location + right * scale)
-            left, right = (-5., 5.)
+            left, right = self.support()
+            if np.isfinite(left) and np.isfinite(right):
+                return (location + left * scale, location + right * scale)
+            if np.isinf(left):
+                left = -5.
+            if np.isinf(right):
+                right = 5.
             center = self.mean()
             if np.isinf(center) or np.isnan(center):
                 center = self.location.value
@@ -1248,6 +1258,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
 
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
+        cls.support = support
         cls.median = median
         cls.mean = mean
         cls.std = std

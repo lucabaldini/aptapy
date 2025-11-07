@@ -176,6 +176,16 @@ Support: :math:`0 < x < 1`; shape parameter(s): :math:`c > 0`.
 .. image:: /_static/plots/bradford_shape.png
 
 
+:class:`~aptapy.models.Burr`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`burr`.
+
+Support: :math:`x > 0`; shape parameter(s): :math:`c, d > 0`.
+
+.. image:: /_static/plots/burr_shape.png
+
+
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

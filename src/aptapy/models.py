@@ -400,13 +400,13 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
-@wrap_rv_continuous(scipy.stats.alpha, plotting_range=(0., 5.))
+@wrap_rv_continuous(scipy.stats.alpha)
 class Alpha(AbstractPeakFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.anglit, plotting_range=(-np.pi / 4., np.pi / 4.))
+@wrap_rv_continuous(scipy.stats.anglit)
 class Anglit(AbstractPeakFitModel):
 
     pass
@@ -418,24 +418,24 @@ class Anglit(AbstractPeakFitModel):
 #     pass
 
 
-@wrap_rv_continuous(scipy.stats.argus, plotting_range=(0., 1.))
+@wrap_rv_continuous(scipy.stats.argus)
 class Argus(AbstractPeakFitModel):
 
     pass
 
-@wrap_rv_continuous(scipy.stats.beta, plotting_range=(0., 1.))
+@wrap_rv_continuous(scipy.stats.beta)
 class Beta(AbstractPeakFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.betaprime, plotting_range=(0., 6.))
+@wrap_rv_continuous(scipy.stats.betaprime)
 class BetaPrime(AbstractPeakFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.bradford, plotting_range=(0., 1.))
+@wrap_rv_continuous(scipy.stats.bradford)
 class Bradford(AbstractPeakFitModel):
 
     pass

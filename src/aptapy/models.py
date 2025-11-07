@@ -412,11 +412,16 @@ class Anglit(AbstractPeakFitModel):
     pass
 
 
+# @wrap_rv_continuous(scipy.stats.arcsine)
+# class Arcsine(AbstractPeakFitModel):
+
+#     pass
+
+
 @wrap_rv_continuous(scipy.stats.argus, plotting_range=(0., 1.))
 class Argus(AbstractPeakFitModel):
 
     pass
-
 
 @wrap_rv_continuous(scipy.stats.beta, plotting_range=(0., 1.))
 class Beta(AbstractPeakFitModel):
@@ -424,7 +429,7 @@ class Beta(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.betaprime, plotting_range=(0., 8.))
+@wrap_rv_continuous(scipy.stats.betaprime, plotting_range=(0., 6.))
 class BetaPrime(AbstractPeakFitModel):
 
     pass

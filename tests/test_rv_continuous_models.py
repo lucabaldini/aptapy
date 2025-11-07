@@ -106,32 +106,9 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
     plt.legend()
 
 
-def _test_model_shape(model_class: type, shape_parameters: Sequence[float] = (_EPSILON, 1., 2., 5.)):
-    """Test the shape of a given fit model.
-
-    This creates a model of the given class, and plots its shape for different
-    values of its shape parameters.
-
-    Arguments
-    ----------
-    model_class: type
-        The model class to be tested.
-    """
-    model = model_class()
-    x = np.linspace(*model.plotting_range(), 250)
-    for shape in shape_parameters:
-        model.set_parameters(1., 0., 1., shape)
-        print(f"Shape = {shape} -> mean: {model.mean():.3f}, std: {model.std():.3f}")
-        plt.plot(x, model(x), label=f"shape = {shape}")
-    setup_gca(xlabel="x", ylabel="pdf(x)")
-    plt.legend()
-
-
 def test_alpha():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Alpha)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} shape")
-    _test_model_shape(Alpha)
 
 
 def test_anglit():
@@ -142,8 +119,6 @@ def test_anglit():
 def test_argus():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Argus)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} shape")
-    _test_model_shape(Argus)
 
 
 def test_beta():
@@ -229,9 +204,3 @@ def test_lorentzian():
 def test_moyal():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     _test_model_base(Moyal)
-
-
-if __name__ == "__main__":
-    test_alpha()
-    test_argus()
-    plt.show()

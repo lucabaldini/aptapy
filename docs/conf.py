@@ -3,8 +3,18 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import importlib.metadata
+import pathlib
+import sys
 
 from aptapy import __version__, __name__ as __package_name__
+
+_SCRIPTS_DIR = pathlib.Path(__file__).parent / "_scripts"
+sys.path.insert(0, str(_SCRIPTS_DIR))
+
+def setup(app):
+    import scipy_rv_continuous
+    scipy_rv_continuous.create_figures()
+    return {"version": "1.0", "parallel_read_safe": True}
 
 
 # Get package metadata.
@@ -89,3 +99,4 @@ html_logo = "_static/logo_small.png"
 html_favicon = "_static/favicon.ico"
 html_permalinks_icon = "<span>#</span>"
 html_static_path = ["_static"]
+html_css_files = ['aptapy.css']

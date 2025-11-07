@@ -134,6 +134,8 @@ Wrapped from :scipy_rv_wrap:`alpha`.
 
 Support: :math:`x > 0`; shape parameter(s): :math:`a > 0`.
 
+.. image:: /_static/plots/alpha_shape.png
+
 The is an asymmetric peak-like model, with a a long tail on the right. The mean and the
 standard deviation of the distribution are always infinite. As the shape parameter
 ``a`` increases, the distribution tends to be more and more peaked in proximity of the
@@ -147,6 +149,7 @@ Wrapped from :scipy_rv_wrap:`anglit`.
 
 Support: :math:`-\pi/4 \le x \le \pi/4`.
 
+.. image:: /_static/plots/anglit_shape.png
 
 
 :class:`~aptapy.models.Argus`
@@ -155,6 +158,8 @@ Support: :math:`-\pi/4 \le x \le \pi/4`.
 Wrapped from :scipy_rv_wrap:`argus`.
 
 Support: :math:`0 < x < 1`; shape parameter(s): :math:`\chi > 0`.
+
+.. image:: /_static/plots/argus_shape.png
 
 The distribution is asymmetric, with a a longer tail on the left. As the shape parameter
 :math:`\chi` increases, the distribution tends to be more and more peaked in proximity

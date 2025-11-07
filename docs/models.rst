@@ -166,6 +166,16 @@ The distribution is asymmetric, with a a longer tail on the left. As the shape p
 of 1.
 
 
+:class:`~aptapy.models.Bradford`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`bradford`.
+
+Support: :math:`0 < x < 1`; shape parameter(s): :math:`c > 0`.
+
+.. image:: /_static/plots/bradford_shape.png
+
+
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

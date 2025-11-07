@@ -105,6 +105,8 @@ def create_figures():
     plot_rv_shape(models.Argus)
     plot_rv_shape(models.Beta, ((1., 1.), (1., 4.), (4., 1.), (2., 4.), (4., 2.), (4., 4.)))
     plot_rv_shape(models.BetaPrime, ((1., 1.), (1., 4.), (4., 1.), (2., 4.), (4., 2.), (4., 4.)))
+    plot_rv_shape(models.Bradford)
+
 
 
 if __name__ == "__main__":

@@ -524,19 +524,19 @@ class Gaussian(AbstractCRVFitModel):
 #     pass
 
 
-@wrap_rv_continuous(scipy.stats.landau) # plotting_range=(-3., 10.))
+@wrap_rv_continuous(scipy.stats.landau)
 class Landau(AbstractCRVFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.lognorm) # plotting_range=(0., 7.5))
+@wrap_rv_continuous(scipy.stats.lognorm)
 class LogNormal(AbstractCRVFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.moyal) #lotting_range=(-4., 10.))
+@wrap_rv_continuous(scipy.stats.moyal)
 class Moyal(AbstractCRVFitModel):
 
     pass

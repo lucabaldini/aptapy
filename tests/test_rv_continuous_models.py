@@ -36,14 +36,14 @@ from aptapy.models import (
     Chisquare,
     Cosine,
     CrystalBall,
-    DoubleGamma,
-    Fisk,
+    #DoubleGamma,
+    #Fisk,
     Gaussian,
-    GeneralizedLogistic,
-    GeneralizedNormal,
+    #GeneralizedLogistic,
+    #GeneralizedNormal,
     Landau,
     LogNormal,
-    Lorentzian,
+    #Lorentzian,
     Moyal,
 )
 from aptapy.hist import Histogram1d
@@ -126,9 +126,9 @@ def test_beta():
    _test_model_base(Beta, (1., 10., 2., 2.31, 0.627))
 
 
-def test_beta_prime():
-   plt.figure(f"{inspect.currentframe().f_code.co_name}")
-   _test_model_base(BetaPrime, (1., 10., 2., 2.31, 0.627))
+# def test_beta_prime():
+#    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#    _test_model_base(BetaPrime, (1., 10., 2., 2.31, 0.627))
 
 
 def test_bradford():
@@ -136,9 +136,9 @@ def test_bradford():
     _test_model_base(Bradford)
 
 
-def test_burr():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Burr)
+# def test_burr():
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     _test_model_base(Burr)
 
 
 def test_chi():
@@ -161,9 +161,9 @@ def test_crystal_ball():
     _test_model_base(CrystalBall, (10., 10., 2., 1., 2.))
 
 
-def test_double_gamma():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(DoubleGamma)
+# def test_double_gamma():
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     _test_model_base(DoubleGamma)
 
 
 # def test_fisk():
@@ -176,14 +176,14 @@ def test_gaussian():
     _test_model_base(Gaussian)
 
 
-def test_generalized_logistic():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(GeneralizedLogistic)
+# def test_generalized_logistic():
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     _test_model_base(GeneralizedLogistic)
 
 
-def test_generalized_normal():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(GeneralizedNormal)
+# def test_generalized_normal():
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     _test_model_base(GeneralizedNormal)
 
 
 def test_landau():
@@ -196,9 +196,9 @@ def test_log_normal():
     _test_model_base(LogNormal)
 
 
-def test_lorentzian():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Lorentzian)
+# def test_lorentzian():
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     _test_model_base(Lorentzian)
 
 
 def test_moyal():

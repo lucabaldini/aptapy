@@ -1109,8 +1109,41 @@ class AbstractCRVFitModel(AbstractFitModel):
 
     """Abstract base class for fit models based on continuous random variables.
 
-    (Typically we will use this to wrap CRV from scipy.stats).
+    (Typically we will use this, in conjunction with the `wrap_rv_continuous`
+    decorator, to wrap continuous random variables from scipy.stats).
     """
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is taylored on unimodal distributions, where we start from the
+        basic statistics (average, standard deviation and area) of the input sample
+        and try to match the amplitude, location and scale of the distribution
+        to be fitted. No attempt is made a setting the shape paremeters (if any).
+        """
+        # Calculate the average, standard deviation, and integral of the input data.
+        location = np.average(xdata, weights=ydata)
+        scale = np.sqrt(np.average((xdata - location)**2, weights=ydata))
+        amplitude = np.trapezoid(ydata, xdata)
+        # If the underlying distribution has a finite standard deviation
+        # we can rescale the scale parameter accordingly. Note that this is
+        # independent of the current location and scale, and only depends on the
+        # shape of the distribution.
+        std = self.std()
+        if not np.isinf(std) and not np.isnan(std):
+            scale = scale * self.scale.value / std
+        # If the underlying distribution has a finite mean we can shift
+        # the location parameter accordingly. Note this depends on the
+        # current value of the scale parameter, which is why we do this after
+        # rescaling it.
+        mean = self.mean()
+        if not np.isinf(mean) and not np.isnan(mean):
+            delta = (mean - self.location.value) * scale / self.scale.value
+            location -= delta
+        # And we are good to go!
+        self.location.init(location)
+        self.scale.init(scale)
+        self.amplitude.init(amplitude)
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
@@ -1225,34 +1258,6 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
             _, location, scale, *args = self.parameter_values()
             return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
-        def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-            """Overloaded method---consider moving this into the base class.
-            """
-            # Calculate the average, standard deviation, and integral of the input data.
-            location = np.average(xdata, weights=ydata)
-            scale = np.sqrt(np.average((xdata - location)**2, weights=ydata))
-            amplitude = np.trapz(ydata, xdata)
-            # If the underlying distribution has a finite standard deviation
-            # we can rescale the scale parameter accordingly. Note that this is
-            # independent of the current location and scale, and only depends on the
-            # shape of the distribution.
-            std = self.std()
-            if not np.isinf(std) and not np.isnan(std):
-                scale = scale * self.scale.value / std
-            # If the underlying distribution has a finite mean we can shift
-            # the location parameter accordingly. Note this depends on the
-            # current value of the scale parameter, which is why we do this after
-            # rescaling it.
-            mean = self.mean()
-            if not np.isinf(mean) and not np.isnan(mean):
-                delta = (mean - self.location.value) * scale / self.scale.value
-                location -= delta
-            # And we are good to go!
-            self.location.init(location)
-            self.scale.init(scale)
-            self.amplitude.init(amplitude)
-
-
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
         cls.support = support
@@ -1262,7 +1267,6 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
         cls.std = std
         cls.skewness = skewness
         cls.random_sample = random_sample
-        cls.init_parameters = init_parameters
 
         update_abstractmethods(cls)
         return cls

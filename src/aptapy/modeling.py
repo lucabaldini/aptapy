@@ -1124,30 +1124,23 @@ class AbstractCRVFitModel(AbstractFitModel):
         minimum, maximum = self.support()
         if np.isfinite(minimum) and np.isfinite(maximum):
             return (minimum, maximum)
-        # Otherwise use the underlying ppf.
-        location = self.location.value
-        scale = self.scale.value
-        minimum = max(minimum, location - 10. * scale)
-        maximum = min(maximum, location + 10. * scale)
+        # Otherwise use the underlying ppf. First thing first, we need some measure of
+        # the center and width of the distribution. The median should be always defined,
+        # as it only relies on the ppf, i.e., the pdf being normalizable. For the width
+        # of the distribution we try the standard deviation first, but if that is not
+        # defined we fall back to using the scale parameter.
+        center = self.median()
+        width = self.std()
+        if not np.isfinite(width):
+            width = self.scale.value
+        # Now use the ppf to get a reasonable plotting range.
         alpha = 0.005
-        padding = 1.5 * scale
-        left = np.clip(self.ppf(alpha) - padding, minimum, None)
-        right = np.clip(self.ppf(1. - alpha) + padding, None, maximum)
+        padding = 1.5 * width
+        minimum = max(minimum, center - 5. * width)
+        maximum = min(maximum, center + 5. * width)
+        left = max(self.ppf(alpha) - padding, minimum)
+        right = min(self.ppf(1. - alpha) + padding, maximum)
         return (left, right)
-        # # Get the mean and standard deviation and, if they are both finite, use them.
-        # mean, std = self.mean(), self.std()
-        # if np.isfinite(mean) and np.isfinite(std):
-        #     left = np.clip(mean - 5. * std, minimum, None)
-        #     right = np.clip(mean + 5. * std, None, maximum)
-        #     return (left, right)
-        # # Finally, fall back to using the generic location and scale parameters.
-        # location, scale = self.location.value, self.scale.value
-        # left, right = minimum, maximum
-        # if np.isinf(left):
-        #     left = -5.
-        # if np.isinf(right):
-        #     right = 5.
-        # return (location + left * scale, location + right * scale)
 
 
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) -> type:

@@ -462,21 +462,13 @@ class Cauchy(AbstractCRVFitModel):
 @wrap_rv_continuous(scipy.stats.chi)
 class Chi(AbstractCRVFitModel):
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method
-        """
-        mean, std = self.mean(), self.std()
-        return (max(0., mean - 5. * std), mean + 5. * std)
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.chi2)
 class Chisquare(AbstractCRVFitModel):
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method
-        """
-        mean, std = self.mean(), self.std()
-        return (max(0., mean - 5. * std), mean + 5. * std)
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.cosine)
@@ -527,7 +519,15 @@ class Gaussian(AbstractCRVFitModel):
 @wrap_rv_continuous(scipy.stats.landau)
 class Landau(AbstractCRVFitModel):
 
-    pass
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        The Landau distribution is peculiar in that it has no definite mean or variance,
+        and its support is unbounded. It is also asymmetric, with a long right tail.
+        Therefore, we resort to a custom function for the plotting range.
+        """
+        location, scale = self.location.value, self.scale.value
+        return (location - 2.5 * scale, location + 12.5 * scale)
 
 
 @wrap_rv_continuous(scipy.stats.lognorm)

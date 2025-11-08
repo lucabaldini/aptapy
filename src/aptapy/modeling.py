@@ -1103,6 +1103,8 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
 
 
 
+
+
 class AbstractCRVFitModel(AbstractFitModel):
 
     """Abstract base class for fit models based on continuous random variables.
@@ -1112,14 +1114,40 @@ class AbstractCRVFitModel(AbstractFitModel):
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
+
+        Note we have access to all the goodies of a scipy.stats.rv_continuous object
+        here (e.g., the support of the function, and the mean and standard deviation
+        when they are finite), so we can be fairly clever in setting up a generic method
+        that works out of the box in many cases.
         """
-        location, scale = self.location.value, self.scale.value
-        left, right = self.support()
-        if np.isinf(left):
-            left = -5.
-        if np.isinf(right):
-            right = 5.
-        return (location + left * scale, location + right * scale)
+        # If the distribution has finite support, use it.
+        minimum, maximum = self.support()
+        if np.isfinite(minimum) and np.isfinite(maximum):
+            return (minimum, maximum)
+        # Otherwise use the underlying ppf.
+        location = self.location.value
+        scale = self.scale.value
+        minimum = max(minimum, location - 10. * scale)
+        maximum = min(maximum, location + 10. * scale)
+        alpha = 0.005
+        padding = 1.5 * scale
+        left = np.clip(self.ppf(alpha) - padding, minimum, None)
+        right = np.clip(self.ppf(1. - alpha) + padding, None, maximum)
+        return (left, right)
+        # # Get the mean and standard deviation and, if they are both finite, use them.
+        # mean, std = self.mean(), self.std()
+        # if np.isfinite(mean) and np.isfinite(std):
+        #     left = np.clip(mean - 5. * std, minimum, None)
+        #     right = np.clip(mean + 5. * std, None, maximum)
+        #     return (left, right)
+        # # Finally, fall back to using the generic location and scale parameters.
+        # location, scale = self.location.value, self.scale.value
+        # left, right = minimum, maximum
+        # if np.isinf(left):
+        #     left = -5.
+        # if np.isinf(right):
+        #     right = 5.
+        # return (location + left * scale, location + right * scale)
 
 
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) -> type:
@@ -1180,6 +1208,10 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
             _, location, scale, *args = self.parameter_values()
             return tuple(float(value) for value in rv.support(*args, loc=location, scale=scale))
 
+        def ppf(self, x):
+            _, location, scale, *args = self.parameter_values()
+            return rv.ppf(x, *args, loc=location, scale=scale)
+
         def median(self):
             _, location, scale, *args = self.parameter_values()
             return float(rv.median(*args, loc=location, scale=scale))
@@ -1231,15 +1263,13 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
         cls.support = support
+        cls.ppf = ppf
         cls.median = median
         cls.mean = mean
         cls.std = std
         cls.skewness = skewness
         cls.random_sample = random_sample
         cls.init_parameters = init_parameters
-        #cls.default_plotting_range = default_plotting_range
-
-        #cls.__doc__ = f"{cls.__doc__}\n{_parse_rv_docstring(rv)}\n"
 
         update_abstractmethods(cls)
         return cls

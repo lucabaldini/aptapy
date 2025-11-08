@@ -42,13 +42,14 @@ def plot_mean_marker(model):
     plt.plot(x, y, "o", ms=1., color=color)
 
 
-def plot_rv_shape(model_class, shape_parameters=None, output_folder=None, **kwargs):
+def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **kwargs):
     """
     """
     kwargs.setdefault("xlabel", "z")
     kwargs.setdefault("ylabel", "g(z)")
 
     model = model_class()
+
     if shape_parameters is None and len(model) > 3:
         shape_parameters = DEFAULT_SHAPE_PARAMETERS
 
@@ -63,6 +64,7 @@ def plot_rv_shape(model_class, shape_parameters=None, output_folder=None, **kwar
 
     # Case 1: the distribution has no shape parameters.
     if shape_parameters is None:
+        model.set_parameters(1., location, scale)
         z = np.linspace(*model.plotting_range(), 250)
         plt.plot(z, model(z), label=" ")
         plot_mean_marker(model)
@@ -77,9 +79,9 @@ def plot_rv_shape(model_class, shape_parameters=None, output_folder=None, **kwar
         param_names = param_names[0]
     for shape in shape_parameters:
         try:
-            model.set_parameters(1., 0., 1., *shape)
+            model.set_parameters(1., location, scale, *shape)
         except TypeError:
-            model.set_parameters(1., 0., 1., shape)
+            model.set_parameters(1., location, scale, shape)
         if isinstance(shape, (float, int)):
             if shape == _EPSILON:
                 label = f"{param_names} = 0+"
@@ -123,5 +125,7 @@ def create_figures():
 
 
 if __name__ == "__main__":
-    create_figures()
+    #create_figures()
+    #plot_rv_shape(models.LogNormal, (0.5, 1., 2.))
+    plot_rv_shape(models.Moyal)
     plt.show()

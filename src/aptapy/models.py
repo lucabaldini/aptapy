@@ -25,7 +25,7 @@ import scipy.special
 import scipy.stats
 import uncertainties
 
-from .modeling import AbstractFitModel, AbstractPeakFitModel, AbstractSigmoidFitModel,\
+from .modeling import AbstractFitModel, AbstractCRVFitModel,  AbstractSigmoidFitModel, \
     FitParameter, wrap_rv_continuous
 from .plotting import plt
 from .typing_ import ArrayLike
@@ -401,90 +401,92 @@ class StretchedExponentialComplement(StretchedExponential):
 
 
 @wrap_rv_continuous(scipy.stats.alpha)
-class Alpha(AbstractPeakFitModel):
+class Alpha(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.anglit)
-class Anglit(AbstractPeakFitModel):
+class Anglit(AbstractCRVFitModel):
 
     pass
 
 
-# @wrap_rv_continuous(scipy.stats.arcsine)
-# class Arcsine(AbstractPeakFitModel):
+@wrap_rv_continuous(scipy.stats.arcsine)
+class Arcsine(AbstractCRVFitModel):
 
-#     pass
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.argus)
-class Argus(AbstractPeakFitModel):
+class Argus(AbstractCRVFitModel):
 
     pass
 
 @wrap_rv_continuous(scipy.stats.beta)
-class Beta(AbstractPeakFitModel):
+class Beta(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.betaprime)
-class BetaPrime(AbstractPeakFitModel):
+class BetaPrime(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.bradford)
-class Bradford(AbstractPeakFitModel):
+class Bradford(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.burr)
-class Burr(AbstractPeakFitModel):
+class Burr(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.burr12)
-class Burr12(AbstractPeakFitModel):
+class Burr12(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.cauchy)
-class Cauchy(AbstractPeakFitModel):
+class Cauchy(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.chi)
-class Chi(AbstractPeakFitModel):
-
-    pass
-
-
-@wrap_rv_continuous(scipy.stats.chi2)
-class Chisquare(AbstractPeakFitModel):
+class Chi(AbstractCRVFitModel):
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method
         """
-        location, scale, dof = self.location.value, self.scale.value, self.df
-        left = min(0., location + dof - 5. * scale)
-        right = location + dof + 5. * scale
-        return (left, right)
+        mean, std = self.mean(), self.std()
+        return (max(0., mean - 5. * std), mean + 5. * std)
+
+
+@wrap_rv_continuous(scipy.stats.chi2)
+class Chisquare(AbstractCRVFitModel):
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method
+        """
+        mean, std = self.mean(), self.std()
+        return (max(0., mean - 5. * std), mean + 5. * std)
 
 
 @wrap_rv_continuous(scipy.stats.cosine)
-class Cosine(AbstractPeakFitModel):
+class Cosine(AbstractCRVFitModel):
 
     pass
 
 
 @wrap_rv_continuous(scipy.stats.crystalball)
-class CrystalBall(AbstractPeakFitModel):
+class CrystalBall(AbstractCRVFitModel):
 
     """Note the shape parameter m needs to be > 1.
     """
@@ -492,53 +494,50 @@ class CrystalBall(AbstractPeakFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.dgamma)
-class DoubleGamma(AbstractPeakFitModel):
+# @wrap_rv_continuous(scipy.stats.dgamma)
+# class DoubleGamma(AbstractCRVFitModel):
 
-    pass
+#     pass
 
 
-@wrap_rv_continuous(scipy.stats.fisk, plotting_range=(0., 5.))
-class Fisk(AbstractPeakFitModel):
+# @wrap_rv_continuous(scipy.stats.fisk)
+# class Fisk(AbstractCRVFitModel):
 
-    pass
+#     pass
 
 
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
-class Gaussian(AbstractPeakFitModel):
+class Gaussian(AbstractCRVFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.genlogistic)
-class GeneralizedLogistic(AbstractPeakFitModel):
+# @wrap_rv_continuous(scipy.stats.genlogistic)
+# class GeneralizedLogistic(AbstractCRVFitModel):
+
+#     pass
+
+
+# @wrap_rv_continuous(scipy.stats.gennorm)
+# class GeneralizedNormal(AbstractCRVFitModel):
+
+#     pass
+
+
+@wrap_rv_continuous(scipy.stats.landau) # plotting_range=(-3., 10.))
+class Landau(AbstractCRVFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.gennorm)
-class GeneralizedNormal(AbstractPeakFitModel):
+@wrap_rv_continuous(scipy.stats.lognorm) # plotting_range=(0., 7.5))
+class LogNormal(AbstractCRVFitModel):
 
     pass
 
 
-@wrap_rv_continuous(scipy.stats.landau, plotting_range=(-3., 10.))
-class Landau(AbstractPeakFitModel):
-
-    pass
-
-
-Lorentzian = Cauchy
-
-
-@wrap_rv_continuous(scipy.stats.lognorm, plotting_range=(0., 7.5))
-class LogNormal(AbstractPeakFitModel):
-
-    pass
-
-
-@wrap_rv_continuous(scipy.stats.moyal, plotting_range=(-4., 10.))
-class Moyal(AbstractPeakFitModel):
+@wrap_rv_continuous(scipy.stats.moyal) #lotting_range=(-4., 10.))
+class Moyal(AbstractCRVFitModel):
 
     pass
 

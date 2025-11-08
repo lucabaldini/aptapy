@@ -1099,32 +1099,30 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
         scale = self.scale.value
         return (location - left * scale, location + right * scale)
 
-def _parse_rv_docstring(rv):
-    """Parse the docstring of a scipy.stats.rv_continuous object to extract
-    information about its parameters.
 
-    Arguments
-    ---------
-    rv : scipy.stats.rv_continuous
-        The scipy.stats.rv_continuous object to parse.
+
+
+
+class AbstractCRVFitModel(AbstractFitModel):
+
+    """Abstract base class for fit models based on continuous random variables.
+
+    (Typically we will use this to wrap CRV from scipy.stats).
     """
-    docstring = rv.__doc__
-    text = ""
-    adding = False
-    for line in docstring.split("\n"):
-        if line.startswith("Notes"):
-            adding = True
-        if adding:
-            text = f"{text}\n{line}"
-        if line.startswith("Examples"):
-            break
-    print(text)
-    #input()
-    return text
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+        """
+        location, scale = self.location.value, self.scale.value
+        left, right = self.support()
+        if np.isinf(left):
+            left = -5.
+        if np.isinf(right):
+            right = 5.
+        return (location + left * scale, location + right * scale)
 
 
-def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
-                       plotting_range: Tuple[float, float] = None) -> type:
+def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
@@ -1180,30 +1178,30 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
 
         def support(self):
             _, location, scale, *args = self.parameter_values()
-            return rv.support(*args, loc=location, scale=scale)
+            return tuple(float(value) for value in rv.support(*args, loc=location, scale=scale))
 
         def median(self):
             _, location, scale, *args = self.parameter_values()
-            return rv.median(*args, loc=location, scale=scale)
+            return float(rv.median(*args, loc=location, scale=scale))
 
         def mean(self):
             _, location, scale, *args = self.parameter_values()
-            return rv.mean(*args, loc=location, scale=scale)
+            return float(rv.mean(*args, loc=location, scale=scale))
 
         def std(self):
             _, location, scale, *args = self.parameter_values()
-            return rv.std(*args, loc=location, scale=scale)
+            return float(rv.std(*args, loc=location, scale=scale))
 
         def skewness(self):
             _, location, scale, *args = self.parameter_values()
-            return rv.stats(*args, loc=location, scale=scale, moments='s')
+            return float(rv.stats(*args, loc=location, scale=scale, moments='s'))
 
         def random_sample(self, size=1, random_state=None):
             _, location, scale, *args = self.parameter_values()
             return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
         def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-            """Overloaded method---consider moving this into the class AbstractPeakFitModel.
+            """Overloaded method---consider moving this into the base class.
             """
             # Calculate the average, standard deviation, and integral of the input data.
             location = np.average(xdata, weights=ydata)
@@ -1229,32 +1227,6 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             self.scale.init(scale)
             self.amplitude.init(amplitude)
 
-        def default_plotting_range(self) -> Tuple[float, float]:
-            """Overloaded method---consider moving this into the class AbstractPeakFitModel.
-
-            If we provide a plotting_range argument to the decorator, we use that
-            to define the default plotting range in terms of the location and scale
-            parameters. Otherwise, we try and do something sensible based on the mean and
-            standard deviation of the distribution.
-            """
-            location, scale = self.location.value, self.scale.value
-            if plotting_range is not None:
-                left, right = plotting_range
-                return (location + left * scale, location + right * scale)
-            left, right = self.support()
-            if np.isfinite(left) and np.isfinite(right):
-                return (location + left * scale, location + right * scale)
-            if np.isinf(left):
-                left = -5.
-            if np.isinf(right):
-                right = 5.
-            center = self.mean()
-            if np.isinf(center) or np.isnan(center):
-                center = self.location.value
-            half_width = self.std()
-            if np.isinf(half_width) or np.isnan(half_width):
-                half_width = self.scale.value
-            return (center + left * half_width, center + right * half_width)
 
         cls.evaluate = staticmethod(evaluate)
         cls.primitive = staticmethod(primitive)
@@ -1265,7 +1237,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         cls.skewness = skewness
         cls.random_sample = random_sample
         cls.init_parameters = init_parameters
-        cls.default_plotting_range = default_plotting_range
+        #cls.default_plotting_range = default_plotting_range
 
         #cls.__doc__ = f"{cls.__doc__}\n{_parse_rv_docstring(rv)}\n"
 
@@ -1275,59 +1247,77 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
     return _wrapper
 
 
-class AbstractPeakFitModel(AbstractFitModel):
 
-    """Abstract base class for peak-like fit models.
-    """
 
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
-        """
-        self.location.init(np.average(xdata, weights=ydata))
-        self.scale.init(np.sqrt(np.average((xdata - self.location.value)**2, weights=ydata)))
-        self.amplitude.init(np.trapz(ydata, xdata))
 
-    def default_plotting_range(self, half_width: Tuple[float, float] = (5., 5.)) -> Tuple[float, float]:
-        """Overloaded method.
 
-        By default the plotting range is set to be an interval centered on the
-        location parameter, and extending for a number of scale units on each side.
 
-        Arguments
-        ---------
-        half_width : tuple of float, optional
-            The half-width of the plotting range in units of the scale parameter
-            (default (5., 5.)).
-        """
-        left, right = half_width
-        location = self.location.value
-        scale = self.scale.value
-        return (location - left * scale, location + right * scale)
 
-    def fwhm(self) -> float:
-        """Return the full-width at half-maximum (FWHM) of the model.
 
-        Subclasses should overload this method with an analytical implementation,
-        when available.
 
-        Returns
-        -------
-        fwhm : float
-            The full-width at half-maximum of the model.
-        """
-        raise NotImplementedError
 
-    def hwhm(self) -> float:
-        """Return the half-width at half-maximum (HWHM) of the model.
 
-        This is simply half the FWHM.
 
-        Returns
-        -------
-        hwhm : float
-            The half-width at half-maximum of the model.
-        """
-        return self.fwhm() / 2.
+
+
+
+
+
+
+
+# class AbstractPeakFitModel(AbstractFitModel):
+
+#     """Abstract base class for peak-like fit models.
+#     """
+
+#     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+#         """Overloaded method.
+#         """
+#         self.location.init(np.average(xdata, weights=ydata))
+#         self.scale.init(np.sqrt(np.average((xdata - self.location.value)**2, weights=ydata)))
+#         self.amplitude.init(np.trapz(ydata, xdata))
+
+#     def default_plotting_range(self, half_width: Tuple[float, float] = (5., 5.)) -> Tuple[float, float]:
+#         """Overloaded method.
+
+#         By default the plotting range is set to be an interval centered on the
+#         location parameter, and extending for a number of scale units on each side.
+
+#         Arguments
+#         ---------
+#         half_width : tuple of float, optional
+#             The half-width of the plotting range in units of the scale parameter
+#             (default (5., 5.)).
+#         """
+#         left, right = half_width
+#         location = self.location.value
+#         scale = self.scale.value
+#         return (location - left * scale, location + right * scale)
+
+#     def fwhm(self) -> float:
+#         """Return the full-width at half-maximum (FWHM) of the model.
+
+#         Subclasses should overload this method with an analytical implementation,
+#         when available.
+
+#         Returns
+#         -------
+#         fwhm : float
+#             The full-width at half-maximum of the model.
+#         """
+#         raise NotImplementedError
+
+#     def hwhm(self) -> float:
+#         """Return the half-width at half-maximum (HWHM) of the model.
+
+#         This is simply half the FWHM.
+
+#         Returns
+#         -------
+#         hwhm : float
+#             The half-width at half-maximum of the model.
+#         """
+#         return self.fwhm() / 2.
 
 
 class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):

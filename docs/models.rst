@@ -148,6 +148,15 @@ support: :math:`-\pi/4 \le z \le \pi/4`.
 .. image:: /_static/plots/anglit_shape.png
 
 
+:class:`~aptapy.models.Arcsine`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`arcsine`;
+support: :math:`0\le z \le 1`.
+
+.. image:: /_static/plots/arcsine_shape.png
+
+
 :class:`~aptapy.models.Argus`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -156,6 +165,27 @@ support: :math:`0 < z < 1`;
 shape parameter(s): :math:`\chi > 0`.
 
 .. image:: /_static/plots/argus_shape.png
+
+
+:class:`~aptapy.models.Beta`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`beta`;
+support: :math:`0 < z < 1`;
+shape parameter(s): :math:`a> 0`, :math:`b > 0`.
+
+.. image:: /_static/plots/beta_shape.png
+
+
+:class:`~aptapy.models.BetaPrime`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`betaprime`;
+support: :math:`0 < z < 1`;
+shape parameter(s): :math:`a> 0`, :math:`b > 0`.
+
+.. image:: /_static/plots/betaprime_shape.png
+
 
 
 :class:`~aptapy.models.Bradford`
@@ -236,25 +266,42 @@ shape parameter(s): :math:`m > 1`, :math:`\beta > 0`.
 .. image:: /_static/plots/crystalball_shape.png
 
 
-
-
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Wrapped from :scipy_rv_wrap:`gaussian`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/gaussian_shape.png
 
 
-:class:`~aptapy.models.Lorentzian`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~aptapy.models.Landau`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Wrapped from :scipy_rv_wrap:`landau`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/landau_shape.png
 
 
 :class:`~aptapy.models.LogNormal`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Wrapped from :scipy_rv_wrap:`lognorm`;
+support: :math:`z > 0`;
+shape parameter(s): :math:`s > 0`.
+
+.. image:: /_static/plots/lognormal_shape.png
 
 
 :class:`~aptapy.models.Moyal`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`moyal`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/moyal_shape.png
+
 
 
 

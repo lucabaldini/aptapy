@@ -1178,13 +1178,15 @@ class AbstractCRVFitModel(AbstractFitModel):
             Additional keyword arguments passed to `plt.plot()`.
         """
         super().plot(axes, **kwargs)
-        # Overplot a small marker at the mean of the distribution, if requested.
+        # Overplot the mean of the distribution, if requested. We achieve this by plotting
+        # relatively large dot with the background color of the figure, and then a smaller
+        # dot with the line color, so that it stands out.
         if plot_mean:
             x = self.mean()
             if np.isfinite(x):
                 y = self(x)
                 color = last_line_color()
-                plt.plot(x, y, "o", ms=5., color="white")
+                plt.plot(x, y, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
                 plt.plot(x, y, "o", ms=1., color=color)
 
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,

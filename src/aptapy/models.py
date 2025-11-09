@@ -477,7 +477,7 @@ class Cosine(AbstractCRVFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.crystalball)
+@wrap_rv_continuous(scipy.stats.crystalball, m=FitParameter(2., minimum=1.))
 class CrystalBall(AbstractCRVFitModel):
 
     """Note the shape parameter m needs to be > 1.
@@ -486,34 +486,54 @@ class CrystalBall(AbstractCRVFitModel):
     pass
 
 
-# @wrap_rv_continuous(scipy.stats.dgamma)
-# class DoubleGamma(AbstractCRVFitModel):
-
-#     pass
-
-
-# @wrap_rv_continuous(scipy.stats.fisk)
-# class Fisk(AbstractCRVFitModel):
-
-#     pass
-
-
 @wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
 class Gaussian(AbstractCRVFitModel):
 
     pass
 
 
-# @wrap_rv_continuous(scipy.stats.genlogistic)
-# class GeneralizedLogistic(AbstractCRVFitModel):
+@wrap_rv_continuous(scipy.stats.gibrat)
+class Gibrat(AbstractCRVFitModel):
 
-#     pass
+    pass
 
 
-# @wrap_rv_continuous(scipy.stats.gennorm)
-# class GeneralizedNormal(AbstractCRVFitModel):
+@wrap_rv_continuous(scipy.stats.gumbel_l)
+class GumbelL(AbstractCRVFitModel):
 
-#     pass
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.gumbel_r)
+class GumbelR(AbstractCRVFitModel):
+
+    pass
+
+
+
+@wrap_rv_continuous(scipy.stats.halfcauchy)
+class HalfCauchy(AbstractCRVFitModel):
+
+    pass
+
+
+
+@wrap_rv_continuous(scipy.stats.halflogistic)
+class HalfLogistic(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.halfnorm)
+class HalfNorm(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.hypsecant)
+class HyperSecant(AbstractCRVFitModel):
+
+    pass
 
 
 @wrap_rv_continuous(scipy.stats.landau)
@@ -530,8 +550,38 @@ class Landau(AbstractCRVFitModel):
         return (location - 2.5 * scale, location + 12.5 * scale)
 
 
+@wrap_rv_continuous(scipy.stats.laplace)
+class Laplace(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.levy)
+class Levy(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.levy_l)
+class LevyL(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.logistic)
+class Logistic(AbstractCRVFitModel):
+
+    pass
+
+
 @wrap_rv_continuous(scipy.stats.lognorm)
 class LogNormal(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.maxwell)
+class Maxwell(AbstractCRVFitModel):
 
     pass
 
@@ -542,6 +592,34 @@ class Moyal(AbstractCRVFitModel):
     pass
 
 
+@wrap_rv_continuous(scipy.stats.nakagami)
+class Nakagami(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.rayleigh)
+class Rayleigh(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.semicircular)
+class Semicircular(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.t)
+class Student(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.wald)
+class Wald(AbstractCRVFitModel):
+
+    pass
 
 
 class Erf(AbstractSigmoidFitModel):
@@ -554,7 +632,7 @@ class Erf(AbstractSigmoidFitModel):
         return 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
 
 
-class Logistic(AbstractSigmoidFitModel):
+class LogisticSigmoid(AbstractSigmoidFitModel):
 
     """Logistic function model.
     """

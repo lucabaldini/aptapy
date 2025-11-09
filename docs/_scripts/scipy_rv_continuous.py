@@ -98,6 +98,7 @@ def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **k
     plt.legend(title=legend_title)
     print(f"Saving figure to {file_path}...")
     plt.savefig(file_path, dpi=150)
+    plt.close()
 
 
 def create_figures():
@@ -119,13 +120,23 @@ def create_figures():
     plot_rv_shape(models.Cosine)
     plot_rv_shape(models.CrystalBall, ((1., 2.), (2., 2.), (3., 3.)))
     plot_rv_shape(models.Gaussian)
+    plot_rv_shape(models.Gibrat)
+    plot_rv_shape(models.GumbelL)
+    plot_rv_shape(models.GumbelR)
+    plot_rv_shape(models.HalfCauchy)
+    plot_rv_shape(models.HalfLogistic)
+    plot_rv_shape(models.HalfNorm)
+    plot_rv_shape(models.HyperSecant)
     plot_rv_shape(models.Landau)
+    plot_rv_shape(models.Laplace)
+    plot_rv_shape(models.Levy)
+    plot_rv_shape(models.LevyL)
+    plot_rv_shape(models.Logistic)
     plot_rv_shape(models.LogNormal, (0.5, 1., 2.))
+    plot_rv_shape(models.Maxwell)
     plot_rv_shape(models.Moyal)
-
-
-if __name__ == "__main__":
-    #create_figures()
-    #plot_rv_shape(models.LogNormal, (0.5, 1., 2.))
-    plot_rv_shape(models.Moyal)
-    plt.show()
+    plot_rv_shape(models.Nakagami, (1., 2., 4.))
+    plot_rv_shape(models.Rayleigh)
+    plot_rv_shape(models.Semicircular)
+    plot_rv_shape(models.Student, (1., 2., 4., 10.))
+    plot_rv_shape(models.Wald)

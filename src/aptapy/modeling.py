@@ -1176,7 +1176,8 @@ class AbstractCRVFitModel(AbstractFitModel):
         return (left, right)
 
 
-def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) -> type:
+def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
+                       **shape_parameters) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
@@ -1197,8 +1198,9 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
     scale_alias : str, optional
         The name to use for the scale parameter (if None defaults to "scale").
 
-    plotting_range : tuple of float, optional
-        The half-width of the plotting range in units of the scale parameter.
+    shape_parameters : dict, optional
+        Additional shape parameters to be setup with non-default FitParameter
+        objects (e.g., to set different minimum/maximum values).
     """
 
     def _wrapper(cls: type):
@@ -1222,7 +1224,8 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None) 
             cls.scale = property(lambda self: getattr(self, scale_alias))
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):
-                setattr(cls, name, FitParameter(1., minimum=0.))
+                parameter = shape_parameters.get(name, FitParameter(1., minimum=0.))
+                setattr(cls, name, parameter)
 
         def evaluate(x, amplitude, location, scale, *args):
             return amplitude * rv.pdf(x, *args, loc=location, scale=scale)

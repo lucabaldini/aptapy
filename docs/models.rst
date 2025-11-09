@@ -111,8 +111,8 @@ Exponentials and power-laws
 
 
 
-Peak-like models
-----------------
+Continuous random variables
+---------------------------
 
 Peak-like models are location-scale models defined in terms of a standardized
 shape function :math:`g(z)`
@@ -275,6 +275,69 @@ support: :math:`-\infty < z < \infty`.
 .. image:: /_static/plots/gaussian_shape.png
 
 
+:class:`~aptapy.models.Gibrat`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`gibrat`;
+support: :math:`z > 0`.
+
+.. image:: /_static/plots/gibrat_shape.png
+
+
+:class:`~aptapy.models.GumbelL`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`gumbel_l`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/gumbell_shape.png
+
+
+:class:`~aptapy.models.GumbelR`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`gumbel_r`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/gumbelr_shape.png
+
+
+:class:`~aptapy.models.HalfCauchy`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`halfcauchy`;
+support: :math:`z > 0`.
+
+.. image:: /_static/plots/halfcauchy_shape.png
+
+
+:class:`~aptapy.models.HalfLogistic`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`halflogistic`;
+support: :math:`z > 0`.
+
+.. image:: /_static/plots/halflogistic_shape.png
+
+
+:class:`~aptapy.models.HalfNorm`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`halfnorm`;
+support: :math:`z > 0`.
+
+.. image:: /_static/plots/halfnorm_shape.png
+
+
+:class:`~aptapy.models.HyperSecant`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`hypsecant`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/hypersecant_shape.png
+
+
 :class:`~aptapy.models.Landau`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -282,6 +345,43 @@ Wrapped from :scipy_rv_wrap:`landau`;
 support: :math:`-\infty < z < \infty`.
 
 .. image:: /_static/plots/landau_shape.png
+
+
+:class:`~aptapy.models.Laplace`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`laplace`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/laplace_shape.png
+
+
+:class:`~aptapy.models.Levy`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`levy`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/levy_shape.png
+
+
+
+:class:`~aptapy.models.LevyL`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`levy_l`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/levyl_shape.png
+
+
+:class:`~aptapy.models.Logistic`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`logistic`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/logistic_shape.png
 
 
 :class:`~aptapy.models.LogNormal`
@@ -294,6 +394,15 @@ shape parameter(s): :math:`s > 0`.
 .. image:: /_static/plots/lognormal_shape.png
 
 
+:class:`~aptapy.models.Maxwell`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`maxwell`;
+support: :math:`0 < z < \infty`.
+
+.. image:: /_static/plots/maxwell_shape.png
+
+
 :class:`~aptapy.models.Moyal`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -303,6 +412,49 @@ support: :math:`-\infty < z < \infty`.
 .. image:: /_static/plots/moyal_shape.png
 
 
+:class:`~aptapy.models.Nakagami`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`nakagami`;
+support: :math:`0 < z < \infty`.
+
+.. image:: /_static/plots/nakagami_shape.png
+
+
+:class:`~aptapy.models.Rayleigh`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`rayleigh`;
+support: :math:`0 < z < \infty`.
+
+.. image:: /_static/plots/rayleigh_shape.png
+
+
+:class:`~aptapy.models.Semicircular`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`semicircular`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/semicircular_shape.png
+
+
+:class:`~aptapy.models.Student`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`t`;
+support: :math:`-\infty < z < \infty`.
+
+.. image:: /_static/plots/student_shape.png
+
+
+:class:`~aptapy.models.Wald`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wrapped from :scipy_rv_wrap:`wald`;
+support: :math:`0 < z < \infty`.
+
+.. image:: /_static/plots/wald_shape.png
 
 
 Sigmoid models

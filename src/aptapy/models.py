@@ -399,6 +399,45 @@ class StretchedExponentialComplement(StretchedExponential):
         """
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
+class Erf(AbstractSigmoidFitModel):
+
+    """Error function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        return 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
+
+
+class LogisticSigmoid(AbstractSigmoidFitModel):
+
+    """Logistic function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        return 1. / (1. + np.exp(-z))
+
+
+class Arctangent(AbstractSigmoidFitModel):
+
+    """Arctangent function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        return 0.5 + np.arctan(z) / np.pi
+
+
+class HyperbolicTangent(AbstractSigmoidFitModel):
+
+    """Hyperbolic tangent function model.
+    """
+
+    @staticmethod
+    def shape(z):
+        return 0.5 * (1. + np.tanh(z))
+
 
 @wrap_rv_continuous(scipy.stats.alpha)
 class Alpha(AbstractCRVFitModel):
@@ -479,9 +518,6 @@ class Cosine(AbstractCRVFitModel):
 
 @wrap_rv_continuous(scipy.stats.crystalball, m=FitParameter(2., minimum=1.))
 class CrystalBall(AbstractCRVFitModel):
-
-    """Note the shape parameter m needs to be > 1.
-    """
 
     pass
 
@@ -580,6 +616,14 @@ class LogNormal(AbstractCRVFitModel):
     pass
 
 
+class Lorentzian(Cauchy):
+
+    """Alias for the Cauchy distribution.
+    """
+
+    pass
+
+
 @wrap_rv_continuous(scipy.stats.maxwell)
 class Maxwell(AbstractCRVFitModel):
 
@@ -620,43 +664,3 @@ class Student(AbstractCRVFitModel):
 class Wald(AbstractCRVFitModel):
 
     pass
-
-
-class Erf(AbstractSigmoidFitModel):
-
-    """Error function model.
-    """
-
-    @staticmethod
-    def shape(z):
-        return 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
-
-
-class LogisticSigmoid(AbstractSigmoidFitModel):
-
-    """Logistic function model.
-    """
-
-    @staticmethod
-    def shape(z):
-        return 1. / (1. + np.exp(-z))
-
-
-class Arctangent(AbstractSigmoidFitModel):
-
-    """Arctangent function model.
-    """
-
-    @staticmethod
-    def shape(z):
-        return 0.5 + np.arctan(z) / np.pi
-
-
-class HyperbolicTangent(AbstractSigmoidFitModel):
-
-    """Hyperbolic tangent function model.
-    """
-
-    @staticmethod
-    def shape(z):
-        return 0.5 * (1. + np.tanh(z))

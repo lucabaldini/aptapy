@@ -1045,9 +1045,9 @@ class AbstractFitModel(AbstractFitModelBase):
         return self.quadrature(x1, x2)
 
 
-class AbstractLocationScaleFitModel(AbstractFitModel):
+class AbstractSigmoidFitModel(AbstractFitModel):
 
-    """Abstract base class for fit models with location and scale parameters.
+    """Abstract base class for fit models representing sigmoids.
     """
 
     amplitude = FitParameter(1.)
@@ -1055,54 +1055,39 @@ class AbstractLocationScaleFitModel(AbstractFitModel):
     scale = FitParameter(1., minimum=0)
 
     @staticmethod
-    def standardize(x: ArrayLike, location: float, scale: float) -> ArrayLike:
-        """Calculate the normalized variable z.
-
-        Arguments
-        ---------
-        x : array_like
-            The value(s) of the independent variable.
-
-        location : float
-            The location parameter.
-
-        scale : float
-            The scale parameter.
-
-        Returns
-        -------
-        z : array_like
-            The normalized variable z.
-        """
-        return (x - location) / scale
-
     @abstractmethod
-    def shape(self, z: ArrayLike, *parameter_values: float) -> ArrayLike:
-        """Abstract method for the normalized shape of the model. Subclasses must
-        implement this method.
+    def shape(z: ArrayLike, *parameter_values: float) -> ArrayLike:
+        """Abstract method for the normalized shape of the sigmoid model. Subclasses
+        must implement this method.
         """
 
-    def default_plotting_range(self, half_width: Tuple[float, float] = (5., 5.)) -> Tuple[float, float]:
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
+                 scale: float, *parameter_values: float) -> ArrayLike:
+        """Overloaded method for evaluating the model.
+
+        Note that here we do not scale the output by 1/scale, as sigmoids are not
+        normalized functions. Also, if the amplitude is negative, we take the
+        complement of the sigmoid function.
+        """
+        z = (x - location) / scale
+        val = amplitude * self.shape(z, *parameter_values)
+        return val if amplitude >= 0. else val - amplitude
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        pass
+
+    def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
 
         By default the plotting range is set to be an interval centered on the
         location parameter, and extending for a number of scale units on each side.
-
-        Arguments
-        ---------
-        half_width : tuple of float, optional
-            The half-width of the plotting range in units of the scale parameter
-            (default (5., 5.)).
         """
-        left, right = half_width
+        left, right = 5., 5.
         location = self.location.value
         scale = self.scale.value
         return (location - left * scale, location + right * scale)
-
-
-
-
-
 
 
 class AbstractCRVFitModel(AbstractFitModel):
@@ -1275,102 +1260,6 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
         return cls
 
     return _wrapper
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# class AbstractPeakFitModel(AbstractFitModel):
-
-#     """Abstract base class for peak-like fit models.
-#     """
-
-#     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-#         """Overloaded method.
-#         """
-#         self.location.init(np.average(xdata, weights=ydata))
-#         self.scale.init(np.sqrt(np.average((xdata - self.location.value)**2, weights=ydata)))
-#         self.amplitude.init(np.trapz(ydata, xdata))
-
-#     def default_plotting_range(self, half_width: Tuple[float, float] = (5., 5.)) -> Tuple[float, float]:
-#         """Overloaded method.
-
-#         By default the plotting range is set to be an interval centered on the
-#         location parameter, and extending for a number of scale units on each side.
-
-#         Arguments
-#         ---------
-#         half_width : tuple of float, optional
-#             The half-width of the plotting range in units of the scale parameter
-#             (default (5., 5.)).
-#         """
-#         left, right = half_width
-#         location = self.location.value
-#         scale = self.scale.value
-#         return (location - left * scale, location + right * scale)
-
-#     def fwhm(self) -> float:
-#         """Return the full-width at half-maximum (FWHM) of the model.
-
-#         Subclasses should overload this method with an analytical implementation,
-#         when available.
-
-#         Returns
-#         -------
-#         fwhm : float
-#             The full-width at half-maximum of the model.
-#         """
-#         raise NotImplementedError
-
-#     def hwhm(self) -> float:
-#         """Return the half-width at half-maximum (HWHM) of the model.
-
-#         This is simply half the FWHM.
-
-#         Returns
-#         -------
-#         hwhm : float
-#             The half-width at half-maximum of the model.
-#         """
-#         return self.fwhm() / 2.
-
-
-class AbstractSigmoidFitModel(AbstractLocationScaleFitModel):
-
-    """Abstract base class for fit models representing sigmoids.
-    """
-
-    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
-                 scale: float, *parameter_values: float) -> ArrayLike:
-        """Overloaded method for evaluating the model.
-
-        Note that here we do not scale the output by 1/scale, as sigmoids are not
-        normalized functions. Also, if the amplitude is negative, we take the
-        complement of the sigmoid function.
-        """
-        z = self.standardize(x, location, scale)
-        val = amplitude * self.shape(z, *parameter_values)
-        return val if amplitude >= 0. else val - amplitude
-
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
-        """Overloaded method.
-        """
-        pass
 
 
 class FitModelSum(AbstractFitModelBase):

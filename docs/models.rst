@@ -110,6 +110,65 @@ Exponentials and power-laws
     \end{cases}
 
 
+Sigmoid models
+--------------
+
+Sigmoid models are location-scale models defined in terms of a standardized
+shape function :math:`g(z)` that is a monotonically increasing function,
+ranging from 0 to 1 as its argument goes from -infinity to +infinity.
+
+.. note::
+
+   In this case the amplitude parameter does not represent an area (as in peak-like
+   models), but rather the total increase of the function from its lower asymptote
+   to its upper asymptote. When the amplitude is negative we switch to the
+   complement.
+
+
+:class:`~aptapy.models.Erf`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. math::
+    g(z) = \frac{1}{2} \left(1 + \operatorname{erf}\left(\frac{z}{\sqrt{2}}\right)\right)
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: Erf.shape
+
+
+:class:`~aptapy.models.Logistic`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+    g(z) = \frac{1}{1 + e^{-z}}
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: Logistic.shape
+
+
+:class:`~aptapy.models.Arctangent`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+    g(z) = \frac{1}{2} + \frac{1}{\pi} \arctan(z)
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: Arctangent.shape
+
+
+:class:`~aptapy.models.HyperbolicTangent`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. math::
+    g(z) = \frac{1}{2} \left(1 + \tanh(z)\right)
+
+.. literalinclude:: ../src/aptapy/models.py
+   :language: python
+   :pyobject: HyperbolicTangent.shape
+
 
 Continuous random variables
 ---------------------------
@@ -456,65 +515,6 @@ support: :math:`0 < z < \infty`.
 
 .. image:: /_static/plots/wald_shape.png
 
-
-Sigmoid models
---------------
-
-Sigmoid models are location-scale models defined in terms of a standardized
-shape function :math:`g(z)` that is a monotonically increasing function,
-ranging from 0 to 1 as its argument goes from -infinity to +infinity.
-
-.. note::
-
-   In this case the amplitude parameter does not represent an area (as in peak-like
-   models), but rather the total increase of the function from its lower asymptote
-   to its upper asymptote. When the amplitude is negative we switch to the
-   complement.
-
-
-:class:`~aptapy.models.Erf`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-.. math::
-    g(z) = \frac{1}{2} \left(1 + \operatorname{erf}\left(\frac{z}{\sqrt{2}}\right)\right)
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Erf.shape
-
-
-:class:`~aptapy.models.Logistic`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. math::
-    g(z) = \frac{1}{1 + e^{-z}}
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Logistic.shape
-
-
-:class:`~aptapy.models.Arctangent`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. math::
-    g(z) = \frac{1}{2} + \frac{1}{\pi} \arctan(z)
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Arctangent.shape
-
-
-:class:`~aptapy.models.HyperbolicTangent`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. math::
-    g(z) = \frac{1}{2} \left(1 + \tanh(z)\right)
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: HyperbolicTangent.shape
 
 
 Module documentation

@@ -16,7 +16,6 @@
 """Modeling core facilities.
 """
 
-from email.mime import base
 import enum
 import functools
 import inspect
@@ -36,7 +35,7 @@ from scipy.optimize import curve_fit
 from scipy.stats import chi2
 
 from .hist import Histogram1d
-from .plotting import AbstractPlottable
+from .plotting import AbstractPlottable, last_line_color
 from .typing_ import ArrayLike
 
 
@@ -1160,6 +1159,33 @@ class AbstractCRVFitModel(AbstractFitModel):
         right = min(self.ppf(1. - alpha) + padding, maximum)
         return (left, right)
 
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_mean: bool = True, **kwargs) -> None:
+        """Plot the model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        fit_output : bool, optional
+            Whether to include the fit output in the legend (default: False).
+
+        plot_mean : bool, optional
+            Whether to overplot the mean of the distribution (default: True).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `plt.plot()`.
+        """
+        super().plot(axes, **kwargs)
+        # Overplot a small marker at the mean of the distribution, if requested.
+        if plot_mean:
+            x = self.mean()
+            if np.isfinite(x):
+                y = self(x)
+                color = last_line_color()
+                plt.plot(x, y, "o", ms=5., color="white")
+                plt.plot(x, y, "o", ms=1., color=color)
 
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
                        **shape_parameters) -> type:

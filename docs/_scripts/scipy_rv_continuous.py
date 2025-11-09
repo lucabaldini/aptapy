@@ -32,16 +32,6 @@ OUTPUT_DIR = pathlib.Path(__file__).resolve().parent.parent / "_static" / "plots
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def plot_mean_marker(model):
-    """Plot a marker at the position of the mean of the given model.
-    """
-    x = model.mean()
-    y = model(x)
-    color = last_line_color()
-    plt.plot(x, y, "o", ms=5., color="white")
-    plt.plot(x, y, "o", ms=1., color=color)
-
-
 def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **kwargs):
     """
     """
@@ -53,8 +43,6 @@ def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **k
     if shape_parameters is None and len(model) > 3:
         shape_parameters = DEFAULT_SHAPE_PARAMETERS
 
-
-
     plt.figure(model_class.__name__)
     legend_title = f"{model_class.__name__} fit model"
     setup_gca(**kwargs)
@@ -65,9 +53,7 @@ def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **k
     # Case 1: the distribution has no shape parameters.
     if shape_parameters is None:
         model.set_parameters(1., location, scale)
-        z = np.linspace(*model.plotting_range(), 250)
-        plt.plot(z, model(z), label=" ")
-        plot_mean_marker(model)
+        model.plot(label="")
         plt.legend(title=legend_title)
         print(f"Saving figure to {file_path}...")
         plt.savefig(file_path, dpi=150)
@@ -90,9 +76,7 @@ def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **k
         else:
             label = ", ".join(f"{name} = {value}" for name, value in zip(param_names, shape))
 
-        z = np.linspace(*model.plotting_range(), 250)
-        plt.plot(z, model(z), label=label)
-        plot_mean_marker(model)
+        model.plot(label=label)
     param_names = ", ".join(param_names)
     plt.ylabel(f"g(z; {param_names})")
     plt.legend(title=legend_title)

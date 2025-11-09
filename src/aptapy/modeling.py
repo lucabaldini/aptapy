@@ -1189,6 +1189,7 @@ class AbstractCRVFitModel(AbstractFitModel):
                 plt.plot(x, y, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
                 plt.plot(x, y, "o", ms=1., color=color)
 
+
 def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
                        **shape_parameters) -> type:
 

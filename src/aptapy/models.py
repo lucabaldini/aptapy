@@ -563,8 +563,11 @@ class CrystalBall(AbstractCRVFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.norm, location_alias="mu", scale_alias="sigma")
+@wrap_rv_continuous(scipy.stats.norm)
 class Gaussian(AbstractCRVFitModel):
+
+    """To be reimplemented from scratch, leaving Normal as the default wrapper.
+    """
 
     pass
 
@@ -679,6 +682,12 @@ class Moyal(AbstractCRVFitModel):
 
 @wrap_rv_continuous(scipy.stats.nakagami)
 class Nakagami(AbstractCRVFitModel):
+
+    pass
+
+
+@wrap_rv_continuous(scipy.stats.norm)
+class Normal(AbstractCRVFitModel):
 
     pass
 

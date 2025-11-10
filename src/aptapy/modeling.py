@@ -1189,8 +1189,7 @@ class AbstractCRVFitModel(AbstractFitModel):
                 plt.plot(x, y, "o", ms=1., color=color)
 
 
-def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
-                       **shape_parameters) -> type:
+def wrap_rv_continuous(rv, **shape_parameters) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
@@ -1205,12 +1204,6 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
     rv : scipy.stats.rv_continuous
         The scipy.stats.rv_continuous object to wrap.
 
-    location_alias : str, optional
-        The name to use for the location parameter (if None defaults to "location").
-
-    scale_alias : str, optional
-        The name to use for the scale parameter (if None defaults to "scale").
-
     shape_parameters : dict, optional
         Additional shape parameters to be setup with non-default FitParameter
         objects (e.g., to set different minimum/maximum values).
@@ -1218,23 +1211,10 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
 
     def _wrapper(cls: type):
 
-        # Check for conflicting aliases---we want to overload the mean() function
-        # later on, so we cannot have location_alias == "mean".
-        if location_alias == ("mean"):
-            raise ValueError("location_alias cannot be 'mean'")
-
         # Set all the class fit-parameter attributes.
         cls.amplitude = FitParameter(1.)
-        if location_alias is None:
-            cls.location = FitParameter(0.)
-        else:
-            setattr(cls, location_alias, FitParameter(0.))
-            cls.location = property(lambda self: getattr(self, location_alias))
-        if scale_alias is None:
-            cls.scale = FitParameter(1., minimum=0)
-        else:
-            setattr(cls, scale_alias, FitParameter(1., minimum=0))
-            cls.scale = property(lambda self: getattr(self, scale_alias))
+        cls.location = FitParameter(0.)
+        cls.scale = FitParameter(1., minimum=0)
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):
                 parameter = shape_parameters.get(name, FitParameter(1., minimum=0.))

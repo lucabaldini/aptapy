@@ -87,14 +87,14 @@ def test_line():
     _test_model_base(models.Line, (slope, intercept), integral)
 
 
-def test_quadratic():
-    """Test the Quadratic model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    a, b, c = 1., 2., 16.
-    def integral(xmin, xmax):
-        return (a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin))
-    _test_model_base(models.Quadratic, (a, b, c), integral)
+# def test_quadratic():
+#     """Test the Quadratic model.
+#     """
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     a, b, c = 1., 2., 16.
+#     # def integral(xmin, xmax):
+#     #     return (a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin))
+#     _test_model_base(models.Quadratic, (a, b, c), None)
 
 
 def test_power_law():

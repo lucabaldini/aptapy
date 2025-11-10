@@ -75,8 +75,8 @@ def test_model_parameters():
     """
     g1 = Gaussian()
     g2 = Gaussian()
-    p1 = g1.prefactor
-    p2 = g2.prefactor
+    p1 = g1.amplitude
+    p2 = g2.amplitude
     print(p1, id(p1))
     print(p2, id(p2))
     assert p1 == p2
@@ -91,8 +91,8 @@ def test_gaussian_fit():
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mu.compatible_with(0., NUM_SIGMA)
-    assert model.sigma.compatible_with(1., NUM_SIGMA)
+    assert model.location.compatible_with(0., NUM_SIGMA)
+    assert model.scale.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
     plt.legend()
 
@@ -105,8 +105,8 @@ def test_gaussian_fit_subrange():
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM, xmin=-2., xmax=2.)
     model.plot(fit_output=True)
-    assert model.mu.compatible_with(0., NUM_SIGMA)
-    assert model.sigma.compatible_with(1., NUM_SIGMA)
+    assert model.location.compatible_with(0., NUM_SIGMA)
+    assert model.scale.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
     plt.legend()
 
@@ -116,12 +116,12 @@ def test_gaussian_fit_bound():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    model.mu.minimum = 0.05
-    model.mu.value = 0.1
+    model.location.minimum = 0.05
+    model.location.value = 0.1
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mu.value >= model.mu.minimum
+    assert model.location.value >= model.location.minimum
     plt.legend()
 
 
@@ -131,12 +131,12 @@ def test_gaussian_fit_frozen():
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
     # Calculate the normalization from the histogram.
-    model.prefactor.freeze(TEST_HISTOGRAM.area())
+    model.amplitude.freeze(TEST_HISTOGRAM.area())
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mu.compatible_with(0., NUM_SIGMA)
-    assert model.sigma.compatible_with(1., NUM_SIGMA)
+    assert model.location.compatible_with(0., NUM_SIGMA)
+    assert model.scale.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
     plt.legend()
 
@@ -147,14 +147,14 @@ def test_gaussian_fit_frozen_and_bound():
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
     print(model)
-    model.sigma.freeze(1.1)
-    model.mu.minimum = 0.05
-    model.mu.value = 0.1
+    model.scale.freeze(1.1)
+    model.location.minimum = 0.05
+    model.location.value = 0.1
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mu.value >= model.mu.minimum
-    assert model.sigma.value == 1.1
+    assert model.location.value >= model.location.minimum
+    assert model.scale.value == 1.1
     plt.legend()
 
 

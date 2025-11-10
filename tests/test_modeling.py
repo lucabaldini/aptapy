@@ -91,7 +91,7 @@ def test_gaussian_fit():
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mean.compatible_with(0., NUM_SIGMA)
+    assert model.mu.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
     plt.legend()
@@ -105,7 +105,7 @@ def test_gaussian_fit_subrange():
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM, xmin=-2., xmax=2.)
     model.plot(fit_output=True)
-    assert model.mean.compatible_with(0., NUM_SIGMA)
+    assert model.mu.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
     plt.legend()
@@ -116,12 +116,12 @@ def test_gaussian_fit_bound():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
-    model.mean.minimum = 0.05
-    model.mean.value = 0.1
+    model.mu.minimum = 0.05
+    model.mu.value = 0.1
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mean.value >= model.mean.minimum
+    assert model.mu.value >= model.mu.minimum
     plt.legend()
 
 
@@ -135,7 +135,7 @@ def test_gaussian_fit_frozen():
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mean.compatible_with(0., NUM_SIGMA)
+    assert model.mu.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
     assert model.status.pvalue > 0.001
     plt.legend()
@@ -146,13 +146,14 @@ def test_gaussian_fit_frozen_and_bound():
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
+    print(model)
     model.sigma.freeze(1.1)
-    model.mean.minimum = 0.05
-    model.mean.value = 0.1
+    model.mu.minimum = 0.05
+    model.mu.value = 0.1
     TEST_HISTOGRAM.plot()
     model.fit_histogram(TEST_HISTOGRAM)
     model.plot(fit_output=True)
-    assert model.mean.value >= model.mean.minimum
+    assert model.mu.value >= model.mu.minimum
     assert model.sigma.value == 1.1
     plt.legend()
 

@@ -20,10 +20,8 @@ the models module.
 import pathlib
 import sys
 
-import numpy as np
-
 from aptapy import models
-from aptapy.plotting import plt, setup_gca, last_line_color
+from aptapy.plotting import plt, setup_gca
 
 
 _EPSILON = sys.float_info.epsilon

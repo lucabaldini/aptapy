@@ -26,7 +26,6 @@ from numbers import Number
 from typing import Callable, Dict, Iterator, Tuple
 
 import matplotlib
-from matplotlib.pylab import norm
 import matplotlib.pyplot as plt
 import numpy as np
 import uncertainties
@@ -1245,7 +1244,7 @@ def wrap_rv_continuous(rv, location_alias: str = None, scale_alias: str = None,
             return amplitude * rv.pdf(x, *args, loc=location, scale=scale)
 
         def primitive(x, amplitude, location, scale, *args):
-             return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
+            return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
 
         def support(self):
             _, location, scale, *args = self.parameter_values()

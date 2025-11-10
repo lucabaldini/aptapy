@@ -22,23 +22,7 @@ from typing import Callable, Sequence
 import numpy as np
 import pytest
 
-from aptapy.models import (
-    Arctangent,
-    Constant,
-    Erf,
-    Exponential,
-    ExponentialComplement,
-    Gaussian,
-    Line,
-    Logistic,
-    LogNormal,
-    Lorentzian,
-    Moyal,
-    PowerLaw,
-    Quadratic,
-    StretchedExponential,
-    StretchedExponentialComplement,
-)
+from aptapy import models
 from aptapy.plotting import plt, setup_gca
 
 
@@ -90,7 +74,7 @@ def test_constant():
     value = 5.
     def integral(xmin, xmax):
         return value * (xmax - xmin)
-    _test_model_base(Constant, (value, ), integral)
+    _test_model_base(models.Constant, (value, ), integral)
 
 
 def test_line():
@@ -100,7 +84,7 @@ def test_line():
     slope, intercept = 2., 5.
     def integral(xmin, xmax):
         return 0.5 * slope * (xmax**2 - xmin**2) + intercept * (xmax - xmin)
-    _test_model_base(Line, (slope, intercept), integral)
+    _test_model_base(models.Line, (slope, intercept), integral)
 
 
 def test_quadratic():
@@ -110,7 +94,7 @@ def test_quadratic():
     a, b, c = 1., 2., 16.
     def integral(xmin, xmax):
         return (a * (xmax**3 - xmin**3) / 3. + b * (xmax**2 - xmin**2) / 2. + c * (xmax - xmin))
-    _test_model_base(Quadratic, (a, b, c), integral)
+    _test_model_base(models.Quadratic, (a, b, c), integral)
 
 
 def test_power_law():
@@ -125,7 +109,7 @@ def test_power_law():
         else:
             def integral(xmin, xmax, prefactor=prefactor, index=index):
                 return (prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.)))
-        _test_model_base(PowerLaw, (prefactor, index), integral)
+        _test_model_base(models.PowerLaw, (prefactor, index), integral)
 
 
 def test_exponential():
@@ -135,7 +119,7 @@ def test_exponential():
     prefactor, scale = 10., 2.
     def integral(xmin, xmax):
         return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
-    _test_model_base(Exponential, (prefactor, scale), integral)
+    _test_model_base(models.Exponential, (prefactor, scale), integral)
 
 
 def test_exponential_complement():
@@ -143,7 +127,7 @@ def test_exponential_complement():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, scale = 10., 2.
-    _test_model_base(ExponentialComplement, (prefactor, scale,), None)
+    _test_model_base(models.ExponentialComplement, (prefactor, scale,), None)
 
 
 def test_stretched_exponential():
@@ -152,7 +136,7 @@ def test_stretched_exponential():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, scale, gamma = 10., 2., 0.5
     # The initialization of the parameters is pretty flaky in this case...
-    _test_model_base(StretchedExponential, (prefactor, scale, gamma), None, num_sigma=50.)
+    _test_model_base(models.StretchedExponential, (prefactor, scale, gamma), None, num_sigma=50.)
 
 
 def test_stretched_exponential_complement():
@@ -161,23 +145,8 @@ def test_stretched_exponential_complement():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     prefactor, scale, gamma = 10., 2., 0.5
     # The initialization of the parameters is pretty flaky in this case...
-    _test_model_base(StretchedExponentialComplement, (prefactor, scale, gamma), None, num_sigma=50.)
-
-
-def test_gaussian_cdf():
-    """Test the GaussianCDF model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    prefactor, mean, sigma = 5., 0., 1.
-    _test_model_base(GaussianCDF, (prefactor, mean, sigma), None)
-
-
-def test_gaussian_cdf_complement():
-    """Test the GaussianCDFComplement model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    prefactor, mean, sigma = 5., 0., 1.
-    _test_model_base(GaussianCDFComplement, (prefactor, mean, sigma), None)
+    _test_model_base(models.StretchedExponentialComplement, (prefactor, scale, gamma),
+                     None, num_sigma=50.)
 
 
 def test_erf():
@@ -185,15 +154,15 @@ def test_erf():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Erf, (amplitude, location, scale), None, sigma=0.25)
+    _test_model_base(models.Erf, (amplitude, location, scale), None, sigma=0.25)
 
 
-def test_erf_complement():
-    """Test the ErfComplement model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(ErfComplement, (amplitude, location, scale), None, sigma=0.25)
+# def test_erf_complement():
+#     """Test the ErfComplement model.
+#     """
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
+#     amplitude, location, scale = 10., 10., 2.
+#     _test_model_base(models.ErfComplement, (amplitude, location, scale), None, sigma=0.25)
 
 
 def test_logistic():
@@ -201,7 +170,7 @@ def test_logistic():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Logistic, (amplitude, location, scale), None, sigma=0.25)
+    _test_model_base(models.Logistic, (amplitude, location, scale), None, sigma=0.25)
 
 
 def test_arctangent():
@@ -209,4 +178,4 @@ def test_arctangent():
     """
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
     amplitude, location, scale = 10., 10., 2.
-    _test_model_base(Arctangent, (amplitude, location, scale), None, sigma=0.25)
+    _test_model_base(models.Arctangent, (amplitude, location, scale), None, sigma=0.25)

@@ -18,38 +18,13 @@
 
 
 import inspect
-from typing import Callable, Sequence
-import sys
+from typing import Sequence
 
 import numpy as np
 
-from aptapy.models import (
-    Alpha,
-    Anglit,
-    Argus,
-    Beta,
-    BetaPrime,
-    Bradford,
-    Burr,
-    Burr12,
-    Chi,
-    Chisquare,
-    Cosine,
-    CrystalBall,
-    #DoubleGamma,
-    #Fisk,
-    Gaussian,
-    #GeneralizedLogistic,
-    #GeneralizedNormal,
-    Landau,
-    LogNormal,
-    #Lorentzian,
-    Moyal,
-)
+from aptapy import models
 from aptapy.hist import Histogram1d
 from aptapy.plotting import plt, setup_gca
-
-_EPSILON = sys.float_info.epsilon
 
 
 def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1., 10., 2.),
@@ -108,99 +83,84 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
 
 def test_alpha():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Alpha)
+    _test_model_base(models.Alpha)
 
 
 def test_anglit():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Anglit)
+    _test_model_base(models.Anglit)
 
 
 def test_argus():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Argus)
+    _test_model_base(models.Argus)
 
 
 def test_beta():
-   plt.figure(f"{inspect.currentframe().f_code.co_name}")
-   _test_model_base(Beta, (1., 10., 2., 2.31, 0.627))
+    plt.figure(f"{inspect.currentframe().f_code.co_name}")
+    _test_model_base(models.Beta, (1., 10., 2., 2.31, 0.627))
 
 
 # def test_beta_prime():
 #    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#    _test_model_base(BetaPrime, (1., 10., 2., 2.31, 0.627))
-
+#    _test_model_base(models.BetaPrime, (1., 10., 2., 2.31, 0.627))
 
 def test_bradford():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Bradford)
-
+    _test_model_base(models.Bradford)
 
 # def test_burr():
 #     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(Burr)
-
+#     _test_model_base(models.Burr)
 
 def test_chi():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Chi)
-
+    _test_model_base(models.Chi)
 
 def test_chisquare():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Chisquare)
-
+    _test_model_base(models.Chisquare)
 
 def test_cosine():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Cosine)
-
+    _test_model_base(models.Cosine)
 
 def test_crystal_ball():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(CrystalBall, (10., 10., 2., 1., 2.))
-
+    _test_model_base(models.CrystalBall, (10., 10., 2., 1., 2.))
 
 # def test_double_gamma():
 #     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(DoubleGamma)
-
+#     _test_model_base(models.DoubleGamma)
 
 # def test_fisk():
 #     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(Fisk)
-
+#     _test_model_base(models.Fisk)
 
 def test_gaussian():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Gaussian)
-
+    _test_model_base(models.Gaussian)
 
 # def test_generalized_logistic():
 #     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(GeneralizedLogistic)
-
+#     _test_model_base(models.GeneralizedLogistic)
 
 # def test_generalized_normal():
 #     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(GeneralizedNormal)
-
+#     _test_model_base(models.GeneralizedNormal)
 
 def test_landau():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Landau)
-
+    _test_model_base(models.Landau)
 
 def test_log_normal():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(LogNormal)
-
+    _test_model_base(models.LogNormal)
 
 # def test_lorentzian():
 #     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(Lorentzian)
-
+#     _test_model_base(models.Lorentzian)
 
 def test_moyal():
     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(Moyal)
+    _test_model_base(models.Moyal)

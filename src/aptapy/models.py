@@ -23,10 +23,14 @@ import matplotlib
 import numpy as np
 import scipy.special
 import scipy.stats
-import uncertainties
 
-from .modeling import AbstractFitModel, AbstractCRVFitModel,  AbstractSigmoidFitModel, \
-    FitParameter, wrap_rv_continuous
+from .modeling import (
+    AbstractCRVFitModel,
+    AbstractFitModel,
+    AbstractSigmoidFitModel,
+    FitParameter,
+    wrap_rv_continuous,
+)
 from .plotting import plt
 from .typing_ import ArrayLike
 
@@ -45,6 +49,42 @@ __all__ = [
     "Logistic",
     "Arctangent",
     "HyperbolicTangent",
+    "Alpha",
+    "Anglit",
+    "Arcsine",
+    "Argus",
+    "Beta",
+    "BetaPrime",
+    "Bradford",
+    "Burr",
+    "Burr12",
+    "Cauchy",
+    "Chi",
+    "Chisquare",
+    "Cosine",
+    "CrystalBall",
+    "Gaussian",
+    "Gibrat",
+    "GumbelL",
+    "GumbelR",
+    "HalfCauchy",
+    "HalfLogistic",
+    "HalfNorm",
+    "HyperSecant",
+    "Landau",
+    "Laplace",
+    "Levy",
+    "LevyL",
+    "Logistic",
+    "LogNormal",
+    "Lorentzian",
+    "Maxwell",
+    "Moyal",
+    "Nakagami",
+    "Rayleigh",
+    "Semicircular",
+    "Student",
+    "Wald",
 ]
 
 
@@ -398,6 +438,7 @@ class StretchedExponentialComplement(StretchedExponential):
         See the comment in the corresponding docstrings of the ExponentialComplement class.
         """
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
+
 
 class Erf(AbstractSigmoidFitModel):
 

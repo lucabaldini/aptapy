@@ -1094,7 +1094,57 @@ class AbstractCRVFitModel(AbstractFitModel):
 
     (Typically we will use this, in conjunction with the `wrap_rv_continuous`
     decorator, to wrap continuous random variables from scipy.stats).
+
+    The general rule for the signature of scipy distributions is that they accept
+    all the shape parameters first, and then loc and scale.
+    This decorator creates a fit model class with the appropriate methods to
+    Read dist.shapes (and numargs) to know the positional shape args.
+    Assume loc and scale keywords are always supported.
+
     """
+
+    amplitude = FitParameter(1.)
+    location = FitParameter(0.)
+    scale = FitParameter(1., minimum=0)
+
+    @classmethod
+    def evaluate(cls, x, amplitude, location, scale, *args):
+        """Overloaded method for evaluating the model.
+
+        This takes the pdf of the underlying distribution and scales it by the amplitude.
+        """
+        return amplitude * cls._rv.pdf(x, *args, loc=location, scale=scale)
+
+    @classmethod
+    def primitive(cls, x, amplitude, location, scale, *args):
+        return amplitude * cls._rv.cdf(x, *args, loc=location, scale=scale)
+
+    def support(self):
+        _, location, scale, *args = self.parameter_values()
+        return tuple(float(value) for value in self._rv.support(*args, loc=location, scale=scale))
+
+    def ppf(self, x):
+        _, location, scale, *args = self.parameter_values()
+        return self._rv.ppf(x, *args, loc=location, scale=scale)
+
+    def median(self):
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.median(*args, loc=location, scale=scale))
+
+    def mean(self):
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.mean(*args, loc=location, scale=scale))
+    def std(self):
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.std(*args, loc=location, scale=scale))
+
+    def skewness(self):
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.stats(*args, loc=location, scale=scale, moments='s'))
+
+    def random_sample(self, size=1, random_state=None):
+        _, location, scale, *args = self.parameter_values()
+        return self._rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
@@ -1193,11 +1243,11 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
 
-    The general rule for the signature of scipy distributions is that they accept
-    all the shape parameters first, and then loc and scale.
-    This decorator creates a fit model class with the appropriate methods to
-    Read dist.shapes (and numargs) to know the positional shape args.
-    Assume loc and scale keywords are always supported.
+    This is fairly minimal, and basically accounts to adding all the necessary shape
+    parameters to the underlying fit model class. Note the name of the parameters is
+    inferred from the rv.shapes attribute, and each shape parameter is set to 1. by
+    default (with a minimum of 0.) unless this is overridden via the shape_parameters
+    argument.
 
     Arguments
     ---------
@@ -1210,61 +1260,14 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
     """
 
     def _wrapper(cls: type):
-
-        # Set all the class fit-parameter attributes.
-        cls.amplitude = FitParameter(1.)
-        cls.location = FitParameter(0.)
-        cls.scale = FitParameter(1., minimum=0)
+        """Wrapper function---cache the underlying continuos random variable, and
+        add all the necessary shape parameters to the class.
+        """
+        cls._rv = rv
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):
                 parameter = shape_parameters.get(name, FitParameter(1., minimum=0.))
                 setattr(cls, name, parameter)
-
-        def evaluate(x, amplitude, location, scale, *args):
-            return amplitude * rv.pdf(x, *args, loc=location, scale=scale)
-
-        def primitive(x, amplitude, location, scale, *args):
-            return amplitude * rv.cdf(x, *args, loc=location, scale=scale)
-
-        def support(self):
-            _, location, scale, *args = self.parameter_values()
-            return tuple(float(value) for value in rv.support(*args, loc=location, scale=scale))
-
-        def ppf(self, x):
-            _, location, scale, *args = self.parameter_values()
-            return rv.ppf(x, *args, loc=location, scale=scale)
-
-        def median(self):
-            _, location, scale, *args = self.parameter_values()
-            return float(rv.median(*args, loc=location, scale=scale))
-
-        def mean(self):
-            _, location, scale, *args = self.parameter_values()
-            return float(rv.mean(*args, loc=location, scale=scale))
-
-        def std(self):
-            _, location, scale, *args = self.parameter_values()
-            return float(rv.std(*args, loc=location, scale=scale))
-
-        def skewness(self):
-            _, location, scale, *args = self.parameter_values()
-            return float(rv.stats(*args, loc=location, scale=scale, moments='s'))
-
-        def random_sample(self, size=1, random_state=None):
-            _, location, scale, *args = self.parameter_values()
-            return rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
-
-        cls.evaluate = staticmethod(evaluate)
-        cls.primitive = staticmethod(primitive)
-        cls.support = support
-        cls.ppf = ppf
-        cls.median = median
-        cls.mean = mean
-        cls.std = std
-        cls.skewness = skewness
-        cls.random_sample = random_sample
-
-        update_abstractmethods(cls)
         return cls
 
     return _wrapper

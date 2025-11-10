@@ -193,27 +193,7 @@ must implement the :meth:`~aptapy.modeling.AbstractLocationScaleFitModel.shape`,
 method, providing the universal shape function :math:`g(z)`.
 
 
-Peak-like models
-~~~~~~~~~~~~~~~~
 
-Location-scale peak-like models all inherit from the abstract base class
-:class:`~aptapy.modeling.AbstractPeakFitModel`, and at the very minimum they must
-provide a concrete implementation of the shape function.
-The basic contract, here, is that the latter is normalized to unit area, and the
-amplitude parameter of the general model
-
-.. math::
-    f(x; A, m, s, ...) = \frac{A}{s} g\left(\frac{x - m}{s}; ...\right)
-
-represents the area under the peak. The abstract base class implements the
-evaluation method, which delegates the actual computation to the shape
-function to be implemented in derived classes:
-
-.. literalinclude:: ../src/aptapy/modeling.py
-   :language: python
-   :pyobject: AbstractPeakFitModel.evaluate
-
-where the dots indicate any additional model parameters.
 
 
 Sigmoid models

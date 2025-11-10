@@ -137,15 +137,15 @@ ranging from 0 to 1 as its argument goes from -infinity to +infinity.
    :pyobject: Erf.shape
 
 
-:class:`~aptapy.models.Logistic`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~aptapy.models.LogisticSigmoid`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. math::
     g(z) = \frac{1}{1 + e^{-z}}
 
 .. literalinclude:: ../src/aptapy/models.py
    :language: python
-   :pyobject: Logistic.shape
+   :pyobject: LogisticSigmoid.shape
 
 
 :class:`~aptapy.models.Arctangent`

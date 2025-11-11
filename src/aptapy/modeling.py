@@ -1298,12 +1298,14 @@ class AbstractCRVFitModel(AbstractFitModel):
         # relatively large dot with the background color of the figure, and then a smaller
         # dot with the line color, so that it stands out.
         if plot_mean:
+            if axes is None:
+                axes = plt.gca()
             x = self.mean()
             if np.isfinite(x):
                 y = self(x)
                 color = last_line_color()
-                plt.plot(x, y, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
-                plt.plot(x, y, "o", ms=1., color=color)
+                axes.plot(x, y, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
+                axes.plot(x, y, "o", ms=1., color=color)
 
 
 def wrap_rv_continuous(rv, **shape_parameters) -> type:
@@ -1490,8 +1492,10 @@ class FitModelSum(AbstractFitModelBase):
         color = plt.gca().lines[-1].get_color()
         x = self._plotting_grid()
         if plot_components:
+            if axes is None:
+                axes = plt.gca()
             for component in self._components:
-                plt.plot(x, component(x), label=None, ls="--", color=color)
+                axes.plot(x, component(x), label=None, ls="--", color=color)
 
     def _format_fit_output(self, spec: str) -> str:
         """String formatting for fit output.

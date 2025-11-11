@@ -447,6 +447,7 @@ class Erf(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
+        # pylint: disable=arguments-differ
         return 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
 
 
@@ -457,6 +458,7 @@ class LogisticSigmoid(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
+        # pylint: disable=arguments-differ
         return 1. / (1. + np.exp(-z))
 
 
@@ -467,6 +469,7 @@ class Arctangent(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
+        # pylint: disable=arguments-differ
         return 0.5 + np.arctan(z) / np.pi
 
 
@@ -477,6 +480,7 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
 
     @staticmethod
     def shape(z):
+        # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
 
 
@@ -568,8 +572,6 @@ class Gaussian(AbstractCRVFitModel):
 
     """To be reimplemented from scratch, leaving Normal as the default wrapper.
     """
-
-    pass
 
 
 @wrap_rv_continuous(scipy.stats.gibrat)
@@ -664,8 +666,6 @@ class Lorentzian(Cauchy):
 
     """Alias for the Cauchy distribution.
     """
-
-    pass
 
 
 @wrap_rv_continuous(scipy.stats.maxwell)

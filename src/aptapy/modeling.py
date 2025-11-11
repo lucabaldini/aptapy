@@ -19,7 +19,7 @@
 import enum
 import functools
 import inspect
-from abc import abstractmethod, update_abstractmethods
+from abc import abstractmethod
 from dataclasses import dataclass
 from itertools import chain
 from numbers import Number
@@ -1057,16 +1057,28 @@ class AbstractSigmoidFitModel(AbstractFitModel):
     def shape(z: ArrayLike, *parameter_values: float) -> ArrayLike:
         """Abstract method for the normalized shape of the sigmoid model. Subclasses
         must implement this method.
+
+        Arguments
+        ---------
+        z : array_like
+            The normalized independent variable.
+
+        parameter_values : float
+            Additional shape parameters for the sigmoid.
+
+        Returns
+        -------
+        array_like
+            The value of the sigmoid shape function at z.
         """
 
     def evaluate(self, x: ArrayLike, amplitude: float, location: float,
                  scale: float, *parameter_values: float) -> ArrayLike:
         """Overloaded method for evaluating the model.
 
-        Note that here we do not scale the output by 1/scale, as sigmoids are not
-        normalized functions. Also, if the amplitude is negative, we take the
-        complement of the sigmoid function.
+        Note if the amplitude is negative, we take the complement of the sigmoid function.
         """
+        # pylint: disable=arguments-differ
         z = (x - location) / scale
         val = amplitude * self.shape(z, *parameter_values)
         return val if amplitude >= 0. else val - amplitude
@@ -1074,7 +1086,6 @@ class AbstractSigmoidFitModel(AbstractFitModel):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
         """
-        pass
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
@@ -1106,6 +1117,7 @@ class AbstractCRVFitModel(AbstractFitModel):
     amplitude = FitParameter(1.)
     location = FitParameter(0.)
     scale = FitParameter(1., minimum=0)
+    _rv = None
 
     @classmethod
     def evaluate(cls, x, amplitude, location, scale, *args):
@@ -1113,36 +1125,72 @@ class AbstractCRVFitModel(AbstractFitModel):
 
         This takes the pdf of the underlying distribution and scales it by the amplitude.
         """
+        # pylint: disable=arguments-differ
         return amplitude * cls._rv.pdf(x, *args, loc=location, scale=scale)
 
     @classmethod
     def primitive(cls, x, amplitude, location, scale, *args):
+        """Overloaded method for evaluating the primitive of the model.
+
+        Note this is not just a primitive, it is the actual cumulative distribution
+        function (cdf) scaled by the amplitude. We keep the ``primitive()`` name for
+        because in general not all the fit models are normalizable, and still we want
+        to keep a common interface.
+        """
         return amplitude * cls._rv.cdf(x, *args, loc=location, scale=scale)
 
     def support(self):
+        """Return the support of the underlying distribution at the current
+        parameter values.
+        """
         _, location, scale, *args = self.parameter_values()
         return tuple(float(value) for value in self._rv.support(*args, loc=location, scale=scale))
 
-    def ppf(self, x):
+    def ppf(self, p: ArrayLike):
+        """Return the percent point function (inverse of cdf) of the underlying
+        distribution for a given quantile at the current parameter values.
+
+        Arguments
+        ---------
+        p : array_like
+            The quantile(s) to evaluate the ppf at.
+        """
         _, location, scale, *args = self.parameter_values()
-        return self._rv.ppf(x, *args, loc=location, scale=scale)
+        return self._rv.ppf(p, *args, loc=location, scale=scale)
 
     def median(self):
+        """Return the median of the underlying distribution at the current parameter
+        values.
+        """
         _, location, scale, *args = self.parameter_values()
         return float(self._rv.median(*args, loc=location, scale=scale))
 
     def mean(self):
+        """Return the mean of the underlying distribution at the current parameter
+        values.
+        """
         _, location, scale, *args = self.parameter_values()
         return float(self._rv.mean(*args, loc=location, scale=scale))
+
     def std(self):
+        """Return the standard deviation of the underlying distribution at the current parameter
+        values.
+        """
         _, location, scale, *args = self.parameter_values()
         return float(self._rv.std(*args, loc=location, scale=scale))
 
-    def skewness(self):
-        _, location, scale, *args = self.parameter_values()
-        return float(self._rv.stats(*args, loc=location, scale=scale, moments='s'))
+    def rvs(self, size: int = 1, random_state=None):
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
 
-    def random_sample(self, size=1, random_state=None):
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
         _, location, scale, *args = self.parameter_values()
         return self._rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
 
@@ -1263,6 +1311,7 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
         """Wrapper function---cache the underlying continuos random variable, and
         add all the necessary shape parameters to the class.
         """
+        # pylint: disable=protected-access
         cls._rv = rv
         if rv.numargs > 0:
             for name in rv.shapes.split(", "):

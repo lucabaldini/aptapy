@@ -1309,7 +1309,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         if not plot_mean or not np.isfinite(x0):
             return
         # Otherwise plot the model and overplot the mean with a dot.
-        color = last_line_color()
+        color = last_line_color(axes)
         y0 = self(x0)
         axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
         axes.plot(x0, y0, "o", ms=1.5, color=color)
@@ -1496,11 +1496,11 @@ class FitModelSum(AbstractFitModelBase):
         None
         """
         super().plot(axes, fit_output=fit_output, **kwargs)
-        color = plt.gca().lines[-1].get_color()
+        if axes is None:
+            axes = plt.gca()
+        color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:
-            if axes is None:
-                axes = plt.gca()
             for component in self._components:
                 axes.plot(x, component(x), label=None, ls="--", color=color)
 

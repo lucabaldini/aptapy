@@ -1,6 +1,6 @@
 """
-Peak models
-===========
+Sigmoid models
+==============
 
 Illustration of the available sigmoid models with the standard location and scale
 parameters

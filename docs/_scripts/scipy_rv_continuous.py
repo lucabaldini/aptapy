@@ -55,6 +55,7 @@ def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **k
         plt.legend(title=legend_title)
         print(f"Saving figure to {file_path}...")
         plt.savefig(file_path, dpi=150)
+        plt.close()
         return
 
     # Case 2: the distribution has shape parameters.
@@ -122,3 +123,4 @@ def create_figures():
     plot_rv_shape(models.Semicircular)
     plot_rv_shape(models.Student, (1., 2., 4., 10.))
     plot_rv_shape(models.Wald)
+    plt.close("all")

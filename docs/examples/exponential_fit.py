@@ -7,26 +7,29 @@ Exponential fit
 
 # %%
 
+import pathlib
+
 import numpy as np
 
-from aptapy.hist import Histogram1d
-from aptapy.models import Gaussian
-from aptapy.plotting import plt
+from aptapy.models import Constant, Exponential, StretchedExponential
+from aptapy.plotting import setup_axes, residual_axes
 
 
-file_path = "data/exponential_data.txt"
-data = np.loadtxt(file_path)
+file_path = pathlib.Path.cwd() / "data" / "exponential_data.txt"
+t, T = np.loadtxt(file_path, unpack=True)
 
-print(data)
+simple_model = Constant() + Exponential()
+simple_model.fit(t, T, sigma=0.1)
 
-hist = Histogram1d(np.linspace(-5., 5., 100), label="Random data", xlabel="z")
-hist.fill(np.random.default_rng().normal(size=100000))
-hist.plot(statistics=True)
+stretched_model = Constant() + StretchedExponential()
+stretched_model.fit(t, T, sigma=0.1)
 
-model = Gaussian()
-model.fit_histogram(hist)
-print(model)
-# Plot the model, including the fit output in the legend.
-model.plot(fit_output=True)
+_, ax1, ax2 = residual_axes(height_ratio=0.3)
+ax1.errorbar(t, T, fmt="o", label="Data", alpha=0.75, ms=5., color="gray")
+simple_model.plot(ax1, fit_output=True, plot_components=False, zorder=10)
+stretched_model.plot(ax1, fit_output=True, plot_components=False, zorder=10)
+setup_axes(ax1, ylabel="Temperature [°C]", legend=True)
 
-plt.legend()
+ax2.errorbar(t, T - simple_model(t), fmt="o", ms=5.)
+ax2.errorbar(t, T - stretched_model(t), fmt="o", ms=5.)
+setup_axes(ax2, xlabel="Time [s]", ylabel="Residuals [°C]", ymin=-1.25, ymax=1.25)

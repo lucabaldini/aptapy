@@ -1310,8 +1310,6 @@ class AbstractCRVFitModel(AbstractFitModel):
             return
         # Otherwise plot the model and overplot the mean with a dot.
         color = last_line_color()
-        # mask = abs(x - x0) <= 0.008 * (x.max() - x.min())
-        # axes.plot(x[mask], self(x[mask]), color=matplotlib.rcParams["figure.facecolor"], lw=2.5)
         y0 = self(x0)
         axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
         axes.plot(x0, y0, "o", ms=1.5, color=color)

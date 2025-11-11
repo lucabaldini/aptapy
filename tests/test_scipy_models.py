@@ -67,7 +67,7 @@ def _test_base(model_class: type, *shape_parameters, location: float = 10., scal
     # what happens in real life.
     model.set_parameters(1., 0., 1.)
     model.init_parameters(histogram.bin_centers(), histogram.content, histogram.errors)
-    model.plot(label="Initial guess", ls="--", color="gray")
+    model.plot(plot_mean=False, label="Initial guess", ls="--", color="gray")
 
     # Fit the model to the histogram data, check the chisquare and plot the result.
     # Note that, since we are fitting a random sample, we cannot test the
@@ -78,8 +78,8 @@ def _test_base(model_class: type, *shape_parameters, location: float = 10., scal
     assert status.pvalue > threshold
     model.plot(fit_output=True)
     setup_gca(xmin=xmin, xmax=xmax)
-    plt.axvline(model.mean(), color="gray", ls="--")
-    plt.axvline(model.mean() + model.std(), color="gray", ls="--")
+    # plt.axvline(model.mean(), color="gray", ls="--")
+    # plt.axvline(model.mean() + model.std(), color="gray", ls="--")
     plt.legend()
 
 
@@ -235,3 +235,8 @@ def test_student():
 
 def test_wald():
     _test_base(models.Wald)
+
+
+if __name__ == "__main__":
+    test_gaussian()
+    plt.show()

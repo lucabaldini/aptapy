@@ -1279,6 +1279,9 @@ class AbstractCRVFitModel(AbstractFitModel):
              plot_mean: bool = True, **kwargs) -> None:
         """Plot the model.
 
+        Note this is reimplemented from scratch to allow overplotting the mean of the
+        distribution.
+
         Arguments
         ---------
         axes : matplotlib.axes.Axes, optional
@@ -1293,19 +1296,25 @@ class AbstractCRVFitModel(AbstractFitModel):
         kwargs : dict, optional
             Additional keyword arguments passed to `plt.plot()`.
         """
-        super().plot(axes, fit_output=fit_output, **kwargs)
-        # Overplot the mean of the distribution, if requested. We achieve this by plotting
-        # relatively large dot with the background color of the figure, and then a smaller
-        # dot with the line color, so that it stands out.
-        if plot_mean:
-            if axes is None:
-                axes = plt.gca()
-            x = self.mean()
-            if np.isfinite(x):
-                y = self(x)
-                color = last_line_color()
-                axes.plot(x, y, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
-                axes.plot(x, y, "o", ms=1., color=color)
+        if axes is None:
+            axes = plt.gca()
+        kwargs.setdefault("label", self.label)
+        if fit_output:
+            kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
+        x = self._plotting_grid()
+        axes.plot(x, self(x), **kwargs)
+        x0 = self.mean()
+        # If we are not plotting the mean, or if the mean is not finite, just plot the model
+        # and return.
+        if not plot_mean or not np.isfinite(x0):
+            return
+        # Otherwise plot the model and overplot the mean with a dot.
+        color = last_line_color()
+        # mask = abs(x - x0) <= 0.008 * (x.max() - x.min())
+        # axes.plot(x[mask], self(x[mask]), color=matplotlib.rcParams["figure.facecolor"], lw=2.5)
+        y0 = self(x0)
+        axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
+        axes.plot(x0, y0, "o", ms=1.5, color=color)
 
 
 def wrap_rv_continuous(rv, **shape_parameters) -> type:

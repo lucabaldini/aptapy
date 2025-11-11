@@ -1274,7 +1274,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         kwargs : dict, optional
             Additional keyword arguments passed to `plt.plot()`.
         """
-        super().plot(axes, **kwargs)
+        super().plot(axes, fit_output=fit_output, **kwargs)
         # Overplot the mean of the distribution, if requested. We achieve this by plotting
         # relatively large dot with the background color of the figure, and then a smaller
         # dot with the line color, so that it stands out.

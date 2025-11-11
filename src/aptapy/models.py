@@ -81,6 +81,7 @@ __all__ = [
     "Maxwell",
     "Moyal",
     "Nakagami",
+    "Normal",
     "Rayleigh",
     "Semicircular",
     "Student",

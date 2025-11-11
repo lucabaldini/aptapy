@@ -16,8 +16,6 @@
 """Unit tests for all the fit models wrapping rv_continuous scipy objects.
 """
 
-
-import inspect
 from typing import Sequence
 
 import numpy as np
@@ -27,8 +25,8 @@ from aptapy.hist import Histogram1d
 from aptapy.plotting import plt, setup_gca
 
 
-def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1., 10., 2.),
-                     threshold: float = 0.001):
+def _test_base(model_class: type, *shape_parameters, location: float = 10., scale: float = 2.,
+               threshold: float = 0.001):
     """Basic tests for a given fit model.
 
     This creates a model of the given class, sets the given ground truth parameter values,
@@ -41,21 +39,31 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
     model_class: type
         The model class to be tested.
 
-    parameter_values: Sequence[float]
-        The ground truth parameter values to be set in the model for the generation
+    shape_parameters: Sequence[float]
+        The ground truth shape parameter values to be set in the model for the generation
+        of the random sample.
+
+    location: float
+        The ground truth location parameter value to be set in the model for the generation
+        of the random sample.
+
+    scale: float
+        The ground truth scale parameter value to be set in the model for the generation
         of the random sample.
 
     threshold: float
         The p-value threshold for the fit to be considered acceptable.
     """
+    plt.figure(model_class.__name__)
     # Create the model and set the basic parameters.
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]")
+    parameter_values = (1., location, scale, *shape_parameters)
     model.set_parameters(*parameter_values)
     xmin, xmax = model.plotting_range()
     print(model)
 
     # Generate a random sample and fill a histogram.
-    sample = model.random_sample(100000, 313)
+    sample = model.rvs(100000, 313)
     histogram = Histogram1d(np.linspace(xmin, xmax, 100)).fill(sample)
     histogram.plot(label="Random sample")
 
@@ -82,85 +90,148 @@ def _test_model_base(model_class: type, parameter_values: Sequence[float] = (1.,
 
 
 def test_alpha():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Alpha)
+    _test_base(models.Alpha)
 
 
 def test_anglit():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Anglit)
+    _test_base(models.Anglit)
+
+
+def test_arcsine():
+    _test_base(models.Arcsine)
 
 
 def test_argus():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Argus)
+    _test_base(models.Argus)
 
 
 def test_beta():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Beta, (1., 10., 2., 2.31, 0.627))
+    _test_base(models.Beta, 2.31, 0.627)
 
 
-# def test_beta_prime():
-#    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#    _test_model_base(models.BetaPrime, (1., 10., 2., 2.31, 0.627))
+def test_beta_prime():
+   _test_base(models.BetaPrime, 2., 4.)
+
 
 def test_bradford():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Bradford)
+    _test_base(models.Bradford, 1.)
 
-# def test_burr():
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(models.Burr)
+
+def test_burr():
+    _test_base(models.Burr, 4., 4.)
+
+
+def test_burr12():
+    _test_base(models.Burr12, 2., 2.)
+
+
+def test_cauchy():
+    _test_base(models.Cauchy)
+
 
 def test_chi():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Chi)
+    _test_base(models.Chi, 8., location=0., scale=1.)
+
 
 def test_chisquare():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Chisquare)
+    _test_base(models.Chisquare, 8., location=0., scale=1.)
+
 
 def test_cosine():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Cosine)
+    _test_base(models.Cosine)
+
 
 def test_crystal_ball():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.CrystalBall, (10., 10., 2., 1., 2.))
+    _test_base(models.CrystalBall, 1., 2.)
 
-# def test_double_gamma():
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(models.DoubleGamma)
-
-# def test_fisk():
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(models.Fisk)
 
 def test_gaussian():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Gaussian)
+    _test_base(models.Gaussian)
 
-# def test_generalized_logistic():
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(models.GeneralizedLogistic)
 
-# def test_generalized_normal():
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(models.GeneralizedNormal)
+def test_gibrat():
+    _test_base(models.Gibrat)
+
+
+def test_gumbel_l():
+    _test_base(models.GumbelL)
+
+
+def test_gumbel_r():
+    _test_base(models.GumbelR)
+
+
+def test_half_cauchy():
+    _test_base(models.HalfCauchy)
+
+
+def test_half_logistic():
+    _test_base(models.HalfLogistic)
+
+
+def test_half_norm():
+    _test_base(models.HalfNorm)
+
+
+def test_hyper_secant():
+    _test_base(models.HyperSecant)
+
 
 def test_landau():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Landau)
+    _test_base(models.Landau)
+
+
+def test_laplace():
+    _test_base(models.Laplace)
+
+
+def test_levy():
+    _test_base(models.Levy)
+
+
+def test_levy_l():
+    _test_base(models.LevyL)
+
+
+def test_logistic():
+    _test_base(models.Logistic)
+
 
 def test_log_normal():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.LogNormal)
+    _test_base(models.LogNormal)
 
-# def test_lorentzian():
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     _test_model_base(models.Lorentzian)
+
+def test_lorentzian():
+    _test_base(models.Lorentzian)
+
+
+def test_maxwell():
+    _test_base(models.Maxwell)
+
 
 def test_moyal():
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    _test_model_base(models.Moyal)
+    _test_base(models.Moyal)
+
+
+def test_nakagami():
+    _test_base(models.Nakagami, 2.)
+
+
+def test_normal():
+    _test_base(models.Normal)
+
+
+def test_rayleigh():
+    _test_base(models.Rayleigh)
+
+
+def test_semicircular():
+    _test_base(models.Semicircular)
+
+
+def test_student():
+    _test_base(models.Student, 4.)
+
+
+def test_wald():
+    _test_base(models.Wald)

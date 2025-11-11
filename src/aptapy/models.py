@@ -31,7 +31,9 @@ from .modeling import (
     FitParameter,
     wrap_rv_continuous,
 )
-from .plotting import plt
+from .hist import Histogram1d
+from .modeling import Format
+from .plotting import plt, last_line_color
 from .typing_ import ArrayLike
 
 __all__ = [
@@ -45,6 +47,7 @@ __all__ = [
     "ExponentialComplement",
     "StretchedExponential",
     "StretchedExponentialComplement",
+    "Gaussian",
     "Erf",
     "Logistic",
     "Arctangent",
@@ -63,7 +66,6 @@ __all__ = [
     "Chisquare",
     "Cosine",
     "CrystalBall",
-    "Gaussian",
     "Gibrat",
     "GumbelL",
     "GumbelR",
@@ -441,6 +443,110 @@ class StretchedExponentialComplement(StretchedExponential):
         StretchedExponential.init_parameters(self, xdata, ydata.max() - ydata, sigma)
 
 
+class Gaussian(AbstractFitModel):
+
+    """To be reimplemented from scratch, leaving Normal as the default wrapper.
+    """
+
+    amplitude = FitParameter(1.)
+    mu = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
+
+    @staticmethod
+    def evaluate(x, amplitude, mu, sigma, *args):
+        return amplitude * scipy.stats.norm.pdf(x, *args, loc=mu, scale=sigma)
+
+    @staticmethod
+    def primitive(x, amplitude, mu, sigma, *args):
+        return amplitude * scipy.stats.norm.cdf(x, *args, loc=mu, scale=sigma)
+
+    def median(self):
+        return self.mu.value
+
+    def mean(self):
+        return self.mu.value
+
+    def std(self):
+        return self.sigma.value
+
+    def rvs(self, size: int = 1, random_state=None):
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        return scipy.stats.norm.rvs(loc=self.mu.value, scale=self.sigma.value,
+                                    size=size, random_state=random_state)
+
+    def random_histogram(self, size: int = 100000, num_bins: int = 100,
+                         random_state=None) -> Histogram1d:
+        """Generate a histogram filled with random variates from the underlying
+        distribution at the current parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 100000).
+
+        num_bins : int, optional
+            The number of bins in the histogram (default 100).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        self.mu.init(np.average(xdata, weights=ydata))
+        self.sigma.init(np.sqrt(np.average((xdata - self.mu.value)**2, weights=ydata)))
+        self.amplitude.init(np.trapezoid(ydata, xdata))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+        """
+        return (self.mu.value - 5. * self.sigma.value, self.mu.value + 5. * self.sigma.value)
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_mean: bool = True, **kwargs) -> None:
+        """Plot the model.
+
+        Note this is reimplemented from scratch to allow overplotting the mean of the
+        distribution.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        fit_output : bool, optional
+            Whether to include the fit output in the legend (default: False).
+
+        plot_mean : bool, optional
+            Whether to overplot the mean of the distribution (default: True).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `plt.plot()`.
+        """
+        super().plot(axes, fit_output=fit_output, **kwargs)
+        if plot_mean:
+            if axes is None:
+                axes = plt.gca()
+            color = last_line_color()
+            x0 = self.mean()
+            y0 = self(x0)
+            axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
+            axes.plot(x0, y0, "o", ms=1.5, color=color)
+
+
 class Erf(AbstractSigmoidFitModel):
 
     """Error function model.
@@ -566,13 +672,6 @@ class Cosine(AbstractCRVFitModel):
 class CrystalBall(AbstractCRVFitModel):
 
     pass
-
-
-@wrap_rv_continuous(scipy.stats.norm)
-class Gaussian(AbstractCRVFitModel):
-
-    """To be reimplemented from scratch, leaving Normal as the default wrapper.
-    """
 
 
 @wrap_rv_continuous(scipy.stats.gibrat)

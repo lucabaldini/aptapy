@@ -16,6 +16,8 @@
 """Unit tests for all the fit models wrapping rv_continuous scipy objects.
 """
 
+import contextlib
+
 from aptapy import models
 from aptapy.plotting import plt, setup_gca
 
@@ -175,10 +177,8 @@ def test_landau():
     """Note the Landau distribution is only available in scipy >= 1.15.1.
     so we are disengaging this test if the model is not implemented.
     """
-    try:
+    with contextlib.suppress(NotImplementedError):
         _test_base(models.Landau)
-    except NotImplementedError:
-        pass
 
 
 def test_laplace():
@@ -235,8 +235,3 @@ def test_student():
 
 def test_wald():
     _test_base(models.Wald)
-
-
-if __name__ == "__main__":
-    test_gaussian()
-    plt.show()

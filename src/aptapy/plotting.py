@@ -656,7 +656,8 @@ def subplot_vstack(num_rows: int = 2, sharex: bool = True, height_ratios: List =
         gridspec_kw = {}
     gridspec_kw.setdefault("hspace", 0.05)
     # Create the subplots.
-    axes_list = fig.subplots(num_rows, 1, sharex=sharex, gridspec_kw=gridspec_kw, height_ratios=height_ratios)
+    axes_list = fig.subplots(num_rows, 1, sharex=sharex, gridspec_kw=gridspec_kw,
+                             height_ratios=height_ratios)
     # Align all the labels on the y axis for all the subplots.
     fig.align_ylabels(axes_list)
     # Hide the x axis labels for all but the last (bottom-most) axes.

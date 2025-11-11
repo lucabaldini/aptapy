@@ -24,6 +24,7 @@ import numpy as np
 import scipy.special
 import scipy.stats
 
+from .hist import Histogram1d
 from .modeling import (
     AbstractCRVFitModel,
     AbstractFitModel,
@@ -31,9 +32,7 @@ from .modeling import (
     FitParameter,
     wrap_rv_continuous,
 )
-from .hist import Histogram1d
-from .modeling import Format
-from .plotting import plt, last_line_color
+from .plotting import last_line_color, plt
 from .typing_ import ArrayLike
 
 __all__ = [
@@ -454,6 +453,7 @@ class Gaussian(AbstractFitModel):
 
     @staticmethod
     def evaluate(x, amplitude, mu, sigma, *args):
+        # pylint: disable=arguments-differ
         return amplitude * scipy.stats.norm.pdf(x, *args, loc=mu, scale=sigma)
 
     @staticmethod
@@ -737,8 +737,11 @@ try:
             return (location - 2.5 * scale, location + 12.5 * scale)
 
 except AttributeError:
+
     class Landau(AbstractCRVFitModel):
+
         def __init__(self, *args, **kwargs):
+            # pylint: disable=super-init-not-called, unused-argument
             msg = "The Landau distribution is only available in scipy >= 1.15.1."
             raise NotImplementedError(msg)
 

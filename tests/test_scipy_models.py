@@ -16,12 +16,7 @@
 """Unit tests for all the fit models wrapping rv_continuous scipy objects.
 """
 
-from typing import Sequence
-
-import numpy as np
-
 from aptapy import models
-from aptapy.hist import Histogram1d
 from aptapy.plotting import plt, setup_gca
 
 
@@ -109,7 +104,7 @@ def test_beta():
 
 
 def test_beta_prime():
-   _test_base(models.BetaPrime, 2., 4.)
+    _test_base(models.BetaPrime, 2., 4.)
 
 
 def test_bradford():

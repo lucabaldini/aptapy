@@ -62,9 +62,8 @@ def _test_base(model_class: type, *shape_parameters, location: float = 10., scal
     xmin, xmax = model.plotting_range()
     print(model)
 
-    # Generate a random sample and fill a histogram.
-    sample = model.rvs(100000, 313)
-    histogram = Histogram1d(np.linspace(xmin, xmax, 100)).fill(sample)
+    # Generate a random histogram.
+    histogram = model.random_histogram(random_state=313)
     histogram.plot(label="Random sample")
 
     # Run the parameter initialization on the histogram data and plot the

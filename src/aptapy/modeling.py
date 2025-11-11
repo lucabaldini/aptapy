@@ -836,7 +836,8 @@ class AbstractFitModelBase(AbstractPlottable):
         x = self._plotting_grid()
         axes.plot(x, self(x), **kwargs)
 
-    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             **kwargs) -> matplotlib.axes.Axes:
         """Plot the model.
 
         Arguments
@@ -850,7 +851,7 @@ class AbstractFitModelBase(AbstractPlottable):
         kwargs.setdefault("label", self.label)
         if fit_output:
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
-        super().plot(axes, **kwargs)
+        return super().plot(axes, **kwargs)
 
     def random_fit_dataset(self, sigma: ArrayLike, num_points: int = 25,
                            seed: int = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -1472,7 +1473,7 @@ class FitModelSum(AbstractFitModelBase):
         return sum(component.integral(x1, x2) for component in self._components)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
-             plot_components: bool = True, **kwargs) -> None:
+             plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:
         """
         Overloaded method for plotting the model.
 
@@ -1501,6 +1502,7 @@ class FitModelSum(AbstractFitModelBase):
         if plot_components:
             for component in self._components:
                 axes.plot(x, component(x), label=None, ls="--", color=color)
+
 
     def _format_fit_output(self, spec: str) -> str:
         """String formatting for fit output.

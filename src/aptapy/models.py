@@ -619,18 +619,29 @@ class HyperSecant(AbstractCRVFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.landau)
-class Landau(AbstractCRVFitModel):
+# Note the Landau distribution is only available starting from scipy 1.15.1
+# It seems a little bit too much to require that version just for this,
+# so we provide a fallback that raises a NotImplementedError when
+# someone tries to instantiate the model.
+try:
+    @wrap_rv_continuous(scipy.stats.landau)
+    class Landau(AbstractCRVFitModel):
 
-    def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method.
+        def default_plotting_range(self) -> Tuple[float, float]:
+            """Overloaded method.
 
-        The Landau distribution is peculiar in that it has no definite mean or variance,
-        and its support is unbounded. It is also asymmetric, with a long right tail.
-        Therefore, we resort to a custom function for the plotting range.
-        """
-        location, scale = self.location.value, self.scale.value
-        return (location - 2.5 * scale, location + 12.5 * scale)
+            The Landau distribution is peculiar in that it has no definite mean or variance,
+            and its support is unbounded. It is also asymmetric, with a long right tail.
+            Therefore, we resort to a custom function for the plotting range.
+            """
+            location, scale = self.location.value, self.scale.value
+            return (location - 2.5 * scale, location + 12.5 * scale)
+
+except AttributeError:
+    class Landau(AbstractCRVFitModel):
+        def __init__(self, *args, **kwargs):
+            msg = "The Landau distribution is only available in scipy >= 1.15.1."
+            raise NotImplementedError(msg)
 
 
 @wrap_rv_continuous(scipy.stats.laplace)

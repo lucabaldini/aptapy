@@ -1495,9 +1495,7 @@ class FitModelSum(AbstractFitModelBase):
         -------
         None
         """
-        super().plot(axes, fit_output=fit_output, **kwargs)
-        if axes is None:
-            axes = plt.gca()
+        axes = super().plot(axes, fit_output=fit_output, **kwargs)
         color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:

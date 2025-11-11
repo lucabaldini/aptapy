@@ -183,7 +183,7 @@ class AbstractPlottable(ABC):
     xlabel: str = None
     ylabel: str = None
 
-    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> matplotlib.axes.Axes:
         """Plot the object on the given axes (or on the current axes if none
         is passed as an argument).
 
@@ -212,6 +212,11 @@ class AbstractPlottable(ABC):
             Additional keyword arguments passed to the _render() method.
             Note that the specifics depends on how _render() is implemented, and
             which type of matplotlib object the plottable is representing.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The axes the object has been plotted on.
         """
         # Set the default value for the label keyword argument, if not already set.
         # Note that if self.label is None, matplotlib will do nothing, as expected.
@@ -223,6 +228,7 @@ class AbstractPlottable(ABC):
             axes.set_xlabel(self.xlabel)
         if self.ylabel is not None:
             axes.set_ylabel(self.ylabel)
+        return axes
 
     @abstractmethod
     def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:

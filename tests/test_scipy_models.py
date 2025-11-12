@@ -22,8 +22,8 @@ from aptapy import models
 from aptapy.plotting import plt, setup_gca
 
 
-def _test_base(model_class: type, *shape_parameters, location: float = 10., scale: float = 2.,
-               threshold: float = 0.001):
+def _test_base(model_class: type, *shape_parameters, location: float = 10.,
+               scale: float = 2., threshold: float = 0.001):
     """Basic tests for a given fit model.
 
     This creates a model of the given class, sets the given ground truth parameter values,

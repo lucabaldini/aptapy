@@ -1087,6 +1087,10 @@ class AbstractSigmoidFitModel(AbstractFitModel):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
         """
+        # Simple initialization based on the data statistics.
+        self.amplitude.set(ydata[-1] - ydata[0])
+        self.location.set(xdata[np.argmax(abs(np.diff(ydata)))])
+        self.scale.set(np.std(xdata) / 4.)
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.

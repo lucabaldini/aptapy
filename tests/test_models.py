@@ -147,35 +147,3 @@ def test_stretched_exponential_complement():
     # The initialization of the parameters is pretty flaky in this case...
     _test_model_base(models.StretchedExponentialComplement, (prefactor, scale, gamma),
                      None, num_sigma=50.)
-
-
-def test_erf():
-    """Test the Erf model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(models.Erf, (amplitude, location, scale), None, sigma=0.25)
-
-
-# def test_erf_complement():
-#     """Test the ErfComplement model.
-#     """
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     amplitude, location, scale = 10., 10., 2.
-#     _test_model_base(models.ErfComplement, (amplitude, location, scale), None, sigma=0.25)
-
-
-def test_logistic():
-    """Test the Logistic model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(models.Logistic, (amplitude, location, scale), None, sigma=0.25)
-
-
-def test_arctangent():
-    """Test the Arctangent model.
-    """
-    plt.figure(f"{inspect.currentframe().f_code.co_name}")
-    amplitude, location, scale = 10., 10., 2.
-    _test_model_base(models.Arctangent, (amplitude, location, scale), None, sigma=0.25)

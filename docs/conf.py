@@ -13,7 +13,9 @@ sys.path.insert(0, str(_SCRIPTS_DIR))
 
 def setup(app):
     import scipy_rv_continuous
+    import sigmoids
     scipy_rv_continuous.create_figures()
+    sigmoids.create_figures()
     return {"version": "1.0", "parallel_read_safe": True}
 
 

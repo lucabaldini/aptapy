@@ -125,6 +125,10 @@ ranging from 0 to 1 as its argument goes from -infinity to +infinity.
    complement.
 
 
+.. image:: /_static/plots/sigmoid_shapes.png
+
+
+
 :class:`~aptapy.models.Erf`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

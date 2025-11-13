@@ -195,10 +195,15 @@ class Polynomial(AbstractFitModel):
 
     def __init__(self, degree: int, label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:
-        super().__init__(label, xlabel, ylabel)
+        # Initialize the fit parameters for the class. Note that
+        # 1. we have to do this *before* we call the constructor of the base class,
+        #    as all the class attributes need to be in place when that is called;
+        # 2. we have to set the attributes on the class itself, not on the instance,
+        #    otherwise they would not be recognized as fit parameters.
         self.degree = degree
         for i in range(degree + 1):
-            setattr(self, f"c{i}", FitParameter(0.))
+            setattr(self.__class__, f"c{i}", FitParameter(0.))
+        super().__init__(label, xlabel, ylabel)
 
     @staticmethod
     def evaluate(x: ArrayLike, *coefficients: float) -> ArrayLike:
@@ -208,6 +213,32 @@ class Polynomial(AbstractFitModel):
         for i, c in enumerate(coefficients):
             result += c * x**(degree - i)
         return result
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is using a weighted linear regression.
+
+        .. note::
+
+           This should provide the exact result in most cases, but, in the spirit of
+           providing a common interface across all models, we are not overloading the
+           fit() method. (Everything will continue working as expected, e.g., when
+           one uses bounds on parameters.)
+        """
+        # pylint: disable=invalid-name
+        if isinstance(sigma, Number):
+            sigma = np.full(ydata.shape, sigma)
+        weights = 1. / sigma**2.
+        # Build the Vandermonde matrix.
+        V = np.vander(xdata, N=self.degree + 1, increasing=False)
+        W = np.diag(weights)
+        VTW = V.T @ W
+        A = VTW @ V
+        b = VTW @ ydata
+        coeffs = np.linalg.solve(A, b)
+        for i, param in enumerate(self):
+            param.init(coeffs[i])
 
     def primitive(self, x: ArrayLike) -> ArrayLike:
         raise NotImplementedError("Analytical primitive not implemented for generic Polynomial.")
@@ -221,8 +252,7 @@ class Quadratic(Polynomial):
     degree fixed to 2.
     """
 
-    def __init__(self, label: str = None, xlabel: str = None,
-                 ylabel: str = None) -> None:
+    def __init__(self, label: str = None, xlabel: str = None, ylabel: str = None) -> None:
         super().__init__(degree=2, label=label, xlabel=xlabel, ylabel=ylabel)
 
 
@@ -234,8 +264,7 @@ class Cubic(Polynomial):
     degree fixed to 3.
     """
 
-    def __init__(self, label: str = None, xlabel: str = None,
-                 ylabel: str = None) -> None:
+    def __init__(self, label: str = None, xlabel: str = None, ylabel: str = None) -> None:
         super().__init__(degree=3, label=label, xlabel=xlabel, ylabel=ylabel)
 
 

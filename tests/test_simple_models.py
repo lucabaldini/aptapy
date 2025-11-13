@@ -27,12 +27,30 @@ from aptapy.plotting import plt, setup_gca
 
 
 def _test_model_base(model_class: type, *parameter_values: float, sigma: float = 0.1,
-                     num_sigma: float = 5.):
+                     num_sigma: float = 5., **kwargs) -> None:
     """Basic tests for the Model base class.
+
+    Arguments
+    ----------
+    model_class: type
+        The model class to be tested.
+
+    parameter_values: float
+        The ground-truth parameter values to be used for generating the random dataset.
+
+    sigma: float
+        The standard deviation of the noise to be added to the generated dataset.
+
+    num_sigma: float
+        The number of standard deviations within which the initial parameter guesses
+        should be compatible with the ground-truth values.
+
+    kwargs: dict
+        Additional keyword arguments to be passed to the model constructor.
     """
     plt.figure(model_class.__name__)
     # Create the model and set the basic parameters.
-    model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]")
+    model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]", **kwargs)
     model.set_parameters(*parameter_values)
     print(model)
 
@@ -58,9 +76,6 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
         # reasonable number of sigma from the truth.
         assert param.compatible_with(guess, num_sigma)
         assert param.compatible_with(ground_truth, 5.)
-
-    #xmin, xmax = model.default_plotting_range()
-    #setup_gca(xmin=xmin, xmax=xmax)
     plt.legend()
 
 
@@ -72,23 +87,21 @@ def test_line():
     _test_model_base(models.Line, 2., 5.)
 
 
-#def test_quadratic():
-#    _test_model_base(models.Quadratic, 1., 2., 16.)
+def test_quadratic():
+    _test_model_base(models.Quadratic, 1., 2., 16.)
 
 
-# def test_power_law():
-#     """Test the PowerLaw model---note we do this for two different indices.
-#     """
-#     for index in (-2., -1.):
-#         plt.figure(f"{inspect.currentframe().f_code.co_name}_index{abs(index)}")
-#         prefactor = 10.
-#         if index == -1.:
-#             def integral(xmin, xmax, prefactor=prefactor):
-#                 return prefactor * np.log(xmax / xmin)
-#         else:
-#             def integral(xmin, xmax, prefactor=prefactor, index=index):
-#                 return (prefactor / (index + 1.) * (xmax**(index + 1.) - xmin**(index + 1.)))
-#         _test_model_base(models.PowerLaw, (prefactor, index), integral)
+def test_cubic():
+    _test_model_base(models.Cubic, 1., 2., 3., 4.)
+
+
+def test_ploynomial():
+    _test_model_base(models.Polynomial, 1., -2., 3., -4., 5., degree=4)
+
+
+def test_power_law():
+    _test_model_base(models.PowerLaw, 10., -2.)
+    _test_model_base(models.PowerLaw, 10., -1.)
 
 
 # def test_exponential():
@@ -126,3 +139,8 @@ def test_line():
 #     # The initialization of the parameters is pretty flaky in this case...
 #     _test_model_base(models.StretchedExponentialComplement, (prefactor, scale, gamma),
 #                      None, num_sigma=50.)
+
+
+if __name__ == "__main__":
+    test_ploynomial()
+    plt.show()

@@ -1233,7 +1233,11 @@ class AbstractCRVFitModel(AbstractFitModel):
         # Calculate the average, standard deviation, and integral of the input data.
         location = np.average(xdata, weights=ydata)
         scale = np.sqrt(np.average((xdata - location)**2, weights=ydata))
-        amplitude = np.trapezoid(ydata, xdata)
+        try:
+            amplitude = np.trapezoid(ydata, xdata)
+        # Horrible but necessary hack to support older numpy versions.
+        except AttributeError:
+            amplitude = np.trapz(ydata, xdata)
         # If the underlying distribution has a finite standard deviation
         # we can rescale the scale parameter accordingly. Note that this is
         # independent of the current location and scale, and only depends on the

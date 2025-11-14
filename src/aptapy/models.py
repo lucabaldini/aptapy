@@ -242,7 +242,8 @@ class Polynomial(AbstractFitModel):
         for i, param in enumerate(self):
             param.init(coeffs[i])
 
-    def primitive(self, x: ArrayLike) -> ArrayLike:
+    @staticmethod
+    def primitive(x: ArrayLike, *coefficients: float) -> ArrayLike:
         raise NotImplementedError("Analytical primitive not implemented for generic Polynomial.")
 
 

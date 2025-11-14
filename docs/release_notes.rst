@@ -4,6 +4,21 @@ Release notes
 =============
 
 
+* Major refactoring of the modeling infrastructure, introducing a more structured and
+  extensible framework for fitting models.
+* New abstract base classes (AbstractSigmoidFitModel, AbstractCRVFitModel) to support
+  different model families
+* Added 40+ new model classes wrapping scipy.stats continuous random variables
+* Refactored existing models to use a consistent primitive() method instead of integral()
+* Reorganized tests into category-specific files (simple, sigmoid, scipy models)
+* Updated parameter naming.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/49
+  - https://github.com/lucabaldini/aptapy/issues/46
+  - https://github.com/lucabaldini/aptapy/issues/43
+
+
 Version 0.13.0 (2025-11-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

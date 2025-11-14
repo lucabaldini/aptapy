@@ -99,11 +99,11 @@ def test_power_law():
 
 
 def test_exponential():
-    _test_model_base(models.Exponential, 5., 2., location=10.,)
+    _test_model_base(models.Exponential, 5., 2., location=10.)
 
 
 def test_exponential_complement():
-    _test_model_base(models.ExponentialComplement, 5., 2., location=10.,)
+    _test_model_base(models.ExponentialComplement, 5., 2., location=10.)
 
 
 def test_stretched_exponential():

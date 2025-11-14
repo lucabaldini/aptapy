@@ -89,7 +89,7 @@ def test_cubic():
     _test_model_base(models.Cubic, 1., 2., 3., 4.)
 
 
-def test_ploynomial():
+def test_polynomial():
     _test_model_base(models.Polynomial, 1., -2., 3., -4., 5., degree=4)
 
 

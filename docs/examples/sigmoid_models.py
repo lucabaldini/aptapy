@@ -9,10 +9,10 @@ parameters
 # %%
 
 from aptapy.plotting import plt
-from aptapy.models import Erf, Logistic, Arctangent, HyperbolicTangent
+from aptapy.models import ErfSigmoid, LogisticSigmoid, Arctangent, HyperbolicTangent
 
-Erf().plot()
-Logistic().plot()
+ErfSigmoid().plot()
+LogisticSigmoid().plot()
 Arctangent().plot()
 HyperbolicTangent().plot()
 

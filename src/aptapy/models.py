@@ -407,7 +407,7 @@ class Exponential(AbstractFitModel):
 
     def primitive(self, x: ArrayLike) -> ArrayLike:
         prefactor, scale = self.parameter_values()
-        return prefactor * scale * (np.exp(-(x - self.location) / scale))
+        return -prefactor * scale * (np.exp(-(x - self.location) / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
         return (self.location, self.location + scale_factor * self.scale.value)

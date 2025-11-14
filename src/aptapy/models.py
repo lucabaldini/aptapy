@@ -457,8 +457,10 @@ class StretchedExponential(Exponential):
         self.stretch.init(1.)
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
-        return (self.location, self.location + scale_factor * \
-                self.scale.value / self.stretch.value**1.5)
+        return (
+            self.location,
+            self.location + scale_factor * self.scale.value / self.stretch.value**1.5
+        )
 
 
 class StretchedExponentialComplement(StretchedExponential):

@@ -28,13 +28,13 @@ from typing import Callable, Dict, Iterator, Tuple
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.integrate
+import scipy.optimize
+import scipy.stats
 import uncertainties
-from scipy.integrate import quad
-from scipy.optimize import curve_fit
-from scipy.stats import chi2
 
 from .hist import Histogram1d
-from .plotting import AbstractPlottable
+from .plotting import AbstractPlottable, last_line_color
 from .typing_ import ArrayLike
 
 
@@ -262,7 +262,7 @@ class FitParameter:
             # the only thing we can do in absence of an error is to use the
             # Python default formatting.
             param = format(self.value, "g")
-        text = f"{self._name.title()}: {param}"
+        text = f"{self._name}: {param}"
         info = []
         if self._frozen:
             info.append("frozen")
@@ -332,7 +332,7 @@ class FitStatus:
         self.chisquare = chisquare
         if dof is not None:
             self.dof = dof
-        self.pvalue = chi2.sf(self.chisquare, self.dof)
+        self.pvalue = scipy.stats.chi2.sf(self.chisquare, self.dof)
         # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
         # function is > 0.5, we flip it around, so that we always report the smallest
         # tail, and the pvalue is the probability of obtaining a chisquare value more
@@ -746,7 +746,7 @@ class AbstractFitModelBase(AbstractPlottable):
                        if parameter.frozen}
         model = self.freeze(self.evaluate, **constraints)
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
-        popt, pcov = curve_fit(*args, **kwargs)
+        popt, pcov = scipy.optimize.curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
         self.status.update(self.calculate_chisquare(xdata, ydata, sigma))
         return self.status
@@ -836,7 +836,8 @@ class AbstractFitModelBase(AbstractPlottable):
         x = self._plotting_grid()
         axes.plot(x, self(x), **kwargs)
 
-    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             **kwargs) -> matplotlib.axes.Axes:
         """Plot the model.
 
         Arguments
@@ -850,7 +851,7 @@ class AbstractFitModelBase(AbstractPlottable):
         kwargs.setdefault("label", self.label)
         if fit_output:
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
-        super().plot(axes, **kwargs)
+        return super().plot(axes, **kwargs)
 
     def random_fit_dataset(self, sigma: ArrayLike, num_points: int = 25,
                            seed: int = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -1019,7 +1020,7 @@ class AbstractFitModel(AbstractFitModelBase):
         integral : float
             The integral of the model between x1 and x2.
         """
-        value, _ = quad(self, x1, x2)
+        value, _ = scipy.integrate.quad(self, x1, x2)
         return value
 
     def integral(self, x1: float, x2: float) -> float:
@@ -1041,6 +1042,335 @@ class AbstractFitModel(AbstractFitModelBase):
             The integral of the model between x1 and x2.
         """
         return self.quadrature(x1, x2)
+
+
+class AbstractSigmoidFitModel(AbstractFitModel):
+
+    """Abstract base class for fit models representing sigmoids.
+    """
+
+    amplitude = FitParameter(1.)
+    location = FitParameter(0.)
+    scale = FitParameter(1.)
+
+    @staticmethod
+    @abstractmethod
+    def shape(z: ArrayLike, *parameter_values: float) -> ArrayLike:
+        """Abstract method for the normalized shape of the sigmoid model. Subclasses
+        must implement this method.
+
+        Arguments
+        ---------
+        z : array_like
+            The normalized independent variable.
+
+        parameter_values : float
+            Additional shape parameters for the sigmoid.
+
+        Returns
+        -------
+        array_like
+            The value of the sigmoid shape function at z.
+        """
+
+    def evaluate(self, x: ArrayLike, amplitude: float, location: float,
+                 scale: float, *parameter_values: float) -> ArrayLike:
+        """Overloaded method for evaluating the model.
+
+        Note if the scale is negative, we take the complement of the sigmoid function.
+        """
+        # pylint: disable=arguments-differ
+        z = (x - location) / abs(scale)
+        val = amplitude * self.shape(z, *parameter_values)
+        return val if scale >= 0. else amplitude - val
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
+        """Overloaded method.
+        """
+        # Simple initialization based on the data statistics.
+        delta = np.diff(ydata)
+        self.amplitude.set(ydata.max() - ydata.min())
+        self.location.set(xdata[np.argmax(abs(delta))])
+        scale = np.std(xdata) / 4.
+        if delta.mean() < 0.:
+            scale = -scale
+        self.scale.set(scale)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        By default the plotting range is set to be an interval centered on the
+        location parameter, and extending for a number of scale units on each side.
+        """
+        left, right = 5., 5.
+        location = self.location.value
+        scale = self.scale.value
+        return (location - left * scale, location + right * scale)
+
+
+class AbstractCRVFitModel(AbstractFitModel):
+
+    """Abstract base class for fit models based on continuous random variables.
+
+    (Typically we will use this, in conjunction with the `wrap_rv_continuous`
+    decorator, to wrap continuous random variables from scipy.stats).
+
+    The general rule for the signature of scipy distributions is that they accept
+    all the shape parameters first, and then loc and scale.
+    This decorator creates a fit model class with the appropriate methods to
+    Read dist.shapes (and numargs) to know the positional shape args.
+    Assume loc and scale keywords are always supported.
+
+    """
+
+    amplitude = FitParameter(1.)
+    location = FitParameter(0.)
+    scale = FitParameter(1., minimum=0)
+    _rv = None
+
+    @classmethod
+    def evaluate(cls, x, amplitude, location, scale, *args):
+        """Overloaded method for evaluating the model.
+
+        This takes the pdf of the underlying distribution and scales it by the amplitude.
+        """
+        # pylint: disable=arguments-differ
+        return amplitude * cls._rv.pdf(x, *args, loc=location, scale=scale)
+
+    @classmethod
+    def primitive(cls, x, amplitude, location, scale, *args):
+        """Overloaded method for evaluating the primitive of the model.
+
+        Note this is not just a primitive, it is the actual cumulative distribution
+        function (cdf) scaled by the amplitude. We keep the ``primitive()`` name for
+        because in general not all the fit models are normalizable, and still we want
+        to keep a common interface.
+        """
+        return amplitude * cls._rv.cdf(x, *args, loc=location, scale=scale)
+
+    def support(self):
+        """Return the support of the underlying distribution at the current
+        parameter values.
+        """
+        _, location, scale, *args = self.parameter_values()
+        return tuple(float(value) for value in self._rv.support(*args, loc=location, scale=scale))
+
+    def ppf(self, p: ArrayLike):
+        """Return the percent point function (inverse of cdf) of the underlying
+        distribution for a given quantile at the current parameter values.
+
+        Arguments
+        ---------
+        p : array_like
+            The quantile(s) to evaluate the ppf at.
+        """
+        _, location, scale, *args = self.parameter_values()
+        return self._rv.ppf(p, *args, loc=location, scale=scale)
+
+    def median(self):
+        """Return the median of the underlying distribution at the current parameter
+        values.
+        """
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.median(*args, loc=location, scale=scale))
+
+    def mean(self):
+        """Return the mean of the underlying distribution at the current parameter
+        values.
+        """
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.mean(*args, loc=location, scale=scale))
+
+    def std(self):
+        """Return the standard deviation of the underlying distribution at the current parameter
+        values.
+        """
+        _, location, scale, *args = self.parameter_values()
+        return float(self._rv.std(*args, loc=location, scale=scale))
+
+    def rvs(self, size: int = 1, random_state=None):
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        _, location, scale, *args = self.parameter_values()
+        return self._rv.rvs(*args, loc=location, scale=scale, size=size, random_state=random_state)
+
+    def random_histogram(self, size: int = 100000, num_bins: int = 100,
+                         random_state=None) -> Histogram1d:
+        """Generate a histogram filled with random variates from the underlying
+        distribution at the current parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 100000).
+
+        num_bins : int, optional
+            The number of bins in the histogram (default 100).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+
+        This is tailored on unimodal distributions, where we start from the
+        basic statistics (average, standard deviation and area) of the input sample
+        and try to match the amplitude, location and scale of the distribution
+        to be fitted. No attempt is made at setting the shape parameters (if any).
+        """
+        # Calculate the average, standard deviation, and integral of the input data.
+        location = np.average(xdata, weights=ydata)
+        scale = np.sqrt(np.average((xdata - location)**2, weights=ydata))
+        amplitude = scipy.integrate.trapezoid(ydata, xdata)
+        # If the underlying distribution has a finite standard deviation
+        # we can rescale the scale parameter accordingly. Note that this is
+        # independent of the current location and scale, and only depends on the
+        # shape of the distribution.
+        std = self.std()
+        if not np.isinf(std) and not np.isnan(std):
+            scale = scale * self.scale.value / std
+        # If the underlying distribution has a finite mean we can shift
+        # the location parameter accordingly. Note this depends on the
+        # current value of the scale parameter, which is why we do this after
+        # rescaling it.
+        mean = self.mean()
+        if not np.isinf(mean) and not np.isnan(mean):
+            delta = (mean - self.location.value) * scale / self.scale.value
+            location -= delta
+        # And we are good to go!
+        self.location.init(location)
+        self.scale.init(scale)
+        self.amplitude.init(amplitude)
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        Note we have access to all the goodies of a scipy.stats.rv_continuous object
+        here (e.g., the support of the function, and the mean and standard deviation
+        when they are finite), so we can be fairly clever in setting up a generic method
+        that works out of the box in many cases.
+        """
+        # If the distribution has finite support, use it.
+        minimum, maximum = self.support()
+        if np.isfinite(minimum) and np.isfinite(maximum):
+            return (minimum, maximum)
+        # Otherwise use the underlying ppf. First thing first, we need some measure of
+        # the center and width of the distribution. The median should be always defined,
+        # as it only relies on the ppf, i.e., the pdf being normalizable. For the width
+        # of the distribution we try the standard deviation first, but if that is not
+        # defined we fall back to using the scale parameter.
+        center = self.median()
+        width = self.std()
+        if not np.isfinite(width):
+            width = self.scale.value
+        # Now use the ppf to get a reasonable plotting range.
+        alpha = 0.005
+        padding = 1.5 * width
+        minimum = max(minimum, center - 5. * width)
+        maximum = min(maximum, center + 5. * width)
+        left = max(self.ppf(alpha) - padding, minimum)
+        right = min(self.ppf(1. - alpha) + padding, maximum)
+        return (left, right)
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_mean: bool = True, **kwargs) -> None:
+        """Plot the model.
+
+        Note this is reimplemented from scratch to allow overplotting the mean of the
+        distribution.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        fit_output : bool, optional
+            Whether to include the fit output in the legend (default: False).
+
+        plot_mean : bool, optional
+            Whether to overplot the mean of the distribution (default: True).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `plt.plot()`.
+        """
+        if axes is None:
+            axes = plt.gca()
+        kwargs.setdefault("label", self.label)
+        if fit_output:
+            kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
+        x = self._plotting_grid()
+        axes.plot(x, self(x), **kwargs)
+        x0 = self.mean()
+        # If we are not plotting the mean, or if the mean is not finite, just plot the model
+        # and return.
+        if not plot_mean or not np.isfinite(x0):
+            return
+        # Otherwise plot the model and overplot the mean with a dot.
+        color = last_line_color(axes)
+        y0 = self(x0)
+        axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
+        axes.plot(x0, y0, "o", ms=1.5, color=color)
+
+
+class PhonyCRVFitModel:
+
+    """Phony class to provide a mechanism not to break everything when a particular
+    scipy.stats distribution is not available in a given scipy version.
+    """
+
+    def __init__(self, scipy_version: str) -> None:
+        """Constructor.
+        """
+        msg = f"The {self.__class__.__name__} distribution is only available in " \
+              f"scipy >= {scipy_version}."
+        raise NotImplementedError(msg)
+
+
+def wrap_rv_continuous(rv, **shape_parameters) -> type:
+
+    """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.
+
+    This is fairly minimal, and basically accounts to adding all the necessary shape
+    parameters to the underlying fit model class. Note the name of the parameters is
+    inferred from the rv.shapes attribute, and each shape parameter is set to 1. by
+    default (with a minimum of 0.) unless this is overridden via the shape_parameters
+    argument.
+
+    Arguments
+    ---------
+    rv : scipy.stats.rv_continuous
+        The scipy.stats.rv_continuous object to wrap.
+
+    shape_parameters : dict, optional
+        Additional shape parameters to be setup with non-default FitParameter
+        objects (e.g., to set different minimum/maximum values).
+    """
+
+    def _wrapper(cls: type):
+        """Wrapper function---cache the underlying continuos random variable, and
+        add all the necessary shape parameters to the class.
+        """
+        # pylint: disable=protected-access
+        cls._rv = rv
+        if rv.numargs > 0:
+            for name in rv.shapes.split(", "):
+                parameter = shape_parameters.get(name, FitParameter(1., minimum=0.))
+                setattr(cls, name, parameter)
+        return cls
+
+    return _wrapper
 
 
 class FitModelSum(AbstractFitModelBase):
@@ -1165,7 +1495,7 @@ class FitModelSum(AbstractFitModelBase):
         return sum(component.integral(x1, x2) for component in self._components)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
-             plot_components: bool = True, **kwargs) -> None:
+             plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:
         """
         Overloaded method for plotting the model.
 
@@ -1188,12 +1518,13 @@ class FitModelSum(AbstractFitModelBase):
         -------
         None
         """
-        super().plot(axes, fit_output=fit_output, **kwargs)
-        color = plt.gca().lines[-1].get_color()
+        axes = super().plot(axes, fit_output=fit_output, **kwargs)
+        color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:
             for component in self._components:
-                plt.plot(x, component(x), label=None, ls="--", color=color)
+                axes.plot(x, component(x), label=None, ls="--", color=color)
+
 
     def _format_fit_output(self, spec: str) -> str:
         """String formatting for fit output.

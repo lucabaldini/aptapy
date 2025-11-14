@@ -183,7 +183,7 @@ class AbstractPlottable(ABC):
     xlabel: str = None
     ylabel: str = None
 
-    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> None:
+    def plot(self, axes: matplotlib.axes.Axes = None, **kwargs) -> matplotlib.axes.Axes:
         """Plot the object on the given axes (or on the current axes if none
         is passed as an argument).
 
@@ -212,6 +212,11 @@ class AbstractPlottable(ABC):
             Additional keyword arguments passed to the _render() method.
             Note that the specifics depends on how _render() is implemented, and
             which type of matplotlib object the plottable is representing.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The axes the object has been plotted on.
         """
         # Set the default value for the label keyword argument, if not already set.
         # Note that if self.label is None, matplotlib will do nothing, as expected.
@@ -223,6 +228,7 @@ class AbstractPlottable(ABC):
             axes.set_xlabel(self.xlabel)
         if self.ylabel is not None:
             axes.set_ylabel(self.ylabel)
+        return axes
 
     @abstractmethod
     def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
@@ -650,7 +656,8 @@ def subplot_vstack(num_rows: int = 2, sharex: bool = True, height_ratios: List =
         gridspec_kw = {}
     gridspec_kw.setdefault("hspace", 0.05)
     # Create the subplots.
-    axes_list = fig.subplots(num_rows, 1, sharex=sharex, gridspec_kw=gridspec_kw)
+    axes_list = fig.subplots(num_rows, 1, sharex=sharex, gridspec_kw=gridspec_kw,
+                             height_ratios=height_ratios)
     # Align all the labels on the y axis for all the subplots.
     fig.align_ylabels(axes_list)
     # Hide the x axis labels for all but the last (bottom-most) axes.

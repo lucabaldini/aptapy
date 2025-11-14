@@ -7,6 +7,7 @@ The modeling module provides all the core tools for fitting models to data, incl
 parameter estimation and uncertainty quantification. All predefined simple models
 are defined in the :mod:`~aptapy.models` module, which builds on top of the
 functionality provided here.
+
 More complex models can be built by summing simple ones, e.g.,
 
 >>> from aptapy.models import Line, Gaussian
@@ -17,7 +18,9 @@ The main fitting engine supports bounded fits and/or fits with fixed parameters.
 
 .. seealso::
 
-   Have a look at the :ref:`sphx_glr_auto_examples_simple_fit.py`,
+   The :ref:`models` section lists all the predefined fitting models.
+
+   Also, have a look at the :ref:`sphx_glr_auto_examples_simple_fit.py`,
    :ref:`sphx_glr_auto_examples_composite_fit.py` and
    :ref:`sphx_glr_auto_examples_constrained_fit.py` examples.
 
@@ -161,6 +164,49 @@ Fitting models interact nicely with one-dimensional histograms from the
 >>> hist.fill(np.random.rand(1000))
 >>> model = Line()
 >>> status = model.fit_histogram(hist)
+
+Location-scale models
+---------------------
+
+A number of models included in this module belong to the `location-scale` family,
+i.e., they can be expressed in terms of a location parameter and a non-negative
+scale parameter and, ultimately, are characterized by a universal shape function
+:math:`g(z)` of the standardized variable
+
+.. math::
+    z = \frac{x - m}{s},
+
+where :math:`m` is the location parameter and :math:`s` is the scale parameter.
+The gaussian probability density function is the prototypical example of
+location-scale model (with the mean as location and the standard deviation
+as scale), but many other models belong to this family---both peak-like and
+sigmoid-like.
+
+From the point of view of the practical implementation, most of the location-scale
+models in :mod:`aptapy.models` wrap :scipy_rv_wrap:`rv_continuous` distributions from
+:scipy:`scipy.stats`, which already provide most of the necessary functionality.
+
+
+Sigmoid models
+~~~~~~~~~~~~~~
+
+Location-scale sigmoid-like models all inherit from the abstract base class
+:class:`~aptapy.modeling.AbstractSigmoidFitModel`, and, just like in the previous
+case, they must provide a concrete implementation of the shape function.
+The latter is expected to be a monotonically increasing function, ranging
+from 0 to 1 as its argument goes from -infinity to +infinity, and the meaning
+of the amplitude parameter in this case is that of the total change in the function
+value across the transition region, so that the general model reads
+
+.. math::
+    f(x; A, m, s, ...) = A g\left(\frac{x - m}{s}; ...\right)
+
+(note that there is no division by the scale parameter in this case). Conversely,
+the implementation of the evaluation method reads:
+
+.. literalinclude:: ../src/aptapy/modeling.py
+   :language: python
+   :pyobject: AbstractSigmoidFitModel.evaluate
 
 
 Composite models

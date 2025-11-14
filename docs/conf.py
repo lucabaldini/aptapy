@@ -3,8 +3,20 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import importlib.metadata
+import pathlib
+import sys
 
 from aptapy import __version__, __name__ as __package_name__
+
+_SCRIPTS_DIR = pathlib.Path(__file__).parent / "_scripts"
+sys.path.insert(0, str(_SCRIPTS_DIR))
+
+def setup(app):
+    import scipy_rv_continuous
+    import sigmoids
+    scipy_rv_continuous.create_figures()
+    sigmoids.create_figures()
+    return {"version": "1.0", "parallel_read_safe": True}
 
 
 # Get package metadata.
@@ -26,6 +38,7 @@ release = version
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.extlinks",
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
@@ -40,6 +53,11 @@ autodoc_default_options = {
 }
 todo_include_todos = True
 
+
+extlinks = {
+    "scipy_rv_wrap": ("https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.%s.html",
+                      "scipy.stats.%s"),
+}
 
 sphinx_gallery_conf = {
     "examples_dirs": ["examples"],      # source example scripts (relative to conf.py)
@@ -83,3 +101,4 @@ html_logo = "_static/logo_small.png"
 html_favicon = "_static/favicon.ico"
 html_permalinks_icon = "<span>#</span>"
 html_static_path = ["_static"]
+html_css_files = ['aptapy.css']

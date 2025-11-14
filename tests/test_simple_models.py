@@ -16,14 +16,8 @@
 """Unit tests for the modeling module.
 """
 
-import inspect
-from typing import Callable, Sequence
-
-import numpy as np
-import pytest
-
 from aptapy import models
-from aptapy.plotting import plt, setup_gca
+from aptapy.plotting import plt
 
 
 def _test_model_base(model_class: type, *parameter_values: float, sigma: float = 0.1,
@@ -104,43 +98,17 @@ def test_power_law():
     _test_model_base(models.PowerLaw, 10., -1.)
 
 
-# def test_exponential():
-#     """Test the Exponential model.
-#     """
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     prefactor, scale = 10., 2.
-#     def integral(xmin, xmax):
-#         return prefactor * scale * (np.exp(-xmin / scale) - np.exp(-xmax / scale))
-#     _test_model_base(models.Exponential, (prefactor, scale), integral)
+def test_exponential():
+    _test_model_base(models.Exponential, 5., 2., location=10.,)
 
 
-# def test_exponential_complement():
-#     """Test the ExponentialComplement model.
-#     """
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     prefactor, scale = 10., 2.
-#     _test_model_base(models.ExponentialComplement, (prefactor, scale,), None)
+def test_exponential_complement():
+    _test_model_base(models.ExponentialComplement, 5., 2., location=10.,)
 
 
-# def test_stretched_exponential():
-#     """Test the StretchedExponential model.
-#     """
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     prefactor, scale, gamma = 10., 2., 0.5
-#     # The initialization of the parameters is pretty flaky in this case...
-#     _test_model_base(models.StretchedExponential, (prefactor, scale, gamma), None, num_sigma=50.)
+def test_stretched_exponential():
+    _test_model_base(models.StretchedExponential, 5., 2., 0.5, num_sigma=50.)
 
 
-# def test_stretched_exponential_complement():
-#     """Test the StretchedExponentialComplement model.
-#     """
-#     plt.figure(f"{inspect.currentframe().f_code.co_name}")
-#     prefactor, scale, gamma = 10., 2., 0.5
-#     # The initialization of the parameters is pretty flaky in this case...
-#     _test_model_base(models.StretchedExponentialComplement, (prefactor, scale, gamma),
-#                      None, num_sigma=50.)
-
-
-if __name__ == "__main__":
-    test_ploynomial()
-    plt.show()
+def test_stretched_exponential_complement():
+    _test_model_base(models.StretchedExponentialComplement, 5., 2., 0.5, num_sigma=50.)

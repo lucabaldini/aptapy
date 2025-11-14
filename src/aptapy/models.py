@@ -338,18 +338,18 @@ class Exponential(AbstractFitModel):
     """Exponential model.
 
     Note this is an example of a model with a state, i.e., one where ``evaluate()``
-    is not a static method, as we have an ``origin`` attribute that needs to be
+    is not a static method, as we have a ``location`` attribute that needs to be
     taken into account. This is done in the spirit of facilitating fits where
     the exponential decay starts at a non-zero x value.
 
-    (One might argue that ``origin`` should be a fit parameter as well, but that
+    (One might argue that ``location`` should be a fit parameter as well, but that
     would be degenerate with the ``scale`` parameter, and it would have to be
     fixed in most cases anyway, so a simple attribute seems more appropriate here.)
 
     Arguments
     ---------
-    origin : float, optional
-        The origin of the exponential decay (default 0.).
+    location : float, optional
+        The location of the exponential decay (default 0.).
 
     label : str, optional
         The model label.
@@ -364,14 +364,14 @@ class Exponential(AbstractFitModel):
     prefactor = FitParameter(1.)
     scale = FitParameter(1.)
 
-    def __init__(self, origin: float = 0., label: str = None, xlabel: str = None,
+    def __init__(self, location: float = 0., label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:
         super().__init__(label, xlabel, ylabel)
-        self.origin = origin
+        self.location = location
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        x = x - self.origin
+        x = x - self.location
         return prefactor * np.exp(-x / scale)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
@@ -388,7 +388,7 @@ class Exponential(AbstractFitModel):
         ydata = ydata[mask]
         if isinstance(sigma, np.ndarray):
             sigma = sigma[mask]
-        X = xdata - self.origin
+        X = xdata - self.location
         Y = np.log(ydata)
         # Propagate the errors to log space.
         weights = ydata**2. / sigma**2.
@@ -405,10 +405,10 @@ class Exponential(AbstractFitModel):
 
     def primitive(self, x: ArrayLike) -> ArrayLike:
         prefactor, scale = self.parameter_values()
-        return prefactor * scale * (np.exp(-(x - self.origin) / scale))
+        return prefactor * scale * (np.exp(-(x - self.location) / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
-        return (self.origin, self.origin + scale_factor * self.scale.value)
+        return (self.location, self.location + scale_factor * self.scale.value)
 
 
 class ExponentialComplement(Exponential):
@@ -439,7 +439,7 @@ class StretchedExponential(Exponential):
 
     def evaluate(self, x: ArrayLike, prefactor: float, scale: float, stretch: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        x = x - self.origin
+        x = x - self.location
         return prefactor * np.exp(-(x / scale)**stretch)
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
@@ -452,6 +452,9 @@ class StretchedExponential(Exponential):
         """
         Exponential.init_parameters(self, xdata, ydata, sigma)
         self.stretch.init(1.)
+
+    def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
+        return (self.location, self.location + scale_factor * self.scale.value / self.stretch.value**1.5)
 
 
 class StretchedExponentialComplement(StretchedExponential):

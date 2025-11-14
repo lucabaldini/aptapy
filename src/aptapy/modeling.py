@@ -28,10 +28,10 @@ from typing import Callable, Dict, Iterator, Tuple
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.integrate
+import scipy.optimize
+import scipy.stats
 import uncertainties
-from scipy.integrate import quad
-from scipy.optimize import curve_fit
-from scipy.stats import chi2
 
 from .hist import Histogram1d
 from .plotting import AbstractPlottable, last_line_color
@@ -332,7 +332,7 @@ class FitStatus:
         self.chisquare = chisquare
         if dof is not None:
             self.dof = dof
-        self.pvalue = chi2.sf(self.chisquare, self.dof)
+        self.pvalue = scipy.stats.chi2.sf(self.chisquare, self.dof)
         # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
         # function is > 0.5, we flip it around, so that we always report the smallest
         # tail, and the pvalue is the probability of obtaining a chisquare value more
@@ -746,7 +746,7 @@ class AbstractFitModelBase(AbstractPlottable):
                        if parameter.frozen}
         model = self.freeze(self.evaluate, **constraints)
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
-        popt, pcov = curve_fit(*args, **kwargs)
+        popt, pcov = scipy.optimize.curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
         self.status.update(self.calculate_chisquare(xdata, ydata, sigma))
         return self.status
@@ -1020,7 +1020,7 @@ class AbstractFitModel(AbstractFitModelBase):
         integral : float
             The integral of the model between x1 and x2.
         """
-        value, _ = quad(self, x1, x2)
+        value, _ = scipy.integrate.quad(self, x1, x2)
         return value
 
     def integral(self, x1: float, x2: float) -> float:
@@ -1233,11 +1233,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         # Calculate the average, standard deviation, and integral of the input data.
         location = np.average(xdata, weights=ydata)
         scale = np.sqrt(np.average((xdata - location)**2, weights=ydata))
-        try:
-            amplitude = np.trapezoid(ydata, xdata)
-        # Horrible but necessary hack to support older numpy versions.
-        except AttributeError:
-            amplitude = np.trapz(ydata, xdata)
+        amplitude = scipy.integrate.trapezoid(ydata, xdata)
         # If the underlying distribution has a finite standard deviation
         # we can rescale the scale parameter accordingly. Note that this is
         # independent of the current location and scale, and only depends on the

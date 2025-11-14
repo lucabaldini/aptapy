@@ -21,6 +21,7 @@ from typing import Tuple
 
 import matplotlib
 import numpy as np
+import scipy.integrate
 import scipy.special
 import scipy.stats
 
@@ -540,13 +541,9 @@ class Gaussian(AbstractFitModel):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
         self.mu.init(np.average(xdata, weights=ydata))
         self.sigma.init(np.sqrt(np.average((xdata - self.mu.value)**2, weights=ydata)))
-        try:
-            self.amplitude.init(np.trapezoid(ydata, xdata))
-        # Horrible workaround for compatibility with older numpy versions.
-        except AttributeError:
-            self.amplitude.init(np.trapz(ydata, xdata))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.

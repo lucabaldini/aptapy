@@ -1228,7 +1228,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         This is tailored on unimodal distributions, where we start from the
         basic statistics (average, standard deviation and area) of the input sample
         and try to match the amplitude, location and scale of the distribution
-        to be fitted. No attempt is made a setting the shape paremeters (if any).
+        to be fitted. No attempt is made at setting the shape parameters (if any).
         """
         # Calculate the average, standard deviation, and integral of the input data.
         location = np.average(xdata, weights=ydata)

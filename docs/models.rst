@@ -9,22 +9,35 @@ This page documents the various fitting models readily available in the package.
 Polynomials
 -----------
 
+
+
 :class:`~aptapy.models.Constant`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A constant model. (Note this is equivalent to a polynomial of degree zero, but
+we keep it separate for clarity.)
+
+
 .. math::
 
-    f(x) = c
+    f(x;~c) = c
     \quad \text{with} \quad
     c \rightarrow \texttt{value}
+
+Fitting with a constant model is equivalent to computing the weighted average of
+the values of the dependent variable.
 
 
 :class:`~aptapy.models.Line`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A straight-line model. (Note this is equivalent to a polynomial of degree one, but
+we keep it separate for clarity.)
+
+
 .. math::
 
-    f(x) = mx + q
+    f(x;~m, q) = mx + q
     \quad \text{with} \quad
     \begin{cases}
     m \rightarrow \texttt{slope} \\
@@ -32,8 +45,34 @@ Polynomials
     \end{cases}
 
 
+:class:`~aptapy.models.Polynomial`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A simple polynomial model of arbitrary degree.
+
+.. math::
+
+    f(x;~c_0, c_1, \ldots, c_n) = \sum_{k=0}^{n} c_k x^k
+    \quad \text{with} \quad
+    c_k \rightarrow \texttt{c0, c1, ..., cn}
+
+The degree of the polynomial is set at initialization time via the ``degree`` argument
+in the constructor, e.g.,
+
+>>> quadratic = Polynomial(2)
+>>> cubic = Polynomial(degree=3)
+
+
 :class:`~aptapy.models.Quadratic`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Simple alias for a polynomial of degree two.
+
+
+:class:`~aptapy.models.Cubic`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Simple alias for a polynomial of degree three.
 
 
 Exponentials and power-laws
@@ -42,118 +81,170 @@ Exponentials and power-laws
 :class:`~aptapy.models.PowerLaw`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A power-law model with the general form:
+
 .. math::
 
-    f(x) = N x^\Gamma
+    f(x;~N, \Gamma) = N x^\Gamma
     \quad \text{with} \quad
     \begin{cases}
     N \rightarrow \texttt{prefactor}\\
     \Gamma \rightarrow \texttt{index}
     \end{cases}
 
+.. note::
+
+   The overloaded ``plot()`` method automatically switches to a log-log scale.
+
 
 :class:`~aptapy.models.Exponential`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A simple exponential model:
+
 .. math::
 
-    f(x) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
+    f(x;~N, X) = N \exp \left\{-\frac{(x - x_0)}{X}\right\}
     \quad \text{with} \quad
     \begin{cases}
     N \rightarrow \texttt{prefactor}\\
     X \rightarrow \texttt{scale}\\
-    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    x_0 \rightarrow \texttt{location}~\text{(set at creation time)}
     \end{cases}
 
+.. note::
+
+   Note that the ``location`` parameter is not a fit parameter, but rather a fixed
+   offset that is set when the model instance is created, e.g.,
+
+   >>> exponential = Exponential(location=2.0)
+
+   The basic idea behind this is to avoid the degeneracy between the location and the
+   prefactor, and this is one of the main reasons this model is not implemented wrapping the
+   scipy exponential distribution.
 
 
 :class:`~aptapy.models.ExponentialComplement`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The exponential complement, describing an exponential rise:
+
 .. math::
 
-    f(x) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
+    f(x;~N, X) = N \left [ 1- \exp\left\{-\frac{(x - x_0)}{X}\right\} \right ]
     \quad \text{with} \quad
     \begin{cases}
     N \rightarrow \texttt{prefactor}\\
     X \rightarrow \texttt{scale}\\
-    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    x_0 \rightarrow \texttt{location}~\text{(set at creation time)}
     \end{cases}
+
+.. note::
+
+   See notes on :class:`~aptapy.models.Exponential` regarding the ``location`` parameter.
+
 
 :class:`~aptapy.models.StretchedExponential`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A stretched exponential model:
+
 .. math::
 
-    f(x) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
+    f(x;~N, X, \gamma) = N \exp \left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\}
     \quad \text{with} \quad
     \begin{cases}
     N \rightarrow \texttt{prefactor}\\
     X \rightarrow \texttt{scale}\\
     \gamma \rightarrow \texttt{stretch}\\
-    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    x_0 \rightarrow \texttt{location}~\text{(set at creation time)}
     \end{cases}
+
+.. note::
+
+   See notes on :class:`~aptapy.models.Exponential` regarding the ``location`` parameter.
 
 
 :class:`~aptapy.models.StretchedExponentialComplement`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The complement of the stretched exponential model:
+
 .. math::
 
-    f(x) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
+    f(x;~N, X, \gamma) = N \left [ 1- \exp\left\{-\left[\frac{(x - x_0)}{X}\right]^\gamma\right\} \right ]
     \quad \text{with} \quad
     \begin{cases}
     N \rightarrow \texttt{prefactor}\\
     X \rightarrow \texttt{scale}\\
     \gamma \rightarrow \texttt{stretch}\\
-    x_0 \rightarrow \texttt{origin}~\text{(not a parameter)}
+    x_0 \rightarrow \texttt{location}~\text{(set at creation time)}
     \end{cases}
+
+.. note::
+
+   See notes on :class:`~aptapy.models.Exponential` regarding the ``location`` parameter.
 
 
 Sigmoid models
 --------------
 
 Sigmoid models are location-scale models defined in terms of a standardized
-shape function :math:`g(z)` that is a monotonically increasing function,
-ranging from 0 to 1 as its argument goes from -infinity to +infinity.
+shape function :math:`g(z)`
+
+.. math::
+    f(x; A, m, s, \ldots) = A g\left(\frac{x - m}{s}; \ldots \right)
+
+where :math:`A` is the amplitude (total height of the sigmoid), :math:`m` is the
+location (typically the point where the value of the function if 50% of the
+amplitude) and :math:`s` is the scale parameters, representing the width of the
+transtion.
 
 .. note::
 
    In this case the amplitude parameter does not represent an area (as in peak-like
    models), but rather the total increase of the function from its lower asymptote
-   to its upper asymptote. When the amplitude is negative we switch to the
-   complement.
+   to its upper asymptote.
 
+   Note when the scale parameter is negative, we switch to the complement of the
+   sigmoid function, i.e., a monotonically decreasing function from 1 to 0
+   (in standard form).
+
+:math:`g(z)` is generally a monotonically increasing function,
+ranging from 0 to 1 as its argument goes from -infinity to +infinity, as illustrated
+below for some of the models available in the package.
 
 .. image:: /_static/plots/sigmoid_shapes.png
 
 
+:class:`~aptapy.models.ErfSigmoid`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`~aptapy.models.Erf`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+The cumulative function of a gaussian distribution:
 
 .. math::
     g(z) = \frac{1}{2} \left(1 + \operatorname{erf}\left(\frac{z}{\sqrt{2}}\right)\right)
 
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: Erf.shape
+.. warning::
+
+   The naming might be slightly unfortunate here, as, strictly speaking, this is not
+   the error function defined, e.g., in :mod:`scipy.special`, but hopefully it is clear
+   enough in the context of model fitting.
 
 
 :class:`~aptapy.models.LogisticSigmoid`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A logistic sigmoid defined by the standard shape function:
+
 .. math::
     g(z) = \frac{1}{1 + e^{-z}}
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: LogisticSigmoid.shape
 
 
 :class:`~aptapy.models.Arctangent`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An arctangent sigmoid defined by the standard shape function:
 
 .. math::
     g(z) = \frac{1}{2} + \frac{1}{\pi} \arctan(z)
@@ -166,28 +257,34 @@ ranging from 0 to 1 as its argument goes from -infinity to +infinity.
 :class:`~aptapy.models.HyperbolicTangent`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+An hyperbolic tangent sigmoid defined by the standard shape function:
+
 .. math::
     g(z) = \frac{1}{2} \left(1 + \tanh(z)\right)
-
-.. literalinclude:: ../src/aptapy/models.py
-   :language: python
-   :pyobject: HyperbolicTangent.shape
 
 
 Continuous random variables
 ---------------------------
 
-Peak-like models are location-scale models defined in terms of a standardized
-shape function :math:`g(z)`
+Most of the models defined in this package are wrappers around continuous random
+variables defined in :mod:`scipy.stats`, which provide a large variety of
+standardized distributions. Most (but not all) of these distributions can be
+interpreted as peak-like models. All of them are location-scale models
+defined in terms of a standardized shape function :math:`g(z)`
 
 .. math::
-    f(x; A, m, s, ...) = \frac{A}{s} g\left(\frac{x - m}{s}; ...\right)
+    f(x; A, m, s, \ldots) = \frac{A}{s} g\left(\frac{x - m}{s}; \ldots \right)
 
 where :math:`A` is the amplitude (area under the peak), :math:`m` is the location
 (parameter specifying the peak position), and :math:`s` is the scale (parameter
-specifying the peak width).
+specifying the peak width). The trailing ``\ldots`` indicates any additional shape
+parameters that might be required by the specific distribution.
 
 .. seealso:: :ref:`modeling`
+
+The rest of this section lists all the available distributions, with a brief
+description of their support and shape parameters. For more details on each
+distribution, please refer to the corresponding documentation in :mod:`scipy.stats`.
 
 
 :class:`~aptapy.models.Alpha`

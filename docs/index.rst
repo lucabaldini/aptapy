@@ -44,7 +44,7 @@ Have fun!
 
 .. toctree::
    :maxdepth: 1
-   :caption: API:
+   :caption: Modules:
 
    plotting
    hist

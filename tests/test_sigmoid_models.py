@@ -80,8 +80,8 @@ def _test_base(model_class: type, location: float = 10., amplitude: float = 5.,
             assert param.compatible_with(ground_truth, 5.)
 
 
-def test_erf():
-    _test_base(models.Erf)
+def test_erf_sigmoid():
+    _test_base(models.ErfSigmoid)
 
 
 def test_logistic_sigmoid():

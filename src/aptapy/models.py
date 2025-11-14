@@ -580,7 +580,7 @@ class Gaussian(AbstractFitModel):
             axes.plot(x0, y0, "o", ms=1.5, color=color)
 
 
-class Erf(AbstractSigmoidFitModel):
+class ErfSigmoid(AbstractSigmoidFitModel):
 
     """Error function model.
     """

@@ -31,7 +31,7 @@ def create_figures():
     """
     print("Creating sigmoid model shape figures...")
     plt.figure("sigmoid_shapes")
-    for model_class in (models.Erf,
+    for model_class in (models.ErfSigmoid,
                         models.LogisticSigmoid,
                         models.Arctangent,
                         models.HyperbolicTangent):

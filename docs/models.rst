@@ -197,7 +197,7 @@ shape function :math:`g(z)`
 
 where :math:`A` is the amplitude (total height of the sigmoid), :math:`m` is the
 location (typically the point where the value of the function if 50% of the
-amplitude) and :math:`s` is the scale parameters, representing the width of the
+amplitude) and :math:`s` is the scale parameter, representing the width of the
 transtion.
 
 .. note::

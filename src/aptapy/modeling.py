@@ -1225,7 +1225,7 @@ class AbstractCRVFitModel(AbstractFitModel):
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
 
-        This is taylored on unimodal distributions, where we start from the
+        This is tailored on unimodal distributions, where we start from the
         basic statistics (average, standard deviation and area) of the input sample
         and try to match the amplitude, location and scale of the distribution
         to be fitted. No attempt is made a setting the shape paremeters (if any).

@@ -4,6 +4,10 @@ Release notes
 =============
 
 
+Version 0.14.0 (2025-11-14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 * Major refactoring of the modeling infrastructure, introducing a more structured and
   extensible framework for fitting models.
 * New abstract base classes (AbstractSigmoidFitModel, AbstractCRVFitModel) to support

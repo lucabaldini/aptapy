@@ -17,7 +17,6 @@ Polynomials
 A constant model. (Note this is equivalent to a polynomial of degree zero, but
 we keep it separate for clarity.)
 
-
 .. math::
 
     f(x;~c) = c
@@ -33,7 +32,6 @@ the values of the dependent variable.
 
 A straight-line model. (Note this is equivalent to a polynomial of degree one, but
 we keep it separate for clarity.)
-
 
 .. math::
 
@@ -429,10 +427,18 @@ shape parameter(s): :math:`m > 1`, :math:`\beta > 0`.
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wrapped from :scipy_rv_wrap:`gaussian`;
-support: :math:`-\infty < z < \infty`.
+This is actually not wrapped from :scipy_rv_wrap:`norm`, but rather a direct
+implementation of the gaussian (normal) distribution, mainly to override the
+parameter names.
 
 .. image:: /_static/plots/gaussian_shape.png
+
+.. seealso:: The :class:`~aptapy.models.Normal` is an alternative, equivalent
+   implementation wrapping :scipy_rv_wrap:`norm` as all the other location-scale
+   models. Any additional features specific to the gaussian distribution will
+   be implemented in :class:`~aptapy.models.Gaussian`, so user are encouraged
+   to use this class over :class:`~aptapy.models.Normal`, except for testing
+   purposes.
 
 
 :class:`~aptapy.models.Gibrat`

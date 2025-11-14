@@ -7,6 +7,7 @@ The modeling module provides all the core tools for fitting models to data, incl
 parameter estimation and uncertainty quantification. All predefined simple models
 are defined in the :mod:`~aptapy.models` module, which builds on top of the
 functionality provided here.
+
 More complex models can be built by summing simple ones, e.g.,
 
 >>> from aptapy.models import Line, Gaussian
@@ -17,7 +18,9 @@ The main fitting engine supports bounded fits and/or fits with fixed parameters.
 
 .. seealso::
 
-   Have a look at the :ref:`sphx_glr_auto_examples_simple_fit.py`,
+   The :ref:`models` section lists all the predefined fitting models.
+
+   Also, have a look at the :ref:`sphx_glr_auto_examples_simple_fit.py`,
    :ref:`sphx_glr_auto_examples_composite_fit.py` and
    :ref:`sphx_glr_auto_examples_constrained_fit.py` examples.
 
@@ -179,21 +182,9 @@ location-scale model (with the mean as location and the standard deviation
 as scale), but many other models belong to this family---both peak-like and
 sigmoid-like.
 
-From the point of view of the practical implementation, all location-scale
-models in :mod:`aptapy.models` inherit from the base class
-:class:`~aptapy.modeling.AbstractLocationScaleFitModel`, which provides all the
-necessary common functionality. All of them features at least three parameters:
-
-* `amplitude`: a multiplicative factor, whose precise meaning depends on the context;
-* `location`: the location parameter;
-* `scale`: the scale parameter.
-
-Concrete classes inheriting from :class:`~aptapy.modeling.AbstractLocationScaleFitModel`
-must implement the :meth:`~aptapy.modeling.AbstractLocationScaleFitModel.shape`,
-method, providing the universal shape function :math:`g(z)`.
-
-
-
+From the point of view of the practical implementation, most of the location-scale
+models in :mod:`aptapy.models` wrap :scipy_rv_wrap:`rv_continuous` distributions from
+:scipy:`scipy.stats`, which already provide most of the necessary functionality.
 
 
 Sigmoid models

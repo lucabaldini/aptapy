@@ -1077,7 +1077,7 @@ class AbstractSigmoidFitModel(AbstractFitModel):
                  scale: float, *parameter_values: float) -> ArrayLike:
         """Overloaded method for evaluating the model.
 
-        Note if the amplitude is negative, we take the complement of the sigmoid function.
+        Note if the scale is negative, we take the complement of the sigmoid function.
         """
         # pylint: disable=arguments-differ
         z = (x - location) / abs(scale)

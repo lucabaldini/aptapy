@@ -20,7 +20,7 @@ from aptapy import models
 from aptapy.plotting import last_line_color, plt
 
 
-def _test_base(model_class: type, location: float = 10., scale: float = 2.,
+def _test_base(model_class: type, location: float = 10., amplitude: float = 5.,
                num_sigma: float = 15.) -> None:
     """Basic tests for a given fit model.
 
@@ -50,7 +50,7 @@ def _test_base(model_class: type, location: float = 10., scale: float = 2.,
     plt.figure(model_class.__name__)
     # Create the model and set the basic parameters.
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]")
-    for amplitude in (5., -5.):
+    for scale in (2., -2.):
         # Setup the model.
         sigma = 0.025 * abs(amplitude)
         parameter_values = (amplitude, location, scale)

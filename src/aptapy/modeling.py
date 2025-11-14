@@ -1051,7 +1051,7 @@ class AbstractSigmoidFitModel(AbstractFitModel):
 
     amplitude = FitParameter(1.)
     location = FitParameter(0.)
-    scale = FitParameter(1., minimum=0)
+    scale = FitParameter(1.)
 
     @staticmethod
     @abstractmethod
@@ -1080,17 +1080,21 @@ class AbstractSigmoidFitModel(AbstractFitModel):
         Note if the amplitude is negative, we take the complement of the sigmoid function.
         """
         # pylint: disable=arguments-differ
-        z = (x - location) / scale
+        z = (x - location) / abs(scale)
         val = amplitude * self.shape(z, *parameter_values)
-        return val if amplitude >= 0. else val - amplitude
+        return val if scale >= 0. else amplitude - val
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.):
         """Overloaded method.
         """
         # Simple initialization based on the data statistics.
-        self.amplitude.set(ydata[-1] - ydata[0])
-        self.location.set(xdata[np.argmax(abs(np.diff(ydata)))])
-        self.scale.set(np.std(xdata) / 4.)
+        delta = np.diff(ydata)
+        self.amplitude.set(ydata.max() - ydata.min())
+        self.location.set(xdata[np.argmax(abs(delta))])
+        scale = np.std(xdata) / 4.
+        if delta.mean() < 0.:
+            scale = -scale
+        self.scale.set(scale)
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.

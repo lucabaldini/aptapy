@@ -30,6 +30,7 @@ from .modeling import (
     AbstractFitModel,
     AbstractSigmoidFitModel,
     FitParameter,
+    PhonyCRVFitModel,
     wrap_rv_continuous,
 )
 from .plotting import last_line_color, plt
@@ -707,10 +708,19 @@ class CrystalBall(AbstractCRVFitModel):
     pass
 
 
-@wrap_rv_continuous(scipy.stats.gibrat)
-class Gibrat(AbstractCRVFitModel):
+# The Gibrat distribution is only available starting from scipy 1.12.0
+try:
+    @wrap_rv_continuous(scipy.stats.gibrat)
+    class Gibrat(AbstractCRVFitModel):
 
-    pass
+        pass
+
+except AttributeError:
+    class Gibrat(PhonyCRVFitModel):
+
+        def __init__(self, *args, **kwargs) -> None:
+            # pylint: disable=unused-argument
+            super().__init__("1.12.0")
 
 
 @wrap_rv_continuous(scipy.stats.gumbel_l)
@@ -751,10 +761,7 @@ class HyperSecant(AbstractCRVFitModel):
     pass
 
 
-# Note the Landau distribution is only available starting from scipy 1.15.1
-# It seems a little bit too much to require that version just for this,
-# so we provide a fallback that raises a NotImplementedError when
-# someone tries to instantiate the model.
+# The Landau distribution is only available starting from scipy 1.15.1
 try:
     @wrap_rv_continuous(scipy.stats.landau)
     class Landau(AbstractCRVFitModel):
@@ -770,13 +777,11 @@ try:
             return (location - 2.5 * scale, location + 12.5 * scale)
 
 except AttributeError:
+    class Landau(PhonyCRVFitModel):
 
-    class Landau(AbstractCRVFitModel):
-
-        def __init__(self, *args, **kwargs):
-            # pylint: disable=super-init-not-called, unused-argument
-            msg = "The Landau distribution is only available in scipy >= 1.15.1."
-            raise NotImplementedError(msg)
+        def __init__(self, *args, **kwargs) -> None:
+            # pylint: disable=unused-argument
+            super().__init__("1.15.1")
 
 
 @wrap_rv_continuous(scipy.stats.laplace)

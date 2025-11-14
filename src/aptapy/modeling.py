@@ -1324,6 +1324,20 @@ class AbstractCRVFitModel(AbstractFitModel):
         axes.plot(x0, y0, "o", ms=1.5, color=color)
 
 
+class PhonyCRVFitModel:
+
+    """Phony class to provide a mechanism not to break everything when a particular
+    scipy.stats distribution is not available in a given scipy version.
+    """
+
+    def __init__(self, scipy_version: str) -> None:
+        """Constructor.
+        """
+        msg = f"The {self.__class__.__name__} distribution is only available in " \
+              f"scipy >= {scipy_version}."
+        raise NotImplementedError(msg)
+
+
 def wrap_rv_continuous(rv, **shape_parameters) -> type:
 
     """Decorator to wrap a scipy.stats.rv_continuous object into a fit model.

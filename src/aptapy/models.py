@@ -747,29 +747,64 @@ class LineForest(FitModelSum):
     """Composition of SpectralLine models.
     All the lines have the same width factor.
     """
-    def __init__(self, nlines, factor) -> None:
+
+    def __init__(self, nlines: int, factor: float) -> None:
+        """Constructor
+        """
         self.nlines = nlines    # is there an attribute with the number of components?
         self.factor = factor
         components = [SpectralLine() for i in range(nlines)]
         super().__init__(*components)
     
+    @staticmethod
+    def _find_peaks_iterative(xdata: ArrayLike, ydata: ArrayLike, npeaks: int) -> Tuple[ArrayLike, ArrayLike]:
+        """Find the position and height of a fixed number of peaks in a sample of data
+
+        Arguments
+        ---------
+        xdata : ArrayLike,
+            The x values of the sample.
+
+        ydata : ArrayLike,
+            The y values of the sample.
+
+        nlines : int,
+            Maximum number of peaks to find in the sample.
+
+        Returns
+        -------
+        xpeaks : ArrayLike
+            The position of the peaks on the x axis.
+
+        ypeaks : ArrayLike
+            The height of the peaks.
+        """
+        min_width, max_width = 0, len(ydata)
+        peaks, properties = scipy.signal.find_peaks(ydata, width=(min_width, max_width))
+        widths = properties['widths']
+        while len(peaks) > npeaks:
+            min_width = min(widths)*1.1
+            peaks, properties = scipy.signal.find_peaks(ydata, width=(min_width, max_width))
+            widths = properties['widths']
+
+        return xdata[peaks], ydata[peaks]
+
     def init_parameters(self, xdata, ydata, sigma) -> None:
-        # Should set the amplitude and the mean of each peak, otherwise fit doesn't converge.
+        """Overloaded method.
+        """
+        # Must set the amplitude and the mean of each peak, otherwise the fit doesn't converge.
         # The factor is given to the constructor (should we freeze it?)
-        
-        # Think how to set min and max width. Maybe with an iterative process until the number of peaks
-        # is equal to nlines
-        peaks, _ = scipy.signal.find_peaks(ydata, width=(10, 150))  # MUST CHANGE THIS
-        mu_array = xdata[peaks][:self.nlines]
-        print(mu_array)
-        amp_array = ydata[peaks][:self.nlines] * np.sqrt(2*np.pi*mu_array*self.factor)
-        parameter_values = [par for i in range(self.nlines) for par in (amp_array[i], mu_array[i], self.factor)]
+        mu, height = self._find_peaks_iterative(xdata, ydata, self.nlines)
+        amplitude = height * np.sqrt(2*np.pi*mu*self.factor)
+        parameter_values = [par for i in range(self.nlines) for par in (amplitude[i], mu[i], self.factor)]
         self.set_parameters(*parameter_values)
     
-    def default_plotting_range(self):
-        mu_array = self.parameter_values()[1::3]
-        mu_min = min(mu_array)
-        mu_max = max(mu_array)
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+        """
+        mu = self.parameter_values()[1::3]
+        mu_min = min(mu)
+        mu_max = max(mu)
 
         return (mu_min - 5. * np.sqrt(mu_min), mu_max + 5. * np.sqrt(mu_max)) 
 

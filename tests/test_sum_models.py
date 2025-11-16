@@ -46,13 +46,13 @@ def _test_fit_model_sum(model_class: type, *parameter_values: float, sigma: floa
     # Create the model and set the basic parameters.
     
     # cannot use test_model_base because FitModelSum doesn't take xlabel, ylabel
-    # otherwise everything is the same ()
+    # otherwise everything is the same
     model = model_class(**kwargs)
     model.set_parameters(*parameter_values)
     print(model)
 
     # Generate a random dataset.
-    xdata, ydata = model.random_fit_dataset(sigma, 1024, seed=313)  # change way to find peaks
+    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
     plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
     #color = last_line_color()
 
@@ -78,8 +78,4 @@ def _test_fit_model_sum(model_class: type, *parameter_values: float, sigma: floa
 
 def test_line_forest():
     factor = 1.
-    _test_fit_model_sum(models.LineForest, 100., 256, factor, 100., 512, factor, num_sigma=50., nlines=2, factor=factor)
-
-    
-test_line_forest()
-plt.show()
+    _test_fit_model_sum(models.LineForest, 100., 256, factor, 50., 512, factor, num_sigma=50., nlines=2, factor=factor)

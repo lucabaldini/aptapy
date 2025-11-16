@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Unit tests for the modeling module.
+"""Unit tests for the FitModelSum models.
 """
 
 from aptapy import models
 from aptapy.plotting import plt
 
 
-def _test_model_base(model_class: type, *parameter_values: float, sigma: float = 0.1,
+def _test_fit_model_sum(model_class: type, *parameter_values: float, sigma: float = 0.1,
                      num_sigma: float = 5., **kwargs) -> None:
     """Basic tests for the Model base class.
 
@@ -44,12 +44,15 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     """
     plt.figure(model_class.__name__)
     # Create the model and set the basic parameters.
-    model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]", **kwargs)
+    
+    # cannot use test_model_base because FitModelSum doesn't take xlabel, ylabel
+    # otherwise everything is the same ()
+    model = model_class(**kwargs)
     model.set_parameters(*parameter_values)
     print(model)
 
     # Generate a random dataset.
-    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
+    xdata, ydata = model.random_fit_dataset(sigma, 1024, seed=313)  # change way to find peaks
     plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
     #color = last_line_color()
 
@@ -73,46 +76,10 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     plt.legend()
 
 
-def test_constant():
-    _test_model_base(models.Constant, 5.)
+def test_line_forest():
+    factor = 1.
+    _test_fit_model_sum(models.LineForest, 100., 256, factor, 100., 512, factor, num_sigma=50., nlines=2, factor=factor)
 
-
-def test_line():
-    _test_model_base(models.Line, 2., 5.)
-
-
-def test_quadratic():
-    _test_model_base(models.Quadratic, 1., 2., 16.)
-
-
-def test_cubic():
-    _test_model_base(models.Cubic, 1., 2., 3., 4.)
-
-
-def test_polynomial():
-    _test_model_base(models.Polynomial, 1., -2., 3., -4., 5., degree=4)
-
-
-def test_power_law():
-    _test_model_base(models.PowerLaw, 10., -2.)
-    _test_model_base(models.PowerLaw, 10., -1.)
-
-
-def test_exponential():
-    _test_model_base(models.Exponential, 5., 2., location=10.)
-
-
-def test_exponential_complement():
-    _test_model_base(models.ExponentialComplement, 5., 2., location=10.)
-
-
-def test_stretched_exponential():
-    _test_model_base(models.StretchedExponential, 5., 2., 0.5, num_sigma=50.)
-
-
-def test_stretched_exponential_complement():
-    _test_model_base(models.StretchedExponentialComplement, 5., 2., 0.5, num_sigma=50.)
-
-
-def test_spectral_line():
-    _test_model_base(models.SpectralLine, 10, 10, 0.5, num_sigma=50.)
+    
+test_line_forest()
+plt.show()

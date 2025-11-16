@@ -22,6 +22,7 @@ from typing import Tuple
 import matplotlib
 import numpy as np
 import scipy.integrate
+import scipy.signal
 import scipy.special
 import scipy.stats
 
@@ -30,6 +31,7 @@ from .modeling import (
     AbstractCRVFitModel,
     AbstractFitModel,
     AbstractSigmoidFitModel,
+    FitModelSum,
     FitParameter,
     PhonyCRVFitModel,
     wrap_rv_continuous,
@@ -53,6 +55,8 @@ __all__ = [
     "LogisticSigmoid",
     "Arctangent",
     "HyperbolicTangent",
+    "SpectralLine",
+    "LineForest"
     "Alpha",
     "Anglit",
     "Arcsine",
@@ -627,6 +631,147 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
     def shape(z):
         # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
+
+
+class SpectralLine(AbstractFitModel):
+
+    """Spectral line model.
+    This model is a Gaussian with the sigma constrained to be sqrt(factor*mu)
+    """
+
+    amplitude = FitParameter(1.)
+    mu = FitParameter(1.)
+    factor = FitParameter(1.)
+
+    @staticmethod
+    def evaluate(x, amplitude, mu, factor, *args):
+        # pylint: disable=arguments-differ
+        return amplitude * scipy.stats.norm.pdf(x, *args, loc=mu,
+                                                scale=np.sqrt(factor*mu))
+
+    @staticmethod
+    def primitive(x, amplitude, mu, factor, *args):
+        return amplitude * scipy.stats.norm.cdf(x, *args, loc=mu,
+                                                scale=np.sqrt(factor*mu))
+
+    def median(self):
+        return self.mu.value
+
+    def mean(self):
+        return self.mu.value
+
+    def std(self):
+        return np.sqrt(self.factor.value*self.mu.value)
+
+    def rvs(self, size: int = 1, random_state=None):
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        return scipy.stats.norm.rvs(loc=self.mu.value,
+                                    scale=np.sqrt(self.factor.value*self.mu.value),
+                                    size=size, random_state=random_state)
+
+    def random_histogram(self, size: int = 100000, num_bins: int = 100,
+                         random_state=None) -> Histogram1d:
+        """Generate a histogram filled with random variates from the underlying
+        distribution at the current parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 100000).
+
+        num_bins : int, optional
+            The number of bins in the histogram (default 100).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.mu.init(np.average(xdata, weights=ydata))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+        """
+        return (self.mu.value - 5. * np.sqrt(self.factor.value*self.mu.value),
+                self.mu.value + 5. * np.sqrt(self.factor.value*self.mu.value))
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_mean: bool = True, **kwargs) -> None:
+        """Plot the model.
+
+        Note this is reimplemented from scratch to allow overplotting the mean of the
+        distribution.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        fit_output : bool, optional
+            Whether to include the fit output in the legend (default: False).
+
+        plot_mean : bool, optional
+            Whether to overplot the mean of the distribution (default: True).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `plt.plot()`.
+        """
+        super().plot(axes, fit_output=fit_output, **kwargs)
+        if plot_mean:
+            if axes is None:
+                axes = plt.gca()
+            color = last_line_color()
+            x0 = self.mean()
+            y0 = self(x0)
+            axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
+            axes.plot(x0, y0, "o", ms=1.5, color=color)
+
+
+class LineForest(FitModelSum):
+    
+    """Composition of SpectralLine models.
+    All the lines have the same width factor.
+    """
+    def __init__(self, nlines, factor) -> None:
+        self.nlines = nlines    # is there an attribute with the number of components?
+        self.factor = factor
+        components = [SpectralLine() for i in range(nlines)]
+        super().__init__(*components)
+    
+    def init_parameters(self, xdata, ydata, sigma) -> None:
+        # Should set the amplitude and the mean of each peak, otherwise fit doesn't converge.
+        # The factor is given to the constructor (should we freeze it?)
+        
+        # Think how to set min and max width. Maybe with an iterative process until the number of peaks
+        # is equal to nlines
+        peaks, _ = scipy.signal.find_peaks(ydata, width=(10, 150))  # MUST CHANGE THIS
+        mu_array = xdata[peaks][:self.nlines]
+        print(mu_array)
+        amp_array = ydata[peaks][:self.nlines] * np.sqrt(2*np.pi*mu_array*self.factor)
+        parameter_values = [par for i in range(self.nlines) for par in (amp_array[i], mu_array[i], self.factor)]
+        self.set_parameters(*parameter_values)
+    
+    def default_plotting_range(self):
+        mu_array = self.parameter_values()[1::3]
+        mu_min = min(mu_array)
+        mu_max = max(mu_array)
+
+        return (mu_min - 5. * np.sqrt(mu_min), mu_max + 5. * np.sqrt(mu_max)) 
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

@@ -34,6 +34,7 @@ from .modeling import (
     FitModelSum,
     FitParameter,
     PhonyCRVFitModel,
+    line_forest,
     wrap_rv_continuous,
 )
 from .plotting import last_line_color, plt
@@ -632,6 +633,18 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
         # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
 
+class GaussianForest(AbstractFitModel):
+
+
+    def __init__(self, label = None, xlabel = None, ylabel = None):
+        super().__init__(label, xlabel, ylabel)
+
+
+    def evaluate(self, x):
+        pass
+@line_forest(5.9, 6.4, 3.)
+class ArFe55Forest(GaussianForest):        
+    pass
 
 class SpectralLine(AbstractFitModel):
 

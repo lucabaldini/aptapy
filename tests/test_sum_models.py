@@ -79,3 +79,11 @@ def _test_fit_model_sum(model_class: type, *parameter_values: float, sigma: floa
 def test_line_forest():
     factor = 1.
     _test_fit_model_sum(models.LineForest, 100., 256, factor, 50., 512, factor, num_sigma=50., nlines=2, factor=factor)
+
+def test_ArFe55Forest():
+    model = models.ArFe55Forest()
+    print(model)
+
+# test_line_forest()
+# plt.show()
+test_ArFe55Forest()

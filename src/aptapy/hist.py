@@ -276,13 +276,13 @@ class Histogram1d(AbstractHistogram):
         super().__init__((xedges, ), label, [xlabel, ylabel])
 
     @classmethod
-    def from_amptek_file(cls, file_path: PathLike) -> 'Histogram1d':
+    def from_amptek_file(cls, file_path: PathLike) -> "Histogram1d":
         """Return a Histogram1d filled with ADC counts from an Amptek file acquired with
         the MCA8000A Multichannel Analyzer (https://www.amptek.com/internal-products/mca8000a-multichannel-analyzer-software-downloads)
 
         Arguments
         ----------
-        file_path : str
+        file_path : PathLike
             The path of the file to read.
 
         Returns
@@ -298,7 +298,7 @@ class Histogram1d(AbstractHistogram):
 
         adc_counts = np.array(lines[start:stop], dtype=float)
         xedges = np.arange(0, len(adc_counts))
-        hist = Histogram1d(xedges=xedges, xlabel="ADC Channel")
+        hist = cls(xedges=xedges, xlabel="ADC Channel")
 
         return hist.fill(xedges, weights=adc_counts)
 

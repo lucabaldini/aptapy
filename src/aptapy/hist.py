@@ -294,6 +294,8 @@ class Histogram1d(AbstractHistogram):
         xedges = np.arange(1, len(adc_counts)+1)
         hist = cls(xedges=xedges, xlabel='ADC Counts')
 
+        return hist.fill(xedges, weights=adc_counts)
+
     def area(self) -> float:
         """Return the total area under the histogram.
 

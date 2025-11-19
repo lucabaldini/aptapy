@@ -298,10 +298,10 @@ class Histogram1d(AbstractHistogram):
         stop = lines.index("<<END>>\n")
 
         adc_counts = np.array(lines[start:stop], dtype=float)
-        xedges = np.arange(0, len(adc_counts))
+        num_channels = len(adc_counts)
+        xedges = np.arange(-0.5, num_channels + 0.5)
         hist = cls(xedges=xedges, xlabel="ADC Channel")
-
-        return hist.fill(xedges, weights=adc_counts)
+        return hist.fill(np.arange(num_channels), weights=adc_counts)
 
     def area(self) -> float:
         """Return the total area under the histogram.

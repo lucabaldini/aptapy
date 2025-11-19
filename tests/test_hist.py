@@ -176,7 +176,6 @@ def test_from_amptek_file(datadir):
     file_path = datadir / "amptek_test.mca"
     histogram = Histogram1d.from_amptek_file(file_path)
     histogram.plot()
-    setup_gca(xmin=0., xmax=100.)
 
     mean, std = histogram.binned_statistics()
     assert mean != 0

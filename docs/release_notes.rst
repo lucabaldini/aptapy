@@ -3,6 +3,7 @@
 Release notes
 =============
 
+* Added the ``from_amptek_file()`` method to create a ``Histogram1d`` from an MCA8000A Multichannel Analyzer output file.
 
 Version 0.14.0 (2025-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

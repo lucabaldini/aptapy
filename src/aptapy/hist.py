@@ -275,6 +275,25 @@ class Histogram1d(AbstractHistogram):
         """
         super().__init__((xedges, ), label, [xlabel, ylabel])
 
+    @classmethod
+    def from_amptex_file(cls, file_path: str) -> 'Histogram1d':
+        """Return a Histogram1d filled with ADC counts from an amptex file
+
+        Arguments
+        ----------
+        file_path : str
+            The path of the file to read.
+
+        Returns
+        -------
+        Histogram1d
+            A Histogram1d object with bins corresponding to ADC channels and filled
+            with the counts from the file.
+        """
+        adc_counts =  np.loadtxt(file_path, comments="<<", skiprows=14)
+        xedges = np.arange(1, len(adc_counts)+1)
+        hist = cls(xedges=xedges, xlabel='ADC Counts')
+
     def area(self) -> float:
         """Return the total area under the histogram.
 

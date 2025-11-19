@@ -22,7 +22,7 @@ import matplotlib
 import numpy as np
 
 from .plotting import AbstractPlottable, plt
-from .typing_ import ArrayLike
+from .typing_ import ArrayLike, PathLike
 
 __all__ = [
     "Histogram1d",
@@ -274,6 +274,34 @@ class Histogram1d(AbstractHistogram):
         """Constructor.
         """
         super().__init__((xedges, ), label, [xlabel, ylabel])
+
+    @classmethod
+    def from_amptek_file(cls, file_path: PathLike) -> "Histogram1d":
+        """Return a Histogram1d filled with ADC counts from a file acquired with
+        the Amptek MCA8000A Multichannel Analyzer, see
+        https://www.amptek.com/internal-products/mca8000a-multichannel-analyzer-software-downloads
+
+        Arguments
+        ----------
+        file_path : PathLike
+            The path of the file to read.
+
+        Returns
+        -------
+        Histogram1d
+            A Histogram1d object with bins corresponding to ADC channels and filled
+            with the counts from the file.
+        """
+        with open(file_path, encoding="UTF-8") as input_file:
+            lines = input_file.readlines()
+        start = lines.index("<<DATA>>\n")+1
+        stop = lines.index("<<END>>\n")
+
+        adc_counts = np.array(lines[start:stop], dtype=float)
+        num_channels = len(adc_counts)
+        xedges = np.arange(-0.5, num_channels + 0.5)
+        hist = cls(xedges=xedges, xlabel="ADC Channel")
+        return hist.fill(np.arange(num_channels), weights=adc_counts)
 
     def area(self) -> float:
         """Return the total area under the histogram.

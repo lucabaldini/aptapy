@@ -166,3 +166,17 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     assert abs(sx - 1.) < 0.02
     assert abs(sy - 1.) < 0.02
     plt.gca().set_aspect("equal")
+
+
+def test_from_amptek_file(datadir):
+    """Test building histogram from amptek file
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+
+    file_path = datadir / "amptek_test.mca"
+    histogram = Histogram1d.from_amptek_file(file_path)
+    histogram.plot()
+
+    mean, std = histogram.binned_statistics()
+    assert mean != 0
+    assert std != 0

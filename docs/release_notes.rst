@@ -3,11 +3,15 @@
 Release notes
 =============
 
-* Added the ``from_amptek_file()`` method to create a ``Histogram1d`` from an MCA8000A Multichannel Analyzer output file.
+* Added the ``from_amptek_file()`` method to create a ``Histogram1d`` from an MCA8000A multichannel
+  analyzer output file.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/51
+
 
 Version 0.14.0 (2025-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 * Major refactoring of the modeling infrastructure, introducing a more structured and
   extensible framework for fitting models.

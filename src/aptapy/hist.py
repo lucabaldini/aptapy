@@ -277,8 +277,9 @@ class Histogram1d(AbstractHistogram):
 
     @classmethod
     def from_amptek_file(cls, file_path: PathLike) -> "Histogram1d":
-        """Return a Histogram1d filled with ADC counts from an Amptek file acquired with
-        the MCA8000A Multichannel Analyzer (https://www.amptek.com/internal-products/mca8000a-multichannel-analyzer-software-downloads)
+        """Return a Histogram1d filled with ADC counts from a file acquired with
+        the Amptek MCA8000A Multichannel Analyzer, see
+        https://www.amptek.com/internal-products/mca8000a-multichannel-analyzer-software-downloads
 
         Arguments
         ----------
@@ -291,8 +292,8 @@ class Histogram1d(AbstractHistogram):
             A Histogram1d object with bins corresponding to ADC channels and filled
             with the counts from the file.
         """
-        with open(file_path, encoding="UTF-8") as file:
-            lines = file.readlines()
+        with open(file_path, encoding="UTF-8") as input_file:
+            lines = input_file.readlines()
         start = lines.index("<<DATA>>\n")+1
         stop = lines.index("<<END>>\n")
 

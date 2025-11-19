@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d, Histogram2d
-from aptapy.plotting import plt
+from aptapy.plotting import plt, setup_gca
 
 _RNG = np.random.default_rng(313)
 
@@ -167,6 +167,7 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     assert abs(sy - 1.) < 0.02
     plt.gca().set_aspect("equal")
 
+
 def test_from_amptek_file(datadir):
     """Test building histogram from amptek file
     """
@@ -175,6 +176,7 @@ def test_from_amptek_file(datadir):
     file_path = datadir / "amptek_test.mca"
     histogram = Histogram1d.from_amptek_file(file_path)
     histogram.plot()
+    setup_gca(xmin=0., xmax=100.)
 
     mean, std = histogram.binned_statistics()
     assert mean != 0

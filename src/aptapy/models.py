@@ -548,6 +548,48 @@ class Gaussian(AbstractFitModel):
         self.mu.init(np.average(xdata, weights=ydata))
         self.sigma.init(np.sqrt(np.average((xdata - self.mu.value)**2, weights=ydata)))
 
+    def fit_histogram_iterative(self, histogram: Histogram1d, p0: ArrayLike = None,
+                                num_sigma_left: float = 2., num_sigma_right: float = 2.,
+                                num_iterations: int = 2, **kwargs) -> None:
+        """Fit the core of a gaussian histogram within a given number of sigma
+        around the peak.
+
+        This function performs a first round of fit to the data and then
+        repeats the fit iteratively limiting the fit range to a specified
+        interval defined in terms of deviations (in sigma) around the peak.
+
+        Arguments
+        ----------
+        histogram : Histogram1d
+            The histogram to fit.
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        num_sigma_left : float
+            The number of sigma on the left of the peak to be used to define the
+            fitting range.
+
+        num_sigma_right : float
+            The number of sigma on the right of the peak to be used to define the
+            fitting range.
+
+        num_iterations : int
+            The number of iterations of the fit.
+        
+        kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+        """
+        fit_status = self.fit_histogram(histogram, p0, **kwargs)
+        for i in range(num_iterations):
+            xmin = self.mean() - num_sigma_left * self.std()
+            xmax = self.mean() + num_sigma_right * self.std()
+            try:
+                fit_status = self.fit_histogram(histogram, p0, xmin=xmin, xmax=xmax, **kwargs)
+            except RuntimeError as exception:
+                raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
+        return fit_status
+
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
         """

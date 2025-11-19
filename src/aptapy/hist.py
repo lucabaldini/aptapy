@@ -22,7 +22,7 @@ import matplotlib
 import numpy as np
 
 from .plotting import AbstractPlottable, plt
-from .typing_ import ArrayLike
+from .typing_ import ArrayLike, PathLike
 
 __all__ = [
     "Histogram1d",
@@ -276,8 +276,9 @@ class Histogram1d(AbstractHistogram):
         super().__init__((xedges, ), label, [xlabel, ylabel])
 
     @classmethod
-    def from_amptex_file(cls, file_path: str) -> 'Histogram1d':
-        """Return a Histogram1d filled with ADC counts from an amptex file
+    def from_amptek_file(cls, file_path: PathLike) -> 'Histogram1d':
+        """Return a Histogram1d filled with ADC counts from an Amptek file acquired with
+        the MCA8000A Multichannel Analyzer (https://www.amptek.com/internal-products/mca8000a-multichannel-analyzer-software-downloads)
 
         Arguments
         ----------
@@ -290,9 +291,14 @@ class Histogram1d(AbstractHistogram):
             A Histogram1d object with bins corresponding to ADC channels and filled
             with the counts from the file.
         """
-        adc_counts =  np.loadtxt(file_path, comments="<<", skiprows=14)
-        xedges = np.arange(1, len(adc_counts)+1)
-        hist = cls(xedges=xedges, xlabel='ADC Counts')
+        with open(file_path, encoding="UTF-8") as file:
+            lines = file.readlines()
+        start = lines.index("<<DATA>>\n")+1
+        stop = lines.index("<<END>>\n")
+
+        adc_counts = np.array(lines[start:stop], dtype=float)
+        xedges = np.arange(0, len(adc_counts))
+        hist = Histogram1d(xedges=xedges, xlabel="ADC Channel")
 
         return hist.fill(xedges, weights=adc_counts)
 

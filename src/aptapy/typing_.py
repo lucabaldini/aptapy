@@ -16,8 +16,10 @@
 """Type annotations.
 """
 
+import pathlib
 from typing import Union
 
 import numpy as np
 
 ArrayLike = Union[float, np.ndarray]
+PathLike = Union[str, pathlib.Path]

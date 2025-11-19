@@ -82,7 +82,15 @@ def test_line_forest():
 
 def test_ArFe55Forest():
     model = models.ArFe55Forest()
+    import numpy as np
     print(model)
+    xx = np.linspace(2.5, 7, 1000)
+    yy = model.evaluate(xx, 1, 1, 1, 1, 1)
+
+    plt.plot(xx, yy)
+    plt.show()
+
+
 
 # test_line_forest()
 # plt.show()

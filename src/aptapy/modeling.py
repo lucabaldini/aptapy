@@ -1374,14 +1374,12 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
 
 def line_forest(*energies: float):
     def _wrapper(cls: type):
-        """Wrapper function---cache the underlying continuos random variable, and
-        add all the necessary shape parameters to the class.
-        """
         # pylint: disable=protected-access
+        cls.energies = energies
         for i, energy in enumerate(energies):
             setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.)) 
 
-        setattr(cls, 'scale', FitParameter(1., minimum=0.))
+        setattr(cls, 'energy_scale', FitParameter(1., minimum=0.))
         setattr(cls, 'sigma', FitParameter(1., minimum=0.))
         return cls
 

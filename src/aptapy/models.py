@@ -633,18 +633,49 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
         # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
 
-class GaussianForest(AbstractFitModel):
 
+class GaussianForest(AbstractFitModel):
 
     def __init__(self, label = None, xlabel = None, ylabel = None):
         super().__init__(label, xlabel, ylabel)
 
 
-    def evaluate(self, x):
-        pass
+    def evaluate(self, x, *args):
+        n = int((len(self.parameter_values()) - 2))
+        y = 0
+        *amplitudes, energy_scale, sigma = args
+        for i in range(n):
+            amplitude = amplitudes[i]
+            loc = self.energies[i] / energy_scale
+            _sigma = sigma / np.sqrt(self.energies[i] / self.energies[0])
+            y += amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=_sigma)
+
+        return y
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        mu_max = xdata[np.argmax(ydata)]
+
+        # amp = np.max(ydata)*np.sqrt(2*np.pi)*np.sqrt(e_max)*self.scale.value
+        # amplitude0 = getattr(self, 'amplitude0')
+        self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
+        # amplitude1 = getattr(self, 'amplitude0')
+        # self.amplitude1.init(scipy.integrate.trapezoid(ydata, xdata))
+        # self.amplitude2.init(scipy.integrate.trapezoid(ydata, xdata))
+        
+
+        self.energy_scale.init(self.energies[0]/mu_max)
+        # self.sigma.init(np.sqrt(self.energy0)*self.scale.value)
+
+    # def default_plotting_range(self):
+    #     pass
+
+
 @line_forest(5.9, 6.4, 3.)
 class ArFe55Forest(GaussianForest):        
     pass
+
 
 class SpectralLine(AbstractFitModel):
 

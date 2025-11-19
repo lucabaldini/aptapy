@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d, Histogram2d
-from aptapy.plotting import plt, setup_gca
+from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
 

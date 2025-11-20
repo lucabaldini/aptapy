@@ -464,6 +464,20 @@ class AbstractFitModelBase(AbstractPlottable):
             for a given set of parameter values.
         """
 
+    def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1e-8) -> np:
+        """Numerically calculate the Jacobian matrix of partial derivatives of the model
+        with respect to the parameters.
+        """
+        p = np.array(parameter_values, dtype=float)
+        m = 1 if isinstance(x, Number) else len(x)
+        n = len(p)
+        J = np.zeros((m, n))
+        for i in range(n):
+            dp = np.zeros_like(p)
+            dp[i] = eps
+            J[:, i] = (self.evaluate(x, *(p + dp)) - self.evaluate(x, *(p - dp))) / (2. * eps)
+        return J
+
     def name(self) -> str:
         """Return the model name, e.g., for legends.
 
@@ -861,6 +875,23 @@ class AbstractFitModelBase(AbstractPlottable):
         if fit_output:
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         return super().plot(axes, **kwargs)
+
+    def plot_confidence_band(self, axes: matplotlib.axes.Axes = None, num_sigma: float = 1.,
+                             **kwargs) -> None:
+        """
+        """
+        if not self.status.valid():
+            raise RuntimeError("Cannot plot confidence band: fit status is not valid")
+        if axes is None:
+            axes = plt.gca()
+        kwargs.setdefault("color", last_line_color(axes))
+        kwargs.setdefault("alpha", 0.3)
+        kwargs.setdefault("label", f"{num_sigma}σ confidence band")
+        x = self._plotting_grid()
+        y = self(x)
+        J = self.jacobian(x, *self.status.popt)
+        delta = num_sigma * np.sqrt(np.einsum("ij,jk,ik->i", J, self.status.pcov, J))
+        axes.fill_between(x, y - delta, y + delta, **kwargs)
 
     def random_fit_dataset(self, sigma: ArrayLike, num_points: int = 25,
                            seed: int = None) -> Tuple[np.ndarray, np.ndarray]:

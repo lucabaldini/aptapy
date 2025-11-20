@@ -561,11 +561,17 @@ class Gaussian(AbstractFitModel):
 
         Arguments
         ----------
-        histogram : Histogram1d
-            The histogram to fit.
+        xdata : array_like or Histogram1d
+            The data (or histogram) to fit.
+
+        ydata : array_like, optional
+            The y data to fit (if xdata is not a Histogram1d).
 
         p0 : array_like, optional
             The initial values for the fit parameters.
+
+        sigma : array_like, optional
+            The uncertainties on the y data.
 
         num_sigma_left : float
             The number of sigma on the left of the peak to be used to define the
@@ -577,7 +583,7 @@ class Gaussian(AbstractFitModel):
 
         num_iterations : int
             The number of iterations of the fit.
-        
+
         kwargs : dict, optional
             Additional keyword arguments passed to `fit()`.
 
@@ -586,13 +592,12 @@ class Gaussian(AbstractFitModel):
         FitStatus
             The results of the fit.
         """
-        fit_status = self.fit(xdata, ydata=ydata, p0=p0, sigma=sigma, **kwargs)
+        fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
         for i in range(num_iterations):
-            xmin = self.mean() - num_sigma_left * self.std()
-            xmax = self.mean() + num_sigma_right * self.std()
+            mean, std = self.mean(), self.std()
+            kwargs.update(xmin=mean - num_sigma_left * std, xmax=mean + num_sigma_right * std)
             try:
-                fit_status = self.fit(xdata, ydata=ydata, p0=p0, sigma=sigma, xmin=xmin,
-                                      xmax=xmax, **kwargs)
+                fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
             except RuntimeError as exception:
                 raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
         return fit_status

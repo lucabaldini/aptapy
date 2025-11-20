@@ -163,7 +163,7 @@ Fitting models interact nicely with one-dimensional histograms from the
 >>> hist = Histogram1D(np.linspace(0., 1., 100))
 >>> hist.fill(np.random.rand(1000))
 >>> model = Line()
->>> status = model.fit_histogram(hist)
+>>> status = model.fit(hist)
 
 Location-scale models
 ---------------------

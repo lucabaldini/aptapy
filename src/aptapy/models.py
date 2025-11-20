@@ -212,8 +212,9 @@ class Polynomial(AbstractFitModel):
     def evaluate(x: ArrayLike, *coefficients: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         result = np.zeros_like(x)
+        degree = len(coefficients) - 1
         for i, c in enumerate(coefficients):
-            result += c * x**i
+            result += c * x**(degree - i)
         return result
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:

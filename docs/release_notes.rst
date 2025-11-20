@@ -5,7 +5,6 @@ Release notes
 * Keeping track of the covariance matrix in the FitResult object.
 * Added numerical Jacobian calculation in the base class for fit models.
 * Added capability to plot confidence bands around fit models.
-* Fixed order of the coefficients in the Polynomial model class.
 * Added ``fit_iterative()`` method to the ``Gaussian`` model class to perform iterative fitting.
 * Added the ``set_content()`` method to ``AbstractHistogram`` to fill a histogram with binned data
 * Slight change to the main fitting interface, and fit_histogram() function removed.

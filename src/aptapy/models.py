@@ -17,7 +17,7 @@
 """
 
 from numbers import Number
-from typing import Tuple
+from typing import Tuple, Union
 
 import matplotlib
 import numpy as np
@@ -31,6 +31,7 @@ from .modeling import (
     AbstractFitModel,
     AbstractSigmoidFitModel,
     FitParameter,
+    FitStatus,
     PhonyCRVFitModel,
     wrap_rv_continuous,
 )
@@ -548,9 +549,9 @@ class Gaussian(AbstractFitModel):
         self.mu.init(np.average(xdata, weights=ydata))
         self.sigma.init(np.sqrt(np.average((xdata - self.mu.value)**2, weights=ydata)))
 
-    def fit_histogram_iterative(self, histogram: Histogram1d, p0: ArrayLike = None,
-                                num_sigma_left: float = 2., num_sigma_right: float = 2.,
-                                num_iterations: int = 2, **kwargs) -> None:
+    def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
+            p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
+            num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
         """Fit the core of a gaussian histogram within a given number of sigma
         around the peak.
 
@@ -580,12 +581,13 @@ class Gaussian(AbstractFitModel):
         kwargs : dict, optional
             Additional keyword arguments passed to `fit()`.
         """
-        fit_status = self.fit_histogram(histogram, p0, **kwargs)
+        fit_status = self.fit(xdata, ydata=ydata, p0=p0, sigma=sigma, **kwargs)
         for i in range(num_iterations):
             xmin = self.mean() - num_sigma_left * self.std()
             xmax = self.mean() + num_sigma_right * self.std()
             try:
-                fit_status = self.fit_histogram(histogram, p0, xmin=xmin, xmax=xmax, **kwargs)
+                fit_status = self.fit(xdata, ydata=ydata, p0=p0, sigma=sigma, xmin=xmin,
+                                      xmax=xmax, **kwargs)
             except RuntimeError as exception:
                 raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
         return fit_status

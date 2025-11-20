@@ -168,8 +168,14 @@ class AbstractHistogram(AbstractPlottable):
         ----------
         content : ArrayLike
             The content of the bins
+
         errors : ArrayLike, optional
-            The errors of the bins, by default None
+            The errors of the bins; if None, assume Poisson statistics (default).
+
+        Returns
+        -------
+        AbstractHistogram
+            The histogram instance.
         """
         if content.shape != self._shape:
             raise ValueError("Shape of content does not match number of bins")

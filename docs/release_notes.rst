@@ -3,7 +3,7 @@
 Release notes
 =============
 
-* Added ``fit_iterative()`` method to the ```Gaussian`` model class to perform iterative fitting.
+* Added ``fit_iterative()`` method to the ``Gaussian`` model class to perform iterative fitting.
 * Added the ``set_content()`` method to ``AbstractHistogram`` to fill a histogram with binned data
 * Slight change to the main fitting interface, and fit_histogram() function removed.
 * Added the ``from_amptek_file()`` method to create a ``Histogram1d`` from an MCA8000A multichannel

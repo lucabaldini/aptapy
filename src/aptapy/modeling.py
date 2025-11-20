@@ -20,7 +20,7 @@ import enum
 import functools
 import inspect
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from itertools import chain
 from numbers import Number
 from typing import Callable, Dict, Iterator, Tuple
@@ -295,8 +295,8 @@ class FitStatus:
     """Small dataclass to hold the fit status.
     """
 
-    _popt: np.ndarray = None
-    _pcov: np.ndarray = None
+    popt: np.ndarray = None
+    pcov: np.ndarray = None
     chisquare: float = None
     dof: int = None
     pvalue: float = None
@@ -304,41 +304,41 @@ class FitStatus:
     def reset(self) -> None:
         """Reset the fit status.
         """
-        self._popt = None
-        self._pcov = None
-        self.chisquare = None
-        self.dof = None
-        self.pvalue = None
+        for field in fields(self):
+            setattr(self, field.name, None)
 
     def valid(self) -> bool:
-        """Return True if the fit status is valid, i.e., if the chisquare,
-        dof, and pvalue are all set.
+        """Return True if the fit status is valid, i.e., all the fields are set.
 
         Returns
         -------
         valid : bool
             True if the fit status is valid.
         """
-        return self.chisquare is not None and self.dof is not None and self.pvalue is not None
+        return all(getattr(self, field.name) is not None for field in fields(self))
 
-    def update(self, popt: np.ndarray, pcov: np.ndarray, chisquare: float,
-               dof: int = None) -> None:
+    def update(self, popt: np.ndarray, pcov: np.ndarray, chisquare: float, dof: int) -> None:
         """Update the fit status, i.e., set the chisquare and calculate the
         corresponding p-value.
 
         Arguments
         ---------
+        popt : array_like
+            The optimal values for the fit parameters.
+
+        pcov : array_like
+            The covariance matrix for the fit parameters.
+
         chisquare : float
             The chisquare of the fit.
 
-        dof : int, optional
+        dof : int
             The number of degrees of freedom of the fit.
         """
-        self._popt = popt
-        self._pcov = pcov
+        self.popt = popt
+        self.pcov = pcov
         self.chisquare = chisquare
-        if dof is not None:
-            self.dof = dof
+        self.dof = dof
         self.pvalue = scipy.stats.chi2.sf(self.chisquare, self.dof)
         # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
         # function is > 0.5, we flip it around, so that we always report the smallest
@@ -732,8 +732,8 @@ class AbstractFitModelBase(AbstractPlottable):
         # Also, filter out any points with non-positive uncertainties.
         mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
-        self.status.dof = int(mask.sum() - len(self.free_parameters()))
-        if self.status.dof < 0:
+        dof = int(mask.sum() - len(self.free_parameters()))
+        if dof < 0:
             raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
         ydata = ydata[mask]
@@ -755,7 +755,7 @@ class AbstractFitModelBase(AbstractPlottable):
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = scipy.optimize.curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
-        self.status.update(popt, pcov, self.calculate_chisquare(xdata, ydata, sigma))
+        self.status.update(popt, pcov, self.calculate_chisquare(xdata, ydata, sigma), dof)
         return self.status
 
     def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:

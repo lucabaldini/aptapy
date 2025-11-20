@@ -21,7 +21,7 @@ import inspect
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import FitParameter
+from aptapy.modeling import FitParameter, FitStatus
 from aptapy.models import Constant, Exponential, Gaussian, Line
 from aptapy.plotting import plt
 
@@ -67,6 +67,21 @@ def test_fit_parameter():
     assert parameter.error is None
     assert parameter.frozen
     print(parameter)
+
+
+def test_fit_status():
+    """Test the FitStatus class.
+    """
+    status = FitStatus()
+    assert not status.valid()
+    chisquare = 10.5
+    dof = 8
+    status.update(np.array([1., 2.]), np.array([[0.1, 0.], [0., 0.2]]), chisquare, dof)
+    assert status.valid()
+    assert status.chisquare == chisquare
+    assert status.dof == dof
+    status.reset()
+    assert not status.valid()
 
 
 def test_model_parameters():

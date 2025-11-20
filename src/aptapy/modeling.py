@@ -921,7 +921,7 @@ class AbstractFitModelBase(AbstractPlottable):
         Returns
         -------
         delta : np.ndarray
-            The vertical width of the one-sigma confidence band at the given x values.
+            The vertical width of the n-sigma confidence band at the given x values.
         """
         # pylint: disable=invalid-name
         if not self.status.valid():

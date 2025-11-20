@@ -2,7 +2,9 @@
 
 Release notes
 =============
-
+* Keeping track of the covariance matrix in the FitResult object.
+* Added numerical Jacobian calculation in the base class for fit models.
+* Added capability to plot confidence bands around fit models.
 * Added ``fit_iterative()`` method to the ``Gaussian`` model class to perform iterative fitting.
 * Added the ``set_content()`` method to ``AbstractHistogram`` to fill a histogram with binned data
 * Slight change to the main fitting interface, and fit_histogram() function removed.
@@ -10,11 +12,14 @@ Release notes
   analyzer output file.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/56
   - https://github.com/lucabaldini/aptapy/pull/54
   - https://github.com/lucabaldini/aptapy/pull/53
   - https://github.com/lucabaldini/aptapy/pull/52
   - https://github.com/lucabaldini/aptapy/pull/51
   - https://github.com/lucabaldini/aptapy/issues/50
+  - https://github.com/lucabaldini/aptapy/issues/40
+
 
 Version 0.14.0 (2025-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

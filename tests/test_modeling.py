@@ -21,7 +21,7 @@ import inspect
 import numpy as np
 
 from aptapy.hist import Histogram1d
-from aptapy.modeling import FitParameter
+from aptapy.modeling import FitParameter, FitStatus
 from aptapy.models import Constant, Exponential, Gaussian, Line
 from aptapy.plotting import plt
 
@@ -67,6 +67,21 @@ def test_fit_parameter():
     assert parameter.error is None
     assert parameter.frozen
     print(parameter)
+
+
+def test_fit_status():
+    """Test the FitStatus class.
+    """
+    status = FitStatus()
+    assert not status.valid()
+    chisquare = 10.5
+    dof = 8
+    status.update(np.array([1., 2.]), np.array([[0.1, 0.], [0., 0.2]]), chisquare, dof)
+    assert status.valid()
+    assert status.chisquare == chisquare
+    assert status.dof == dof
+    status.reset()
+    assert not status.valid()
 
 
 def test_model_parameters():
@@ -261,4 +276,39 @@ def test_shifted_exponential_frozen():
     model.scale.freeze(1.)
     model.fit(x, y, sigma=error)
     model.plot(fit_output=True)
+    plt.legend()
+
+
+def test_confidence_band_constant():
+    """Test the confidence band plotting.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Constant()
+    model.set_parameters(10.)
+    sigma = 0.1
+    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
+    plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
+    model.fit(xdata, ydata, sigma=sigma)
+    model.plot(fit_output=True)
+    delta = model.confidence_band(xdata)
+    assert np.allclose(delta, model.value.error)
+    model.plot_confidence_band()
+    plt.legend()
+
+
+def test_confidence_band_linear():
+    """Test the confidence band plotting.
+
+    Note this is particularly simple, as the width of the 1-sigma band is equal to the
+    uncertainty on the fitted parameter.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Line()
+    model.set_parameters(2., 10.)
+    sigma = 0.1
+    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
+    plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
+    model.fit(xdata, ydata, sigma=sigma)
+    model.plot(fit_output=True)
+    model.plot_confidence_band(num_sigma=2.)
     plt.legend()

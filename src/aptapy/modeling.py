@@ -20,7 +20,7 @@ import enum
 import functools
 import inspect
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from itertools import chain
 from numbers import Number
 from typing import Callable, Dict, Iterator, Tuple, Union
@@ -295,6 +295,8 @@ class FitStatus:
     """Small dataclass to hold the fit status.
     """
 
+    popt: np.ndarray = None
+    pcov: np.ndarray = None
     chisquare: float = None
     dof: int = None
     pvalue: float = None
@@ -302,36 +304,41 @@ class FitStatus:
     def reset(self) -> None:
         """Reset the fit status.
         """
-        self.chisquare = None
-        self.dof = None
-        self.pvalue = None
+        for field in fields(self):
+            setattr(self, field.name, None)
 
     def valid(self) -> bool:
-        """Return True if the fit status is valid, i.e., if the chisquare,
-        dof, and pvalue are all set.
+        """Return True if the fit status is valid, i.e., all the fields are set.
 
         Returns
         -------
         valid : bool
             True if the fit status is valid.
         """
-        return self.chisquare is not None and self.dof is not None and self.pvalue is not None
+        return all(getattr(self, field.name) is not None for field in fields(self))
 
-    def update(self, chisquare: float, dof: int = None) -> None:
+    def update(self, popt: np.ndarray, pcov: np.ndarray, chisquare: float, dof: int) -> None:
         """Update the fit status, i.e., set the chisquare and calculate the
         corresponding p-value.
 
         Arguments
         ---------
+        popt : array_like
+            The optimal values for the fit parameters.
+
+        pcov : array_like
+            The covariance matrix for the fit parameters.
+
         chisquare : float
             The chisquare of the fit.
 
-        dof : int, optional
+        dof : int
             The number of degrees of freedom of the fit.
         """
+        self.popt = popt
+        self.pcov = pcov
         self.chisquare = chisquare
-        if dof is not None:
-            self.dof = dof
+        self.dof = dof
         self.pvalue = scipy.stats.chi2.sf(self.chisquare, self.dof)
         # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
         # function is > 0.5, we flip it around, so that we always report the smallest
@@ -456,6 +463,49 @@ class AbstractFitModelBase(AbstractPlottable):
             The value(s) of the model at the given value(s) of the independent variable
             for a given set of parameter values.
         """
+
+    def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1.e-8) -> np.ndarray:
+        """Numerically calculate the Jacobian matrix of partial derivatives of the model
+        with respect to the parameters.
+
+        This is used, e.g., to plot confidence bands around the best-fit model.
+
+        Arguments
+        ----------
+        x : array_like
+            The value(s) of the independent variable.
+
+        parameter_values : sequence of float
+            The value of the model parameters. If no parameters are passed, the current
+            values are used by default. Alternatively, all the model parameters must
+            be passed, otherwise a ValueError is raised.
+
+        eps : float, optional
+            The step size to use for the numerical differentiation.
+
+        Returns
+        -------
+        J : ndarray
+            The Jacobian matrix of partial derivatives. The shape of the array is (m, n),
+            where m is the number of data points where the Jacobian is calculated, and
+            n the number of parameters.
+        """
+        # pylint: disable=invalid-name
+        if len(parameter_values) == 0:
+            parameter_values = self.parameter_values()
+        if len(parameter_values) != len(self):
+            raise ValueError(f"{len(self)} parameters expected in the Jacobian calculation")
+
+        p = np.array(parameter_values, dtype=float)
+        x = np.atleast_1d(x)
+        m = len(x)
+        n = len(p)
+        J = np.zeros((m, n))
+        for i in range(n):
+            dp = np.zeros_like(p)
+            dp[i] = eps
+            J[:, i] = (self.evaluate(x, *(p + dp)) - self.evaluate(x, *(p - dp))) / (2. * eps)
+        return J
 
     def name(self) -> str:
         """Return the model name, e.g., for legends.
@@ -744,8 +794,8 @@ class AbstractFitModelBase(AbstractPlottable):
         # Also, filter out any points with non-positive uncertainties.
         mask = np.logical_and(mask, sigma > 0.)
         # (And, since we are at it, make sure we have enough degrees of freedom.)
-        self.status.dof = int(mask.sum() - len(self.free_parameters()))
-        if self.status.dof < 0:
+        dof = int(mask.sum() - len(self.free_parameters()))
+        if dof < 0:
             raise RuntimeError(f"{self.name()} has no degrees of freedom")
         xdata = xdata[mask]
         ydata = ydata[mask]
@@ -767,7 +817,7 @@ class AbstractFitModelBase(AbstractPlottable):
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = scipy.optimize.curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
-        self.status.update(self.calculate_chisquare(xdata, ydata, sigma))
+        self.status.update(popt, pcov, self.calculate_chisquare(xdata, ydata, sigma), dof)
         return self.status
 
     def default_plotting_range(self) -> Tuple[float, float]:
@@ -854,6 +904,62 @@ class AbstractFitModelBase(AbstractPlottable):
         if fit_output:
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         return super().plot(axes, **kwargs)
+
+    def confidence_band(self, x: ArrayLike, num_sigma: float = 1.) -> np.ndarray:
+        """Return the vertical width of the n-sigma confidence band at the given x values.
+
+        Note this assumes that the model has been fitted to data and is equipped with a
+        valid FitStatus. A RuntimeError is raised if that is not the case.
+
+        Arguments
+        ---------
+        x : array_like
+            The x values where the confidence delta is calculated.
+
+        num_sigma : float
+            The number of sigmas for the band (default 1).
+
+        Returns
+        -------
+        delta : np.ndarray
+            The vertical width of the n-sigma confidence band at the given x values.
+        """
+        # pylint: disable=invalid-name
+        if not self.status.valid():
+            raise RuntimeError("Invalid fit status, cannot calculate confidence band")
+        J = self.jacobian(x, *self.status.popt)
+        return num_sigma * np.sqrt(np.einsum("ij,jk,ik->i", J, self.status.pcov, J))
+
+    def plot_confidence_band(self, axes: matplotlib.axes.Axes = None, num_sigma: float = 1.,
+                             **kwargs) -> matplotlib.axes.Axes:
+        """Plot the n-sigma confidence band around the best-fit model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        num_sigma : float, optional
+            The number of sigmas for the confidence band (default: 1).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `axes.fill_between()`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The axes with the confidence band plotted.
+        """
+        if axes is None:
+            axes = plt.gca()
+        kwargs.setdefault("color", last_line_color(axes))
+        kwargs.setdefault("alpha", 0.25)
+        kwargs.setdefault("label", f"{num_sigma}σ confidence band")
+        x = self._plotting_grid()
+        y = self(x)
+        delta = self.confidence_band(x, num_sigma)
+        axes.fill_between(x, y - delta, y + delta, **kwargs)
+        return axes
 
     def random_fit_dataset(self, sigma: ArrayLike, num_points: int = 25,
                            seed: int = None) -> Tuple[np.ndarray, np.ndarray]:

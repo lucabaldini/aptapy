@@ -464,7 +464,7 @@ class AbstractFitModelBase(AbstractPlottable):
             for a given set of parameter values.
         """
 
-    def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1.e-8) -> np:
+    def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1.e-8) -> np.ndarray:
         """Numerically calculate the Jacobian matrix of partial derivatives of the model
         with respect to the parameters.
 

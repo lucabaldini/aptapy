@@ -932,6 +932,22 @@ class AbstractFitModelBase(AbstractPlottable):
     def plot_confidence_band(self, axes: matplotlib.axes.Axes = None, num_sigma: float = 1.,
                              **kwargs) -> matplotlib.axes.Axes:
         """Plot the n-sigma confidence band around the best-fit model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes to plot on (default: current axes).
+
+        num_sigma : float, optional
+            The number of sigmas for the confidence band (default: 1).
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `axes.fill_between()`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The axes with the confidence band plotted.
         """
         if axes is None:
             axes = plt.gca()

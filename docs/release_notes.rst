@@ -12,6 +12,7 @@ Release notes
 
   - https://github.com/lucabaldini/aptapy/pull/54
   - https://github.com/lucabaldini/aptapy/pull/53
+  - https://github.com/lucabaldini/aptapy/pull/52
   - https://github.com/lucabaldini/aptapy/pull/51
   - https://github.com/lucabaldini/aptapy/issues/50
 

@@ -76,7 +76,7 @@ def _test_base(model_class: type, *shape_parameters, location: float = 10.,
     # amplitude against the ground truth. We *could* check all the other parameter
     # values, but since this is a quick test, we just make sure that the p-value
     # is acceptable.
-    status = model.fit_histogram(histogram)
+    status = model.fit(histogram)
     assert status.pvalue > threshold
     model.plot(fit_output=True)
     setup_gca(xmin=xmin, xmax=xmax)

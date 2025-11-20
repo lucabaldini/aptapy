@@ -29,7 +29,7 @@ total = signal + background
 background_model = Exponential()
 # Note the use of xmin > xmax to fit outside the signal region: this will actually
 # ignore all data between 4 and 8.
-background_model.fit_histogram(total, xmin=8, xmax=4.)
+background_model.fit(total, xmin=8, xmax=4.)
 print(background_model)
 
 # Plot the histograms and the fit results on the upper axes.
@@ -47,7 +47,7 @@ sub_signal.plot(ax2, errors=True, label="Subtracted signal")
 
 # Fit the subtracted histogram with a Gaussian.
 model = Gaussian()
-model.fit_histogram(sub_signal)
+model.fit(sub_signal)
 print(model)
 model.plot(ax2, fit_output=True)
 ax2.legend()

@@ -497,13 +497,14 @@ class AbstractFitModelBase(AbstractPlottable):
             raise ValueError(f"{len(self)} parameters expected in the Jacobian calculation")
 
         p = np.array(parameter_values, dtype=float)
-        m = 1 if isinstance(x, Number) else len(x)
+        x_array = np.atleast_1d(x)
+        m = len(x_array)
         n = len(p)
         J = np.zeros((m, n))
         for i in range(n):
             dp = np.zeros_like(p)
             dp[i] = eps
-            J[:, i] = (self.evaluate(x, *(p + dp)) - self.evaluate(x, *(p - dp))) / (2. * eps)
+            J[:, i] = (self.evaluate(x_array, *(p + dp)) - self.evaluate(x_array, *(p - dp))) / (2. * eps)
         return J
 
     def name(self) -> str:

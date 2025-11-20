@@ -161,16 +161,25 @@ class AbstractHistogram(AbstractPlottable):
         self._sumw2 += sumw2
         return self
 
-    def set_content(self, content: ArrayLike) -> "AbstractHistogram":
+    def set_content(self, content: ArrayLike, errors: ArrayLike = None) -> "AbstractHistogram":
         """Fill the histogram from binned data
 
-        Parameters
+        Arguments
         ----------
         content : ArrayLike
             The content of the bins
+        errors : ArrayLike, optional
+            The errors of the bins, by default None
         """
+        if content.shape != self._shape:
+            raise ValueError("Shape of content does not match number of bins")
         self._sumw = content
-        self._sumw2 = content
+        if errors is None:
+            self._sumw2 = content
+        else:
+            if errors.shape != self._shape:
+                raise ValueError("Shape of errors does not match number of bins")
+            self._sumw2 = errors**2
 
         return self
 

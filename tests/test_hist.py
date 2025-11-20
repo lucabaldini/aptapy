@@ -76,15 +76,19 @@ def test_filling1d():
     assert hist.content == 101.
 
 
-def test_settingcontent1d():
+def test_setting_content1d():
     """Test setting the content of a 2-bin, 1-dimensional histogram.
     """
     hist = Histogram1d(np.linspace(0., 2., 3))
     content = np.array([10, 20])
     hist.set_content(content)
-
     assert np.array_equal(hist.content, content)
     assert np.array_equal(hist.errors, np.sqrt(content))
+
+    errors = np.array([1, 1])
+    hist.set_content(content, errors)
+    assert np.array_equal(hist.content, content)
+    assert np.array_equal(hist.errors, errors)
 
 
 def test_compat1d():

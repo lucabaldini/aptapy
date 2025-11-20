@@ -22,7 +22,7 @@ model = Gaussian()
 # Fix the amplitude. This is a generally useful technique, as you should
 # never fit the normalization of a histogram.
 model.amplitude.freeze(hist.area() / model.integral(-5., 5.))
-model.fit_histogram(hist)
+model.fit(hist)
 print(model)
 model.plot(fit_output=True)
 

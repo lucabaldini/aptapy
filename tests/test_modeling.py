@@ -89,7 +89,7 @@ def test_gaussian_fit():
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
     TEST_HISTOGRAM.plot()
-    model.fit_histogram(TEST_HISTOGRAM)
+    model.fit(TEST_HISTOGRAM)
     model.plot(fit_output=True)
     assert model.mu.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
@@ -103,7 +103,7 @@ def test_gaussian_fit_subrange():
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Gaussian()
     TEST_HISTOGRAM.plot()
-    model.fit_histogram(TEST_HISTOGRAM, xmin=-2., xmax=2.)
+    model.fit(TEST_HISTOGRAM, xmin=-2., xmax=2.)
     model.plot(fit_output=True)
     assert model.mu.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
@@ -119,7 +119,7 @@ def test_gaussian_fit_bound():
     model.mu.minimum = 0.05
     model.mu.value = 0.1
     TEST_HISTOGRAM.plot()
-    model.fit_histogram(TEST_HISTOGRAM)
+    model.fit(TEST_HISTOGRAM)
     model.plot(fit_output=True)
     assert model.mu.value >= model.mu.minimum
     plt.legend()
@@ -133,7 +133,7 @@ def test_gaussian_fit_frozen():
     # Calculate the normalization from the histogram.
     model.amplitude.freeze(TEST_HISTOGRAM.area())
     TEST_HISTOGRAM.plot()
-    model.fit_histogram(TEST_HISTOGRAM)
+    model.fit(TEST_HISTOGRAM)
     model.plot(fit_output=True)
     assert model.mu.compatible_with(0., NUM_SIGMA)
     assert model.sigma.compatible_with(1., NUM_SIGMA)
@@ -151,7 +151,7 @@ def test_gaussian_fit_frozen_and_bound():
     model.mu.minimum = 0.05
     model.mu.value = 0.1
     TEST_HISTOGRAM.plot()
-    model.fit_histogram(TEST_HISTOGRAM)
+    model.fit(TEST_HISTOGRAM)
     model.plot(fit_output=True)
     assert model.mu.value >= model.mu.minimum
     assert model.sigma.value == 1.1
@@ -168,7 +168,7 @@ def test_sum_gauss_line():
     hist.fill(x)
     model = Gaussian() + Line()
     hist.plot()
-    model.fit_histogram(hist)
+    model.fit(hist)
     model.plot(fit_output=True)
     plt.legend()
 

@@ -22,7 +22,7 @@ hist.fill(np.random.default_rng().normal(size=100000))
 hist.plot(statistics=True)
 
 model = Gaussian()
-model.fit_histogram(hist)
+model.fit(hist)
 print(model)
 # Plot the model, including the fit output in the legend.
 model.plot(fit_output=True)

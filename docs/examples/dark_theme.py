@@ -22,7 +22,7 @@ with stylesheet_context("aptapy-dark"):
     hist.plot(statistics=True)
 
     model = Gaussian()
-    model.fit_histogram(hist)
+    model.fit(hist)
     print(model)
     # Plot the model, including the fit output in the legend.
     model.plot(fit_output=True)

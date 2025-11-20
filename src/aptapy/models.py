@@ -552,17 +552,16 @@ class Gaussian(AbstractFitModel):
     def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
             p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
             num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
-        """Fit the core of a gaussian histogram within a given number of sigma
-        around the peak.
+        """Fit the core of Gaussian data within a given number of sigma around the peak.
 
-        This function performs a first round of fit to the data and then
-        repeats the fit iteratively limiting the fit range to a specified
-        interval defined in terms of deviations (in sigma) around the peak.
+        This function performs a first round of fit to the data (either a histogram or
+        scatter plot data) and then repeats the fit iteratively, limiting the fit range
+        to a specified interval defined in terms of deviations (in sigma) around the peak.
 
         Arguments
         ----------
         xdata : array_like or Histogram1d
-            The data (or histogram) to fit.
+            The data (scatter plot x values) or histogram to fit.
 
         ydata : array_like, optional
             The y data to fit (if xdata is not a Histogram1d).

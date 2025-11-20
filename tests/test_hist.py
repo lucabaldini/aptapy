@@ -75,6 +75,17 @@ def test_filling1d():
     assert hist.content == 101.
 
 
+def test_settingcontent1d():
+    """Test setting the content of a 2-bin, 1-dimensional histogram.
+    """
+    hist = Histogram1d(np.linspace(0., 2., 3))
+    content = np.array([10, 20])
+    hist.set_content(content)
+
+    assert np.array_equal(hist.content, content)
+    assert np.array_equal(hist.errors, np.sqrt(content))
+
+
 def test_compat1d():
     """Test the histogram compatibility.
     """
@@ -176,6 +187,7 @@ def test_from_amptek_file(datadir):
     file_path = datadir / "amptek_test.mca"
     histogram = Histogram1d.from_amptek_file(file_path)
     histogram.plot()
+    # Add a fit to assert everthing works well. Waiting for the fit interface change
 
     mean, std = histogram.binned_statistics()
     assert mean != 0

@@ -8,7 +8,7 @@ Release notes
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/51
-
+* Added the ``set_content()`` method to ``AbstractHistogram`` to fill a histogram with binned data
 
 Version 0.14.0 (2025-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

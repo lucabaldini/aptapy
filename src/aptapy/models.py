@@ -580,6 +580,11 @@ class Gaussian(AbstractFitModel):
         
         kwargs : dict, optional
             Additional keyword arguments passed to `fit()`.
+
+        Returns
+        -------
+        FitStatus
+            The results of the fit.
         """
         fit_status = self.fit(xdata, ydata=ydata, p0=p0, sigma=sigma, **kwargs)
         for i in range(num_iterations):

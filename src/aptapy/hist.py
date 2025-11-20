@@ -161,6 +161,34 @@ class AbstractHistogram(AbstractPlottable):
         self._sumw2 += sumw2
         return self
 
+    def set_content(self, content: ArrayLike, errors: ArrayLike = None) -> "AbstractHistogram":
+        """Fill the histogram from binned data
+
+        Arguments
+        ----------
+        content : ArrayLike
+            The content of the bins
+
+        errors : ArrayLike, optional
+            The errors of the bins; if None, assume Poisson statistics (default).
+
+        Returns
+        -------
+        AbstractHistogram
+            The histogram instance.
+        """
+        if content.shape != self._shape:
+            raise ValueError("Shape of content does not match number of bins")
+        self._sumw = content
+        if errors is None:
+            self._sumw2 = content
+        else:
+            if errors.shape != self._shape:
+                raise ValueError("Shape of errors does not match number of bins")
+            self._sumw2 = errors**2
+
+        return self
+
     def copy(self, label: str = None) -> "AbstractHistogram":
         """Create a full copy of a histogram.
 
@@ -301,7 +329,7 @@ class Histogram1d(AbstractHistogram):
         num_channels = len(adc_counts)
         xedges = np.arange(-0.5, num_channels + 0.5)
         hist = cls(xedges=xedges, xlabel="ADC Channel")
-        return hist.fill(np.arange(num_channels), weights=adc_counts)
+        return hist.set_content(adc_counts)
 
     def area(self) -> float:
         """Return the total area under the histogram.

@@ -19,7 +19,6 @@
 import inspect
 
 import numpy as np
-from scipy.differentiate import jacobian
 
 from aptapy.hist import Histogram1d
 from aptapy.modeling import FitParameter, FitStatus
@@ -280,7 +279,22 @@ def test_shifted_exponential_frozen():
     plt.legend()
 
 
-def test_confidence_band():
+def test_confidence_band_constant():
+    """Test the confidence band plotting.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Constant()
+    model.set_parameters(10.)
+    sigma = 0.1
+    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
+    plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
+    model.fit(xdata, ydata, sigma=sigma)
+    model.plot(fit_output=True)
+    model.plot_confidence_band(num_sigma=2.)
+    plt.legend()
+
+
+def test_confidence_band_linear():
     """Test the confidence band plotting.
     """
     plt.figure(inspect.currentframe().f_code.co_name)

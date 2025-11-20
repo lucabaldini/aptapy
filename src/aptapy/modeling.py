@@ -464,10 +464,38 @@ class AbstractFitModelBase(AbstractPlottable):
             for a given set of parameter values.
         """
 
-    def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1e-8) -> np:
+    def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1.e-8) -> np:
         """Numerically calculate the Jacobian matrix of partial derivatives of the model
         with respect to the parameters.
+
+        This is used, e.g., to plot confidence bands around the best-fit model.
+
+        Arguments
+        ----------
+        x : array_like
+            The value(s) of the independent variable.
+
+        parameter_values : sequence of float
+            The value of the model parameters. If no parameters are passed, the current
+            values are used by default. Alternatively, all the model parameters must
+            be passed, otherwise a ValueError is raised.
+
+        eps : float, optional
+            The step size to use for the numerical differentiation.
+
+        Returns
+        -------
+        J : ndarray
+            The Jacobian matrix of partial derivatives. The shape of the array is (m, n),
+            where m is the number of data points where the Jacobian is calculated, and
+            n the number of parameters.
         """
+        # pylint: disable=invalid-name
+        if len(parameter_values) == 0:
+            parameter_values = self.parameter_values()
+        if len(parameter_values) != len(self):
+            raise ValueError(f"{len(self)} parameters expected in the Jacobian calculation")
+
         p = np.array(parameter_values, dtype=float)
         m = 1 if isinstance(x, Number) else len(x)
         n = len(p)
@@ -876,22 +904,45 @@ class AbstractFitModelBase(AbstractPlottable):
             kwargs["label"] = f"{kwargs['label']}\n{self._format_fit_output(Format.LATEX)}"
         return super().plot(axes, **kwargs)
 
-    def plot_confidence_band(self, axes: matplotlib.axes.Axes = None, num_sigma: float = 1.,
-                             **kwargs) -> None:
+    def confidence_band(self, x: ArrayLike, num_sigma: float = 1.) -> np.ndarray:
+        """Return the vertical width of the n-sigma confidence band at the given x values.
+
+        Note this assumes that the model has been fitted to data and is equipped with a
+        valid FitStatus. A RuntimeError is raised if that is not the case.
+
+        Arguments
+        ---------
+        x : array_like
+            The x values where the confidence delta is calculated.
+
+        num_sigma : float
+            The number of sigmas for the band (default 1).
+
+        Returns
+        -------
+        delta : np.ndarray
+            The vertical width of the one-sigma confidence band at the given x values.
         """
-        """
+        # pylint: disable=invalid-name
         if not self.status.valid():
-            raise RuntimeError("Cannot plot confidence band: fit status is not valid")
+            raise RuntimeError("Invalid fit status, cannot calculate confidence band")
+        J = self.jacobian(x, *self.status.popt)
+        return num_sigma * np.sqrt(np.einsum("ij,jk,ik->i", J, self.status.pcov, J))
+
+    def plot_confidence_band(self, axes: matplotlib.axes.Axes = None, num_sigma: float = 1.,
+                             **kwargs) -> matplotlib.axes.Axes:
+        """Plot the n-sigma confidence band around the best-fit model.
+        """
         if axes is None:
             axes = plt.gca()
         kwargs.setdefault("color", last_line_color(axes))
-        kwargs.setdefault("alpha", 0.3)
+        kwargs.setdefault("alpha", 0.25)
         kwargs.setdefault("label", f"{num_sigma}σ confidence band")
         x = self._plotting_grid()
         y = self(x)
-        J = self.jacobian(x, *self.status.popt)
-        delta = num_sigma * np.sqrt(np.einsum("ij,jk,ik->i", J, self.status.pcov, J))
+        delta = self.confidence_band(x, num_sigma)
         axes.fill_between(x, y - delta, y + delta, **kwargs)
+        return axes
 
     def random_fit_dataset(self, sigma: ArrayLike, num_points: int = 25,
                            seed: int = None) -> Tuple[np.ndarray, np.ndarray]:

@@ -23,7 +23,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, fields
 from itertools import chain
 from numbers import Number
-from typing import Callable, Dict, Iterator, Tuple
+from typing import Callable, Dict, Iterator, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -671,23 +671,23 @@ class AbstractFitModelBase(AbstractPlottable):
         wrapper.__signature__ = signature
         return wrapper
 
-    def fit(self, xdata: ArrayLike, ydata: ArrayLike, p0: ArrayLike = None,
-            sigma: ArrayLike = 1., absolute_sigma: bool = False, xmin: float = -np.inf,
-            xmax: float = np.inf, **kwargs) -> FitStatus:
+    def fit(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
+            p0: ArrayLike = None, sigma: ArrayLike = None, absolute_sigma: bool = False,
+            xmin: float = -np.inf, xmax: float = np.inf, **kwargs) -> FitStatus:
         """Fit a series of points.
 
         Arguments
         ---------
-        xdata : array_like
-            The input values of the independent variable.
+        xdata : array_like or one-dimensional histogram
+            The input values of the independent variable or a 1-dimensional histogram.
 
-        ydata : array_like
+        ydata : array_like, optional
             The input values of the dependent variable.
 
         p0 : array_like, optional
             The initial values for the fit parameters.
 
-        sigma : array_like
+        sigma : array_like, optional
             The input uncertainties on the dependent variable.
 
         absolute_sigma : bool, optional (default False)
@@ -701,11 +701,28 @@ class AbstractFitModelBase(AbstractPlottable):
             The maximum value of the independent variable to fit. Note that if
             xmin < xmax the (xmax, xmin) interval is excluded from the fit.
 
+        kwargs : dict, optional
+            Additional keyword arguments passed to `curve_fit()`.
+
         Returns
         -------
         status : FitStatus
             The status of the fit.
         """
+        # Dispatch the input arguments if we are fitting a histogram.
+        if isinstance(xdata, Histogram1d):
+            if ydata is not None:
+                raise ValueError("ydata must be None when xdata is a Histogram1d")
+            if sigma is not None:
+                raise ValueError("sigma must be None when xdata is a Histogram1d")
+            histogram = xdata
+            xdata = histogram.bin_centers()
+            ydata = histogram.content
+            sigma = histogram.errors
+        else:
+            if ydata is None:
+                raise ValueError("ydata must be provided when xdata is array-like")
+
         # Reset the fit status.
         self.status.reset()
 
@@ -714,7 +731,9 @@ class AbstractFitModelBase(AbstractPlottable):
         # the broadcast facilities.
         xdata = np.asarray(xdata)
         ydata = np.asarray(ydata)
-        if isinstance(sigma, Number):
+        if sigma is None:
+            sigma = np.ones_like(ydata)
+        elif isinstance(sigma, Number):
             sigma = np.full(ydata.shape, sigma)
         sigma = np.asarray(sigma)
         # If we are fitting over a subrange, filter the input data. We have three cases:
@@ -757,23 +776,6 @@ class AbstractFitModelBase(AbstractPlottable):
         self.update_parameters(popt, pcov)
         self.status.update(popt, pcov, self.calculate_chisquare(xdata, ydata, sigma), dof)
         return self.status
-
-    def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:
-        """Convenience function for fitting a 1-dimensional histogram.
-
-        Arguments
-        ---------
-        histogram : Histogram1d
-            The histogram to fit.
-
-        p0 : array_like, optional
-            The initial values for the fit parameters.
-
-        kwargs : dict, optional
-            Additional keyword arguments passed to `fit()`.
-        """
-        args = histogram.bin_centers(), histogram.content, p0, histogram.errors
-        return self.fit(*args, **kwargs)
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Return the default plotting range for the model.

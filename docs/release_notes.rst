@@ -3,12 +3,18 @@
 Release notes
 =============
 
+* Added ``fit_iterative()`` method to the ``Gaussian`` model class to perform iterative fitting.
+* Added the ``set_content()`` method to ``AbstractHistogram`` to fill a histogram with binned data
+* Slight change to the main fitting interface, and fit_histogram() function removed.
 * Added the ``from_amptek_file()`` method to create a ``Histogram1d`` from an MCA8000A multichannel
   analyzer output file.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/54
+  - https://github.com/lucabaldini/aptapy/pull/53
+  - https://github.com/lucabaldini/aptapy/pull/52
   - https://github.com/lucabaldini/aptapy/pull/51
-
+  - https://github.com/lucabaldini/aptapy/issues/50
 
 Version 0.14.0 (2025-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

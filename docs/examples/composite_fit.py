@@ -21,7 +21,7 @@ hist.fill(5. - 10. * np.sqrt(1 - np.random.default_rng().random(100000)))
 hist.plot()
 
 model = Gaussian() + Line()
-model.fit_histogram(hist)
+model.fit(hist)
 print(model)
 model.plot(fit_output=True)
 

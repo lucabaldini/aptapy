@@ -22,6 +22,7 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d, Histogram2d
+from aptapy.models import Gaussian
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -187,8 +188,14 @@ def test_from_amptek_file(datadir):
     file_path = datadir / "amptek_test.mca"
     histogram = Histogram1d.from_amptek_file(file_path)
     histogram.plot()
-    # Add a fit to assert everthing works well. Waiting for the fit interface change
+
+    model = Gaussian()
+    model.fit(histogram, xmin=20, xmax=35)
+    model.plot(fit_output=True)
+    dof = model.status.dof
+    plt.legend()
 
     mean, std = histogram.binned_statistics()
     assert mean != 0
     assert std != 0
+    assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)

@@ -290,12 +290,17 @@ def test_confidence_band_constant():
     plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
     model.fit(xdata, ydata, sigma=sigma)
     model.plot(fit_output=True)
-    model.plot_confidence_band(num_sigma=2.)
+    delta = model.confidence_band(xdata)
+    assert np.allclose(delta, model.value.error)
+    model.plot_confidence_band()
     plt.legend()
 
 
 def test_confidence_band_linear():
     """Test the confidence band plotting.
+
+    Note this is particularly simple, as the width of the 1-sigma band is equal to the
+    uncertainty on the fitted parameter.
     """
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Line()

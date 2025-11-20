@@ -295,6 +295,8 @@ class FitStatus:
     """Small dataclass to hold the fit status.
     """
 
+    _popt: np.ndarray = None
+    _pcov: np.ndarray = None
     chisquare: float = None
     dof: int = None
     pvalue: float = None
@@ -302,6 +304,8 @@ class FitStatus:
     def reset(self) -> None:
         """Reset the fit status.
         """
+        self._popt = None
+        self._pcov = None
         self.chisquare = None
         self.dof = None
         self.pvalue = None
@@ -317,7 +321,8 @@ class FitStatus:
         """
         return self.chisquare is not None and self.dof is not None and self.pvalue is not None
 
-    def update(self, chisquare: float, dof: int = None) -> None:
+    def update(self, popt: np.ndarray, pcov: np.ndarray, chisquare: float,
+               dof: int = None) -> None:
         """Update the fit status, i.e., set the chisquare and calculate the
         corresponding p-value.
 
@@ -329,6 +334,8 @@ class FitStatus:
         dof : int, optional
             The number of degrees of freedom of the fit.
         """
+        self._popt = popt
+        self._pcov = pcov
         self.chisquare = chisquare
         if dof is not None:
             self.dof = dof
@@ -748,7 +755,7 @@ class AbstractFitModelBase(AbstractPlottable):
         args = model, xdata, ydata, p0, sigma, absolute_sigma, True, self.bounds()
         popt, pcov = scipy.optimize.curve_fit(*args, **kwargs)
         self.update_parameters(popt, pcov)
-        self.status.update(self.calculate_chisquare(xdata, ydata, sigma))
+        self.status.update(popt, pcov, self.calculate_chisquare(xdata, ydata, sigma))
         return self.status
 
     def fit_histogram(self, histogram: Histogram1d, p0: ArrayLike = None, **kwargs) -> None:

@@ -550,9 +550,8 @@ class Gaussian(AbstractFitModel):
         self.sigma.init(np.sqrt(np.average((xdata - self.mu.value)**2, weights=ydata)))
 
     def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
-            p0: ArrayLike = None, sigma: ArrayLike = None, xmin: float = -np.inf,
-            xmax: float = np.inf, num_sigma_left: float = 2., num_sigma_right: float = 2.,
-            num_iterations: int = 2, **kwargs) -> "FitStatus":
+            p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
+            num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
         """Fit the core of Gaussian data within a given number of sigma around the peak.
 
         This function performs a first round of fit to the data (either a histogram or
@@ -573,14 +572,6 @@ class Gaussian(AbstractFitModel):
         sigma : array_like, optional
             The uncertainties on the y data.
 
-        xmin : float, optional (default -inf)
-            The minimum value of the independent variable to fit. Note that if
-            xmin < xmax the (xmax, xmin) interval is excluded from the fit.
-
-        xmax : float, optional (default inf)
-            The maximum value of the independent variable to fit. Note that if
-            xmin < xmax the (xmax, xmin) interval is excluded from the fit.
-
         num_sigma_left : float
             The number of sigma on the left of the peak to be used to define the
             fitting range.
@@ -600,13 +591,13 @@ class Gaussian(AbstractFitModel):
         FitStatus
             The results of the fit.
         """
-        fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, xmin=xmin, xmax=xmax, **kwargs)
+        fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
         for i in range(num_iterations):
-            xmin = self.mean() - num_sigma_left * self.std()
-            xmax = self.mean() + num_sigma_right * self.std()
+            kwargs.update(xmin=self.mean() - num_sigma_left * self.std(),
+                          xmax=self.mean() + num_sigma_right * self.std())
             try:
                 fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
-                                      sigma=sigma, xmin=xmin, xmax=xmax, **kwargs)
+                                      sigma=sigma, **kwargs)
             except RuntimeError as exception:
                 raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
         return fit_status

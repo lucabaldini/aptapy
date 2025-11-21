@@ -180,7 +180,8 @@ def test_gaussian_fit_iterative_hist():
     model = Gaussian()
     print(model)
     TEST_HISTOGRAM.plot()
-    model.fit_iterative(TEST_HISTOGRAM, num_iterations=3, num_sigma_left=3., num_sigma_right=3.)
+    model.fit_iterative(TEST_HISTOGRAM, num_iterations=3, num_sigma_left=3., num_sigma_right=3.,
+                        xmin=-5., xmax=5.)
     model.plot(fit_output=True)
     plt.legend()
     assert model.mu.compatible_with(0., NUM_SIGMA)

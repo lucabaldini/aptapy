@@ -205,7 +205,7 @@ class Polynomial(AbstractFitModel):
         #    otherwise they would not be recognized as fit parameters.
         self.degree = degree
         for i in range(degree + 1):
-            setattr(self.__class__, f"c{i}", FitParameter(0.))
+            setattr(self.__class__, f"c{degree - i}", FitParameter(0.))
         super().__init__(label, xlabel, ylabel)
 
     @staticmethod

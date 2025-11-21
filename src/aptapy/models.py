@@ -698,8 +698,8 @@ class GaussianForest(AbstractFitModel):
         y = sum(
             amplitude * scipy.stats.norm.pdf(
                 x,
-                loc=energy / energy_scale,
-                scale=sigma / np.sqrt(energy / self.energies[0]))
+                loc = energy / energy_scale,
+                scale = sigma / np.sqrt(energy / self.energies[0]))
                 for amplitude, energy in zip(amplitudes, self.energies)
         )
         return y
@@ -708,9 +708,10 @@ class GaussianForest(AbstractFitModel):
         # pylint: disable=no-member
         """Overloaded method.
         """
-        mu_max = xdata[np.argmax(ydata)]
+        mu0 = xdata[np.argmax(ydata)]
         self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
-        self.energy_scale.init(self.energies[0]/mu_max)
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         # pylint: disable=no-member

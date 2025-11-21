@@ -4,9 +4,43 @@ Release notes
 =============
 
 
-Version 0.14.0 (2025-11-14)
+Version 0.15.1 (2025-11-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+* Fix for a bug in the gaussian iterative fitting in a range.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/issues/60
+
+
+Version 0.15.0 (2025-11-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Naming order for polynomial coefficients changed to match standard mathematical
+  notation (e.g., c2 for quadratic term, c1 for linear term, c0 for constant term).
+* Keeping track of the covariance matrix in the FitResult object.
+* Added numerical Jacobian calculation in the base class for fit models.
+* Added capability to plot confidence bands around fit models.
+* Added ``fit_iterative()`` method to the ``Gaussian`` model class to perform iterative fitting.
+* Added the ``set_content()`` method to ``AbstractHistogram`` to fill a histogram with binned data
+* Slight change to the main fitting interface, and fit_histogram() function removed.
+* Added the ``from_amptek_file()`` method to create a ``Histogram1d`` from an MCA8000A multichannel
+  analyzer output file.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/58
+  - https://github.com/lucabaldini/aptapy/pull/56
+  - https://github.com/lucabaldini/aptapy/pull/54
+  - https://github.com/lucabaldini/aptapy/pull/53
+  - https://github.com/lucabaldini/aptapy/pull/52
+  - https://github.com/lucabaldini/aptapy/pull/51
+  - https://github.com/lucabaldini/aptapy/issues/50
+  - https://github.com/lucabaldini/aptapy/issues/40
+
+
+Version 0.14.0 (2025-11-14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Major refactoring of the modeling infrastructure, introducing a more structured and
   extensible framework for fitting models.

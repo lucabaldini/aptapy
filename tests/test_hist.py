@@ -22,6 +22,7 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d, Histogram2d
+from aptapy.models import Gaussian
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -73,6 +74,21 @@ def test_filling1d():
     # Fill with a number.
     hist.fill(0.5)
     assert hist.content == 101.
+
+
+def test_setting_content1d():
+    """Test setting the content of a 2-bin, 1-dimensional histogram.
+    """
+    hist = Histogram1d(np.linspace(0., 2., 3))
+    content = np.array([10, 20])
+    hist.set_content(content)
+    assert np.array_equal(hist.content, content)
+    assert np.array_equal(hist.errors, np.sqrt(content))
+
+    errors = np.array([1, 1])
+    hist.set_content(content, errors)
+    assert np.array_equal(hist.content, content)
+    assert np.array_equal(hist.errors, errors)
 
 
 def test_compat1d():
@@ -166,3 +182,24 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     assert abs(sx - 1.) < 0.02
     assert abs(sy - 1.) < 0.02
     plt.gca().set_aspect("equal")
+
+
+def test_from_amptek_file(datadir):
+    """Test building histogram from amptek file
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+
+    file_path = datadir / "amptek_test.mca"
+    histogram = Histogram1d.from_amptek_file(file_path)
+    histogram.plot()
+
+    model = Gaussian()
+    model.fit(histogram, xmin=20, xmax=35)
+    model.plot(fit_output=True)
+    dof = model.status.dof
+    plt.legend()
+
+    mean, std = histogram.binned_statistics()
+    assert mean != 0
+    assert std != 0
+    assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)

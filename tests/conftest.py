@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import pathlib
+
 import matplotlib.pyplot as plt
 import pytest
 
@@ -40,3 +42,8 @@ def pytest_sessionfinish(session):
     if session.config.getoption("--interactive"):
         # Show any open figures *once* at the end of the session
         plt.show()
+
+
+@pytest.fixture
+def datadir():
+    return pathlib.Path(__file__).parent / "data"

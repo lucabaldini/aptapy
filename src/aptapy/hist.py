@@ -22,7 +22,7 @@ import matplotlib
 import numpy as np
 
 from .plotting import AbstractPlottable, plt
-from .typing_ import ArrayLike
+from .typing_ import ArrayLike, PathLike
 
 __all__ = [
     "Histogram1d",
@@ -161,6 +161,34 @@ class AbstractHistogram(AbstractPlottable):
         self._sumw2 += sumw2
         return self
 
+    def set_content(self, content: ArrayLike, errors: ArrayLike = None) -> "AbstractHistogram":
+        """Fill the histogram from binned data
+
+        Arguments
+        ----------
+        content : ArrayLike
+            The content of the bins
+
+        errors : ArrayLike, optional
+            The errors of the bins; if None, assume Poisson statistics (default).
+
+        Returns
+        -------
+        AbstractHistogram
+            The histogram instance.
+        """
+        if content.shape != self._shape:
+            raise ValueError("Shape of content does not match number of bins")
+        self._sumw = content
+        if errors is None:
+            self._sumw2 = content
+        else:
+            if errors.shape != self._shape:
+                raise ValueError("Shape of errors does not match number of bins")
+            self._sumw2 = errors**2
+
+        return self
+
     def copy(self, label: str = None) -> "AbstractHistogram":
         """Create a full copy of a histogram.
 
@@ -274,6 +302,34 @@ class Histogram1d(AbstractHistogram):
         """Constructor.
         """
         super().__init__((xedges, ), label, [xlabel, ylabel])
+
+    @classmethod
+    def from_amptek_file(cls, file_path: PathLike) -> "Histogram1d":
+        """Return a Histogram1d filled with ADC counts from a file acquired with
+        the Amptek MCA8000A Multichannel Analyzer, see
+        https://www.amptek.com/internal-products/mca8000a-multichannel-analyzer-software-downloads
+
+        Arguments
+        ----------
+        file_path : PathLike
+            The path of the file to read.
+
+        Returns
+        -------
+        Histogram1d
+            A Histogram1d object with bins corresponding to ADC channels and filled
+            with the counts from the file.
+        """
+        with open(file_path, encoding="UTF-8") as input_file:
+            lines = input_file.readlines()
+        start = lines.index("<<DATA>>\n")+1
+        stop = lines.index("<<END>>\n")
+
+        adc_counts = np.array(lines[start:stop], dtype=float)
+        num_channels = len(adc_counts)
+        xedges = np.arange(-0.5, num_channels + 0.5)
+        hist = cls(xedges=xedges, xlabel="ADC Channel")
+        return hist.set_content(adc_counts)
 
     def area(self) -> float:
         """Return the total area under the histogram.

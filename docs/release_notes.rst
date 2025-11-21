@@ -4,6 +4,10 @@ Release notes
 =============
 
 
+Version 0.15.1 (2025-11-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 * Fix for a bug in the gaussian iterative fitting in a range.
 * Pull requests merged and issues closed:
 

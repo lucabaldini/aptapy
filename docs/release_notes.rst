@@ -3,6 +3,8 @@
 Release notes
 =============
 
+
+* Fix for a bug in the gaussian iterative fitting in a range.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/issues/60

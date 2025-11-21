@@ -1481,14 +1481,22 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
     return _wrapper
 
 def line_forest(*energies: float):
+
+    """Decorator to assign the energy values in a GaussianForest child class
+
+    Arguments
+    ---------
+    energies : float
+        The energies (in keV) of the lines in the forest
+    """
     def _wrapper(cls: type):
         # pylint: disable=protected-access
         cls.energies = energies
-        for i, energy in enumerate(energies):
-            setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.)) 
+        for i, _ in enumerate(energies):
+            setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.))
+        cls.energy_scale = FitParameter(1., minimum=0.)
+        cls.sigma = FitParameter(1., minimum=0.)
 
-        setattr(cls, 'energy_scale', FitParameter(1., minimum=0.))
-        setattr(cls, 'sigma', FitParameter(1., minimum=0.))
         return cls
 
     return _wrapper

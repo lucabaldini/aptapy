@@ -22,7 +22,6 @@ from typing import Tuple, Union
 import matplotlib
 import numpy as np
 import scipy.integrate
-import scipy.signal
 import scipy.special
 import scipy.stats
 
@@ -31,7 +30,6 @@ from .modeling import (
     AbstractCRVFitModel,
     AbstractFitModel,
     AbstractSigmoidFitModel,
-    FitModelSum,
     FitParameter,
     FitStatus,
     PhonyCRVFitModel,
@@ -57,8 +55,8 @@ __all__ = [
     "LogisticSigmoid",
     "Arctangent",
     "HyperbolicTangent",
-    "SpectralLine",
-    "LineForest"
+    "GaussianForest",
+    "Fe55Forest",
     "Alpha",
     "Anglit",
     "Arcsine",
@@ -690,221 +688,42 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
 
 class GaussianForest(AbstractFitModel):
 
-    def __init__(self, label = None, xlabel = None, ylabel = None):
-        super().__init__(label, xlabel, ylabel)
-
+    """Gaussian lines forest model.
+    """
 
     def evaluate(self, x, *args):
-        n = int((len(self.parameter_values()) - 2))
-        y = 0
+        # pylint: disable=no-member
+        # pylint: disable=arguments-differ
         *amplitudes, energy_scale, sigma = args
-        for i in range(n):
-            amplitude = amplitudes[i]
-            loc = self.energies[i] / energy_scale
-            _sigma = sigma / np.sqrt(self.energies[i] / self.energies[0])
-            y += amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=_sigma)
-
+        y = sum(
+            amplitude * scipy.stats.norm.pdf(
+                x,
+                loc=energy / energy_scale,
+                scale=sigma / np.sqrt(energy / self.energies[0]))
+                for amplitude, energy in zip(amplitudes, self.energies)
+        )
         return y
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        # pylint: disable=no-member
         """Overloaded method.
         """
         mu_max = xdata[np.argmax(ydata)]
-
-        # amp = np.max(ydata)*np.sqrt(2*np.pi)*np.sqrt(e_max)*self.scale.value
-        # amplitude0 = getattr(self, 'amplitude0')
         self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
-        # amplitude1 = getattr(self, 'amplitude0')
-        # self.amplitude1.init(scipy.integrate.trapezoid(ydata, xdata))
-        # self.amplitude2.init(scipy.integrate.trapezoid(ydata, xdata))
-        
-
         self.energy_scale.init(self.energies[0]/mu_max)
-        # self.sigma.init(np.sqrt(self.energy0)*self.scale.value)
 
-    # def default_plotting_range(self):
-    #     pass
+    def default_plotting_range(self) -> Tuple[float, float]:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        emin = min(self.energies) / self.energy_scale.value
+        emax = max(self.energies) / self.energy_scale.value
+        return (emin - 5 * self.sigma.value, emax +  5 * self.sigma.value,)
 
 
-@line_forest(5.9, 6.4, 3.)
-class ArFe55Forest(GaussianForest):        
+@line_forest(5.896, 6.492)
+class Fe55Forest(GaussianForest):
     pass
-
-
-class SpectralLine(AbstractFitModel):
-
-    """Spectral line model.
-    This model is a Gaussian with the sigma constrained to be sqrt(factor*mu)
-    """
-
-    amplitude = FitParameter(1.)
-    mu = FitParameter(1.)
-    factor = FitParameter(1.)
-
-    @staticmethod
-    def evaluate(x, amplitude, mu, factor, *args):
-        # pylint: disable=arguments-differ
-        return amplitude * scipy.stats.norm.pdf(x, *args, loc=mu,
-                                                scale=np.sqrt(factor*mu))
-
-    @staticmethod
-    def primitive(x, amplitude, mu, factor, *args):
-        return amplitude * scipy.stats.norm.cdf(x, *args, loc=mu,
-                                                scale=np.sqrt(factor*mu))
-
-    def median(self):
-        return self.mu.value
-
-    def mean(self):
-        return self.mu.value
-
-    def std(self):
-        return np.sqrt(self.factor.value*self.mu.value)
-
-    def rvs(self, size: int = 1, random_state=None):
-        """Generate random variates from the underlying distribution at the current
-        parameter values.
-
-        Arguments
-        ---------
-        size : int, optional
-            The number of random variates to generate (default 1).
-
-        random_state : int or np.random.Generator, optional
-            The random seed or generator to use (default None).
-        """
-        return scipy.stats.norm.rvs(loc=self.mu.value,
-                                    scale=np.sqrt(self.factor.value*self.mu.value),
-                                    size=size, random_state=random_state)
-
-    def random_histogram(self, size: int = 100000, num_bins: int = 100,
-                         random_state=None) -> Histogram1d:
-        """Generate a histogram filled with random variates from the underlying
-        distribution at the current parameter values.
-
-        Arguments
-        ---------
-        size : int, optional
-            The number of random variates to generate (default 100000).
-
-        num_bins : int, optional
-            The number of bins in the histogram (default 100).
-
-        random_state : int or np.random.Generator, optional
-            The random seed or generator to use (default None).
-        """
-        edges = np.linspace(*self.plotting_range(), num_bins + 1)
-        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
-
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
-        """
-        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
-        self.mu.init(np.average(xdata, weights=ydata))
-
-    def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method.
-        """
-        return (self.mu.value - 5. * np.sqrt(self.factor.value*self.mu.value),
-                self.mu.value + 5. * np.sqrt(self.factor.value*self.mu.value))
-
-    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
-             plot_mean: bool = True, **kwargs) -> None:
-        """Plot the model.
-
-        Note this is reimplemented from scratch to allow overplotting the mean of the
-        distribution.
-
-        Arguments
-        ---------
-        axes : matplotlib.axes.Axes, optional
-            The axes to plot on (default: current axes).
-
-        fit_output : bool, optional
-            Whether to include the fit output in the legend (default: False).
-
-        plot_mean : bool, optional
-            Whether to overplot the mean of the distribution (default: True).
-
-        kwargs : dict, optional
-            Additional keyword arguments passed to `plt.plot()`.
-        """
-        super().plot(axes, fit_output=fit_output, **kwargs)
-        if plot_mean:
-            if axes is None:
-                axes = plt.gca()
-            color = last_line_color()
-            x0 = self.mean()
-            y0 = self(x0)
-            axes.plot(x0, y0, "o", ms=5., color=matplotlib.rcParams["figure.facecolor"])
-            axes.plot(x0, y0, "o", ms=1.5, color=color)
-
-
-class LineForest(FitModelSum):
-    
-    """Composition of SpectralLine models.
-    All the lines have the same width factor.
-    """
-
-    def __init__(self, nlines: int, factor: float) -> None:
-        """Constructor
-        """
-        self.nlines = nlines    # is there an attribute with the number of components?
-        self.factor = factor
-        components = [SpectralLine() for i in range(nlines)]
-        super().__init__(*components)
-    
-    @staticmethod
-    def _find_peaks_iterative(xdata: ArrayLike, ydata: ArrayLike, npeaks: int) -> Tuple[ArrayLike, ArrayLike]:
-        """Find the position and height of a fixed number of peaks in a sample of data
-
-        Arguments
-        ---------
-        xdata : ArrayLike,
-            The x values of the sample.
-
-        ydata : ArrayLike,
-            The y values of the sample.
-
-        nlines : int,
-            Maximum number of peaks to find in the sample.
-
-        Returns
-        -------
-        xpeaks : ArrayLike
-            The position of the peaks on the x axis.
-
-        ypeaks : ArrayLike
-            The height of the peaks.
-        """
-        min_width, max_width = 0, len(ydata)
-        peaks, properties = scipy.signal.find_peaks(ydata, width=(min_width, max_width))
-        widths = properties['widths']
-        while len(peaks) > npeaks:
-            min_width = min(widths)*1.1
-            peaks, properties = scipy.signal.find_peaks(ydata, width=(min_width, max_width))
-            widths = properties['widths']
-
-        return xdata[peaks], ydata[peaks]
-
-    def init_parameters(self, xdata, ydata, sigma) -> None:
-        """Overloaded method.
-        """
-        # Must set the amplitude and the mean of each peak, otherwise the fit doesn't converge.
-        # The factor is given to the constructor (should we freeze it?)
-        mu, height = self._find_peaks_iterative(xdata, ydata, self.nlines)
-        amplitude = height * np.sqrt(2*np.pi*mu*self.factor)
-        parameter_values = [par for i in range(self.nlines) for par in (amplitude[i], mu[i], self.factor)]
-        self.set_parameters(*parameter_values)
-    
-    def default_plotting_range(self) -> Tuple[float, float]:
-        """Overloaded method.
-        """
-        mu = self.parameter_values()[1::3]
-        mu_min = min(mu)
-        mu_max = max(mu)
-
-        return (mu_min - 5. * np.sqrt(mu_min), mu_max + 5. * np.sqrt(mu_max)) 
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

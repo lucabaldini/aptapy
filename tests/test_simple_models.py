@@ -114,5 +114,5 @@ def test_stretched_exponential_complement():
     _test_model_base(models.StretchedExponentialComplement, 5., 2., 0.5, num_sigma=50.)
 
 
-def test_spectral_line():
-    _test_model_base(models.SpectralLine, 10, 10, 0.5, num_sigma=50.)
+def test_line_forest():
+    _test_model_base(models.Fe55Forest, 1., 0.1, 1., 0.1, num_sigma=50.)

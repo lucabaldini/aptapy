@@ -593,11 +593,11 @@ class Gaussian(AbstractFitModel):
         """
         fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
         for i in range(num_iterations):
-            xmin = self.mean() - num_sigma_left * self.std()
-            xmax = self.mean() + num_sigma_right * self.std()
+            kwargs.update(xmin=self.mean() - num_sigma_left * self.std(),
+                          xmax=self.mean() + num_sigma_right * self.std())
             try:
                 fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
-                                      sigma=sigma, xmin=xmin, xmax=xmax, **kwargs)
+                                      sigma=sigma, **kwargs)
             except RuntimeError as exception:
                 raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
         return fit_status

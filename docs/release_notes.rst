@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.15.0 (2025-11-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Naming order for polynomial coefficients changed to match standard mathematical
   notation (e.g., c2 for quadratic term, c1 for linear term, c0 for constant term).
 * Keeping track of the covariance matrix in the FitResult object.

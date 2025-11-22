@@ -688,7 +688,10 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
 
 class GaussianForest(AbstractFitModel):
 
-    """Gaussian lines forest model.
+    """Model representing a forest of Gaussian spectral lines at fixed energies.
+
+    Each peak corresponds to a known energy, and the model allows for fitting the amplitudes,
+    a global energy scale, and a common width (sigma).
     """
 
     def evaluate(self, x, *args):
@@ -698,8 +701,8 @@ class GaussianForest(AbstractFitModel):
         y = sum(
             amplitude * scipy.stats.norm.pdf(
                 x,
-                loc = energy / energy_scale,
-                scale = sigma / np.sqrt(energy / self.energies[0]))
+                loc=energy / energy_scale,
+                scale=sigma / np.sqrt(energy / self.energies[0]))
                 for amplitude, energy in zip(amplitudes, self.energies)
         )
         return y
@@ -719,12 +722,17 @@ class GaussianForest(AbstractFitModel):
         """
         emin = min(self.energies) / self.energy_scale.value
         emax = max(self.energies) / self.energy_scale.value
-        return (emin - 5 * self.sigma.value, emax +  5 * self.sigma.value,)
+        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value,)
 
 
 @line_forest(5.896, 6.492)
 class Fe55Forest(GaussianForest):
-    pass
+    """Model representing the Kα and Kβ emission lines produced in the decay of 55Fe. The energy
+    values are computed as the intensity-weighted mean of all possible emission lines contributing
+    to each feature.
+
+    The energy data are retrieved from the X-ray database at https://xraydb.seescience.org/.
+    """
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

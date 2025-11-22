@@ -1480,14 +1480,16 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
 
     return _wrapper
 
-def line_forest(*energies: float):
+def line_forest(*energies: float) -> Callable[[type], type]:
 
-    """Decorator to assign the energy values in a GaussianForest child class
+    """Decorator to assign the energy values of the lines in a GaussianForest child class.
+    For each energy, a class attribute representing the amplitude of the line is created.
+    It also adds the energy_scale and sigma FitParameter attributes.
 
     Arguments
     ---------
     energies : float
-        The energies (in keV) of the lines in the forest
+        The energies of the lines included in the forest
     """
     def _wrapper(cls: type):
         # pylint: disable=protected-access

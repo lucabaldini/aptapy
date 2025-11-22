@@ -33,6 +33,7 @@ from .modeling import (
     FitParameter,
     FitStatus,
     PhonyCRVFitModel,
+    line_forest,
     wrap_rv_continuous,
 )
 from .plotting import last_line_color, plt
@@ -54,6 +55,8 @@ __all__ = [
     "LogisticSigmoid",
     "Arctangent",
     "HyperbolicTangent",
+    "GaussianForest",
+    "Fe55Forest",
     "Alpha",
     "Anglit",
     "Arcsine",
@@ -681,6 +684,55 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
     def shape(z):
         # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
+
+
+class GaussianForest(AbstractFitModel):
+
+    """Model representing a forest of Gaussian spectral lines at fixed energies.
+
+    Each peak corresponds to a known energy, and the model allows for fitting the amplitudes,
+    a global energy scale, and a common width (sigma).
+    """
+
+    def evaluate(self, x, *args):
+        # pylint: disable=no-member
+        # pylint: disable=arguments-differ
+        *amplitudes, energy_scale, sigma = args
+        y = sum(
+            amplitude * scipy.stats.norm.pdf(
+                x,
+                loc=energy / energy_scale,
+                scale=sigma / np.sqrt(energy / self.energies[0]))
+                for amplitude, energy in zip(amplitudes, self.energies)
+        )
+        return y
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        emin = min(self.energies) / self.energy_scale.value
+        emax = max(self.energies) / self.energy_scale.value
+        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value,)
+
+
+@line_forest(5.896, 6.492)
+class Fe55Forest(GaussianForest):
+    """Model representing the Kα and Kβ emission lines produced in the decay of 55Fe. The energy
+    values are computed as the intensity-weighted mean of all possible emission lines contributing
+    to each feature.
+
+    The energy data are retrieved from the X-ray database at https://xraydb.seescience.org/.
+    """
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

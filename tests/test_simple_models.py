@@ -115,4 +115,4 @@ def test_stretched_exponential_complement():
 
 
 def test_line_forest():
-    _test_model_base(models.Fe55Forest, 10., 2., 1., 0.2, num_sigma=500.)
+    _test_model_base(models.Fe55Forest, 10., 2., 1., 0.2, sigma=0.5, num_sigma=500.)

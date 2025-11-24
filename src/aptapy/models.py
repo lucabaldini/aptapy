@@ -707,6 +707,44 @@ class GaussianForest(AbstractFitModel):
         )
         return y
 
+    def rvs(self, size: int = 1, random_state=None):
+        # pylint: disable=no-member
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        amplitudes = [getattr(self, f"amplitude{i}") for i in range(self.energies)]
+        vals = np.random.choice(self.energies, size=size, p=amplitudes)
+        loc = vals / self.energy_scale
+        scale = self.sigma / np.sqrt(vals / self.energies[0])
+        return scipy.stats.norm.rvs(loc=loc, scale=scale, random_state=random_state)
+
+    def random_histogram(self, size: int = 100000, num_bins: int = 100,
+                         random_state=None) -> Histogram1d:
+        """Generate a histogram filled with random variates from the underlying
+        distribution at the current parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 100000).
+
+        num_bins : int, optional
+            The number of bins in the histogram (default 100).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
+
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         # pylint: disable=no-member
         """Overloaded method.

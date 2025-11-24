@@ -17,7 +17,7 @@ class ExampleForest(GaussianForest):
     """Example of a GaussianForest child class with lines centeres in 1. and 2. [a.u.]
     """
 
-# Instanciate the class and set the parameters
+# Instantiate the class and initialize the parameters
 model = ExampleForest()
 model.amplitude1.init(0.1)
 # Generate a random histogram with the given parameters

@@ -720,11 +720,12 @@ class GaussianForest(AbstractFitModel):
         random_state : int or np.random.Generator, optional
             The random seed or generator to use (default None).
         """
-        amplitudes = [getattr(self, f"amplitude{i}") for i in range(self.energies)]
-        vals = np.random.choice(self.energies, size=size, p=amplitudes)
-        loc = vals / self.energy_scale
-        scale = self.sigma / np.sqrt(vals / self.energies[0])
-        return scipy.stats.norm.rvs(loc=loc, scale=scale, random_state=random_state)
+        rng = np.random.default_rng(random_state)
+        amplitudes = [getattr(self, f"amplitude{i}").value for i in range(len(self.energies))]
+        vals = rng.choice(self.energies, size=size, p=amplitudes / np.sum(amplitudes))
+        loc = vals / self.energy_scale.value
+        scale = self.sigma.value / np.sqrt(vals / self.energies[0])
+        return scipy.stats.norm.rvs(loc=loc, scale=scale, random_state=rng)
 
     def random_histogram(self, size: int = 100000, num_bins: int = 100,
                          random_state=None) -> Histogram1d:
@@ -761,6 +762,42 @@ class GaussianForest(AbstractFitModel):
         emin = min(self.energies) / self.energy_scale.value
         emax = max(self.energies) / self.energy_scale.value
         return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value,)
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:
+        # pylint: disable=no-member
+        """
+        Overloaded method for plotting the model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes on which to plot the model. If None, uses the current axes.
+
+        fit_output : bool, optional
+            If True, displays the fit output on the legend. Default is False.
+
+        plot_components : bool, optional
+            If True, plots the individual components of the model as dashed lines.
+            Default is True.
+
+        kwargs
+            Additional keyword arguments passed to the parent class.
+
+        Returns
+        -------
+        None
+        """
+        axes = super().plot(axes, fit_output=fit_output, **kwargs)
+        color = last_line_color(axes)
+        x = self._plotting_grid()
+        if plot_components:
+            for i, energy in enumerate(self.energies):
+                amplitude = getattr(self, f"amplitude{i}").value
+                loc = energy / self.energy_scale.value
+                scale = self.sigma.value / np.sqrt(energy / self.energies[0])
+                y = amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=scale)
+                axes.plot(x, y, label=None, ls="--", color=color)
 
 
 @line_forest(5.896, 6.492)

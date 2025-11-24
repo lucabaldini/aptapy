@@ -22,6 +22,8 @@ model = ExampleForest()
 model.amplitude1.init(0.1)
 # Generate a random histogram with the given parameters
 hist = model.random_histogram(size=100000, num_bins=100)
+hist.label = "Random data"
+hist.xlabel = "x"
 hist.plot()
 
 model.fit(hist)

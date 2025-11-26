@@ -789,7 +789,6 @@ class GaussianForest(AbstractFitModel):
         None
         """
         axes = super().plot(axes, fit_output=fit_output, **kwargs)
-        color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:
             for i, energy in enumerate(self.energies):
@@ -797,7 +796,7 @@ class GaussianForest(AbstractFitModel):
                 loc = energy / self.energy_scale.value
                 scale = self.sigma.value / np.sqrt(energy / self.energies[0])
                 y = amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=scale)
-                axes.plot(x, y, label=None, ls="--", color=color)
+                axes.plot(x, y, label=None, ls="--")
 
 
 @line_forest(5.896, 6.492)

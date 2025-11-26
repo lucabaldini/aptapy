@@ -1480,6 +1480,29 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
 
     return _wrapper
 
+def line_forest(*energies: float) -> Callable[[type], type]:
+
+    """Decorator to assign the energy values of the lines in a GaussianForest child class.
+    For each energy, a class attribute representing the amplitude of the line is created.
+    It also adds the energy_scale and sigma FitParameter attributes.
+
+    Arguments
+    ---------
+    energies : float
+        The energies of the lines included in the forest
+    """
+    def _wrapper(cls: type):
+        # pylint: disable=protected-access
+        cls.energies = energies
+        for i, _ in enumerate(energies):
+            setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.))
+        cls.energy_scale = FitParameter(1., minimum=0.)
+        cls.sigma = FitParameter(1., minimum=0.)
+
+        return cls
+
+    return _wrapper
+
 
 class FitModelSum(AbstractFitModelBase):
 
@@ -1627,11 +1650,11 @@ class FitModelSum(AbstractFitModelBase):
         None
         """
         axes = super().plot(axes, fit_output=fit_output, **kwargs)
-        color = last_line_color(axes)
+        # color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:
             for component in self._components:
-                axes.plot(x, component(x), label=None, ls="--", color=color)
+                axes.plot(x, component(x), label=None, ls="--")#, color=color)
 
 
     def _format_fit_output(self, spec: str) -> str:

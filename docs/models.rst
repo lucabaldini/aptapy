@@ -424,6 +424,13 @@ shape parameter(s): :math:`m > 1`, :math:`\beta > 0`.
 .. image:: /_static/plots/crystalball_shape.png
 
 
+:class:`~aptapy.models.Fe55Forest`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Gaussian line forest for the Kα and Kβ emission features of :math:`^{55}\mathrm{Fe}` decay,
+using intensity-weighted mean energies from the X-ray database (<https://xraydb.seescience.org/>).
+
+
 :class:`~aptapy.models.Gaussian`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -439,6 +446,22 @@ parameter names.
    be implemented in :class:`~aptapy.models.Gaussian`, so user are encouraged
    to use this class over :class:`~aptapy.models.Normal`, except for testing
    purposes.
+
+
+:class:`~aptapy.models.GaussianForest`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Model of a forest of Gaussian peaks with fixed energies :math:`E_i`.
+Each peak has amplitude :math:`A_i`, while all peaks share a global
+energy scale :math:`E_s` and a common width :math:`\sigma`, scaled as
+:math:`1/\sqrt{E_i / E_0}`.
+
+.. math::
+    g(z) = \sum_i A_i \exp \left[- \frac{(z - E_i / E_s)^2}{(\sigma / \sqrt{E_i / E_0})^2} \right]
+
+.. note::
+
+    Base class used by models generated with :meth:`aptapy.modeling.line_forest`.
 
 
 :class:`~aptapy.models.Gibrat`

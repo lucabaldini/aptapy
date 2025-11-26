@@ -769,35 +769,7 @@ class GaussianForest(AbstractFitModel):
         """
         emin = min(self.energies) / self.energy_scale.value
         emax = max(self.energies) / self.energy_scale.value
-        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value,)
-
-    def _legend_format_fit_output(self) -> str:
-        # pylint: disable=no-member
-        """String formatting for legend fit output.
-
-        Returns
-        -------
-        text : str
-            The formatted string.
-        """
-        return f"FWHM@{self.energies[0]:.1f} keV: {self.fwhm():.1f} %"
-
-    def _plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
-             **kwargs) -> matplotlib.axes.Axes:
-        """Plot the model.
-
-        Arguments
-        ---------
-        axes : matplotlib.axes.Axes, optional
-            The axes to plot on (default: current axes).
-
-        kwargs : dict, optional
-            Additional keyword arguments passed to `plt.plot()`.
-        """
-        kwargs.setdefault("label", self.label)
-        if fit_output:
-            kwargs["label"] = f"{kwargs['label']}\n{self._legend_format_fit_output()}"
-        return super(AbstractFitModel, self).plot(axes, **kwargs)
+        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
              plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:
@@ -824,7 +796,7 @@ class GaussianForest(AbstractFitModel):
         -------
         None
         """
-        axes = self._plot(axes, fit_output=fit_output, **kwargs)
+        axes = super().plot(axes, fit_output=fit_output, **kwargs)
         x = self._plotting_grid()
         if plot_components:
             for i, energy in enumerate(self.energies):

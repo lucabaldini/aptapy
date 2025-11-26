@@ -1650,11 +1650,11 @@ class FitModelSum(AbstractFitModelBase):
         None
         """
         axes = super().plot(axes, fit_output=fit_output, **kwargs)
-        color = last_line_color(axes)
+        # color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:
             for component in self._components:
-                axes.plot(x, component(x), label=None, ls="--", color=color)
+                axes.plot(x, component(x), label=None, ls="--")#, color=color)
 
 
     def _format_fit_output(self, spec: str) -> str:

@@ -55,7 +55,6 @@ __all__ = [
     "LogisticSigmoid",
     "Arctangent",
     "HyperbolicTangent",
-    "GaussianForest",
     "Fe55Forest",
     "Alpha",
     "Anglit",
@@ -689,12 +688,18 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
         return 0.5 * (1. + np.tanh(z))
 
 
-class GaussianForest(AbstractFitModel):
+class GaussianForestBase(AbstractFitModel):
 
-    """Model representing a forest of Gaussian spectral lines at fixed energies.
+    """Abstract base model representing a forest of Gaussian spectral lines
+    at fixed energies.
 
-    Each peak corresponds to a known energy, and the model allows for fitting the amplitudes,
-    a global energy scale, and a common width (sigma).
+    Concrete models needs to be decorated with the `@line_forest` decorator,
+    specifying the energies of the lines included in the forest.
+
+    Each peak corresponds to a known energy, and the model allows for
+    fitting the amplitudes, a global energy scale, and a common width
+    (sigma) that scales as the square root of the line energy, as it is
+    common to observe in particle detectors.
     """
 
     def evaluate(self, x, *args):
@@ -864,12 +869,13 @@ class GaussianForest(AbstractFitModel):
 
 
 @line_forest(5.896, 6.492)
-class Fe55Forest(GaussianForest):
-    """Model representing the Kα and Kβ emission lines produced in the decay of 55Fe. The energy
-    values are computed as the intensity-weighted mean of all possible emission lines contributing
-    to each feature.
+class Fe55Forest(GaussianForestBase):
+    """Model representing the Kα and Kβ emission lines produced in the decay
+    of 55Fe. The energy values are computed as the intensity-weighted mean of
+    all possible emission lines contributing to each feature.
 
-    The energy data are retrieved from the X-ray database at https://xraydb.seescience.org/.
+    The energy data are retrieved from the X-ray database at
+    https://xraydb.seescience.org/.
     """
 
 

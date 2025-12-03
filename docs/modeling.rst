@@ -184,7 +184,7 @@ sigmoid-like.
 
 From the point of view of the practical implementation, most of the location-scale
 models in :mod:`aptapy.models` wrap :scipy_rv_wrap:`rv_continuous` distributions from
-:scipy:`scipy.stats`, which already provide most of the necessary functionality.
+`scipy.stats`, which already provide most of the necessary functionality.
 
 
 Sigmoid models

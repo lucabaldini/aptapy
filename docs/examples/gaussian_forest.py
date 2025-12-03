@@ -2,17 +2,17 @@
 Gaussian forest
 ===============
 
-Illustration of the GaussianForest class and the line_forest decorator.
+Illustration of the GaussianForestBase class and the line_forest decorator.
 """
 
 # %%
 
 from aptapy.modeling import line_forest
-from aptapy.models import GaussianForest
+from aptapy.models import GaussianForestBase
 from aptapy.plotting import plt
 
 @line_forest(1., 3.)
-class ExampleForest(GaussianForest):
+class ExampleForest(GaussianForestBase):
     """Example of a GaussianForest child class with lines centered at 1. and 3. [a.u.]
     """
 

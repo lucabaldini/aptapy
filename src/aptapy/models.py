@@ -511,6 +511,9 @@ class Gaussian(AbstractFitModel):
     def std(self):
         return self.sigma.value
 
+    def fwhm(self):
+        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()
+
     def rvs(self, size: int = 1, random_state=None):
         """Generate random variates from the underlying distribution at the current
         parameter values.
@@ -712,8 +715,8 @@ class GaussianForest(AbstractFitModel):
         The result is expressed as a percentage.
         """
         # pylint: disable=no-member
-        line_val = self.energies[0] / self.energy_scale.ufloat()
-        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat() / line_val * 100.
+        # line_val = self.energies[0] / self.energy_scale.ufloat()
+        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()
 
     def rvs(self, size: int = 1, random_state=None):
         # pylint: disable=no-member
@@ -762,6 +765,59 @@ class GaussianForest(AbstractFitModel):
         self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
         self.energy_scale.init(self.energies[0] / mu0)
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
+    def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
+            p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
+            num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
+        """Fit the core of Gaussian data within a given number of sigma around the peak.
+
+        This function performs a first round of fit to the data (either a histogram or
+        scatter plot data) and then repeats the fit iteratively, limiting the fit range
+        to a specified interval defined in terms of deviations (in sigma) around the peak.
+
+        Arguments
+        ----------
+        xdata : array_like or Histogram1d
+            The data (scatter plot x values) or histogram to fit.
+
+        ydata : array_like, optional
+            The y data to fit (if xdata is not a Histogram1d).
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        sigma : array_like, optional
+            The uncertainties on the y data.
+
+        num_sigma_left : float
+            The number of sigma on the left of the peak to be used to define the
+            fitting range.
+
+        num_sigma_right : float
+            The number of sigma on the right of the peak to be used to define the
+            fitting range.
+
+        num_iterations : int
+            The number of iterations of the fit.
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+
+        Returns
+        -------
+        FitStatus
+            The results of the fit.
+        """
+        fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
+        for i in range(num_iterations):
+            kwargs.update(xmin=self.energies[0] / self.energy_scale.value - num_sigma_left * self.sigma.value,
+                          xmax=self.energies[-1] / self.energy_scale.value + num_sigma_right * self.sigma.value / np.sqrt(self.energies[0] / self.energies[-1]))
+            try:
+                fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
+                                      sigma=sigma, **kwargs)
+            except RuntimeError as exception:
+                raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
+        return fit_status
 
     def default_plotting_range(self) -> Tuple[float, float]:
         # pylint: disable=no-member

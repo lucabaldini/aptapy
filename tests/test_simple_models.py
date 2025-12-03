@@ -62,6 +62,7 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     print(f"Initial values: {initial_values}")
     model.fit(xdata, ydata, sigma=sigma)
     model.plot(fit_output=True)
+    plt.legend()
     for param, guess, ground_truth in zip(model, initial_values, parameter_values):
         # Note that we can programmatically relax the test on the initial guess by
         # increasing num_sigma, since for the majority of models the init_parameters()
@@ -70,7 +71,6 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
         # reasonable number of sigma from the truth.
         assert param.compatible_with(guess, num_sigma)
         assert param.compatible_with(ground_truth, 5.)
-    plt.legend()
 
 
 def test_constant():
@@ -112,3 +112,7 @@ def test_stretched_exponential():
 
 def test_stretched_exponential_complement():
     _test_model_base(models.StretchedExponentialComplement, 5., 2., 0.5, num_sigma=50.)
+
+
+def test_line_forest():
+    _test_model_base(models.Fe55Forest, 10., 2., 1., 0.2, sigma=0.5, num_sigma=500.)

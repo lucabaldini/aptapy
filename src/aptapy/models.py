@@ -33,6 +33,7 @@ from .modeling import (
     FitParameter,
     FitStatus,
     PhonyCRVFitModel,
+    line_forest,
     wrap_rv_continuous,
 )
 from .plotting import last_line_color, plt
@@ -54,6 +55,7 @@ __all__ = [
     "LogisticSigmoid",
     "Arctangent",
     "HyperbolicTangent",
+    "Fe55Forest",
     "Alpha",
     "Anglit",
     "Arcsine",
@@ -681,6 +683,144 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
     def shape(z):
         # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
+
+
+class GaussianForestBase(AbstractFitModel):
+
+    """Abstract base model representing a forest of Gaussian spectral lines
+    at fixed energies.
+
+    Concrete models needs to be decorated with the `@line_forest` decorator,
+    specifying the energies of the lines included in the forest.
+
+    Each peak corresponds to a known energy, and the model allows for
+    fitting the amplitudes, a global energy scale, and a common width
+    (sigma) that scales as the square root of the line energy, as it is
+    common to observe in particle detectors.
+    """
+
+    def evaluate(self, x, *args):
+        # pylint: disable=no-member
+        # pylint: disable=arguments-differ
+        *amplitudes, energy_scale, sigma = args
+        y = sum(
+            amplitude * scipy.stats.norm.pdf(
+                x,
+                loc=energy / energy_scale,
+                scale=sigma / np.sqrt(energy / self.energies[0]))
+                for amplitude, energy in zip(amplitudes, self.energies)
+        )
+        return y
+
+    def fwhm(self):
+        """Calculate the ratio between the FWHM and the position of the main line of the forest.
+        The result is expressed as a percentage.
+        """
+        # pylint: disable=no-member
+        line_val = self.energies[0] / self.energy_scale.ufloat()
+        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat() / line_val * 100.
+
+    def rvs(self, size: int = 1, random_state=None):
+        # pylint: disable=no-member
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        rng = np.random.default_rng(random_state)
+        amplitudes = [getattr(self, f"amplitude{i}").value for i in range(len(self.energies))]
+        vals = rng.choice(self.energies, size=size, p=amplitudes / np.sum(amplitudes))
+        loc = vals / self.energy_scale.value
+        scale = self.sigma.value / np.sqrt(vals / self.energies[0])
+        return scipy.stats.norm.rvs(loc=loc, scale=scale, random_state=rng)
+
+    def random_histogram(self, size: int = 100000, num_bins: int = 100,
+                         random_state=None) -> Histogram1d:
+        """Generate a histogram filled with random variates from the underlying
+        distribution at the current parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 100000).
+
+        num_bins : int, optional
+            The number of bins in the histogram (default 100).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        emin = min(self.energies) / self.energy_scale.value
+        emax = max(self.energies) / self.energy_scale.value
+        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value)
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:
+        # pylint: disable=no-member
+        """
+        Overloaded method for plotting the model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes on which to plot the model. If None, uses the current axes.
+
+        fit_output : bool, optional
+            If True, displays the fit output on the legend. Default is False.
+
+        plot_components : bool, optional
+            If True, plots the individual components of the model as dashed lines.
+            Default is True.
+
+        kwargs
+            Additional keyword arguments passed to the parent class.
+
+        Returns
+        -------
+        None
+        """
+        axes = super().plot(axes, fit_output=fit_output, **kwargs)
+        x = self._plotting_grid()
+        if plot_components:
+            for i, energy in enumerate(self.energies):
+                amplitude = getattr(self, f"amplitude{i}").value
+                loc = energy / self.energy_scale.value
+                scale = self.sigma.value / np.sqrt(energy / self.energies[0])
+                y = amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=scale)
+                axes.plot(x, y, label=None, ls="--")
+
+
+@line_forest(5.896, 6.492)
+class Fe55Forest(GaussianForestBase):
+    """Model representing the Kα and Kβ emission lines produced in the decay
+    of 55Fe. The energy values are computed as the intensity-weighted mean of
+    all possible emission lines contributing to each feature.
+
+    The energy data are retrieved from the X-ray database at
+    https://xraydb.seescience.org/.
+    """
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

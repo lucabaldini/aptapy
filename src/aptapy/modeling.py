@@ -1481,6 +1481,43 @@ def wrap_rv_continuous(rv, **shape_parameters) -> type:
     return _wrapper
 
 
+def line_forest(*energies: float) -> Callable[[type], type]:
+
+    """Decorator to build a line forest fit model.
+
+    A line forest is a collection of spectral lines at known energies, each
+    with an independent amplitude, all sharing a common energy scale and
+    with a line width (sigma) that scales as the square root of the line
+    energy.
+
+    This decorator is simply adding a class attribute to store the line
+    energies, and creating all the necessary FitParameter objects.
+
+    While the decorator is agnostic as to what is the actual line shape,
+    the GaussianForestBase class is a good example of how to use this
+    decorator to build a line forest fit model.
+
+    Arguments
+    ---------
+    energies : float
+        The energies of the lines comprised in the forest. (These are typically
+        provided in physical units, e.g., keV, whereas the energy scale
+        parameters determines the conversion between the energy and whatever
+        units the fit model is actually evaluated in. e.g., ADC counts).
+    """
+    def _wrapper(cls: type):
+        # pylint: disable=protected-access
+        cls.energies = energies
+        for i, _ in enumerate(energies):
+            setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.))
+        cls.energy_scale = FitParameter(1., minimum=0.)
+        cls.sigma = FitParameter(1., minimum=0.)
+
+        return cls
+
+    return _wrapper
+
+
 class FitModelSum(AbstractFitModelBase):
 
     """Composite model representing the sum of an arbitrary number of simple models.
@@ -1627,11 +1664,11 @@ class FitModelSum(AbstractFitModelBase):
         None
         """
         axes = super().plot(axes, fit_output=fit_output, **kwargs)
-        color = last_line_color(axes)
+        # color = last_line_color(axes)
         x = self._plotting_grid()
         if plot_components:
             for component in self._components:
-                axes.plot(x, component(x), label=None, ls="--", color=color)
+                axes.plot(x, component(x), label=None, ls="--")#, color=color)
 
 
     def _format_fit_output(self, spec: str) -> str:

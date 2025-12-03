@@ -3,6 +3,12 @@
 Release notes
 =============
 
+* Added the ``GaussianForestBase`` and ``Fe55Forest`` model classes.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/62
+  - https://github.com/lucabaldini/aptapy/issues/47
+
 
 Version 0.15.1 (2025-11-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -685,7 +685,7 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
         return 0.5 * (1. + np.tanh(z))
 
 
-class AbstractGaussianForest(AbstractFitModel):
+class GaussianForestBase(AbstractFitModel):
 
     """Abstract base model representing a forest of Gaussian spectral lines
     at fixed energies.
@@ -813,7 +813,7 @@ class AbstractGaussianForest(AbstractFitModel):
 
 
 @line_forest(5.896, 6.492)
-class Fe55Forest(AbstractGaussianForest):
+class Fe55Forest(GaussianForestBase):
     """Model representing the Kα and Kβ emission lines produced in the decay
     of 55Fe. The energy values are computed as the intensity-weighted mean of
     all possible emission lines contributing to each feature.

@@ -1494,7 +1494,7 @@ def line_forest(*energies: float) -> Callable[[type], type]:
     energies, and creating all the necessary FitParameter objects.
 
     While the decorator is agnostic as to what is the actual line shape,
-    the GaussianForest concrete class is a good example of how to use this
+    the GaussianForestBase class is a good example of how to use this
     decorator to build a line forest fit model.
 
     Arguments

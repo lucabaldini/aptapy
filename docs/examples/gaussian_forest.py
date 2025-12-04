@@ -13,12 +13,12 @@ from aptapy.plotting import plt
 
 @line_forest(1., 3.)
 class ExampleForest(GaussianForestBase):
-    """Example of a GaussianForest child class with lines centered at 1. and 3. [a.u.]
+    """Example of a GaussianForestBase child class with lines centered at 1. and 3. [a.u.]
     """
 
 # Instantiate the class and initialize the parameters
 model = ExampleForest()
-model.amplitude1.init(0.1)
+model.intensity1.init(0.3)
 model.sigma.init(0.75)
 
 # Generate a random histogram with the given parameters
@@ -29,5 +29,4 @@ hist.plot()
 
 model.fit(hist)
 model.plot(fit_output=True)
-
 plt.legend()

@@ -470,7 +470,7 @@ class AbstractFitModelBase(AbstractPlottable):
         """Helper function to build a wrapper around the evaluate() method with
         the (correct) explicit signature, including all the parameter names.
 
-        This is used, e.g., by FitModelSum and GainForestBase to wrap the evaluate()
+        This is used, e.g., by FitModelSum and GaussianForestBase to wrap the evaluate()
         method, which is expressed in terms of a generic *args signature, before the
         method itself is passed to the freeze() method.
         """
@@ -1577,15 +1577,6 @@ class GaussianForestBase(AbstractFitModel):
 
     def freeze(self, model_function, **constraints) -> Callable:
         """Overloaded method.
-
-        This is a tricky one, for two distinct reasons: (i) for a FitModelSum object
-        evaluate() is not a static method, as it needs to access the list of components
-        to sum over; (ii) since components can be added at runtime, the original
-        signature of the function is generic, so we need to build a new signature that
-        reflects the actual parameters of the model when we actually want to use it in a
-        fit. In order to make this work, when freezing parameters we build a wrapper
-        around evaluate() with the correct signature, and pass it downstream to the
-        static freeze() method of the parent class AbstractFitModel.
         """
         # pylint: disable=arguments-differ
         if not constraints:
@@ -1702,7 +1693,7 @@ class GaussianForestBase(AbstractFitModel):
         for i in range(num_iterations):
             _xmin = self.energies[0] / self.energy_scale.value - num_sigma_left * self.sigma.value
             _xmax = self.energies[-1] / self.energy_scale.value + num_sigma_right * \
-                  self.sigma.value / np.sqrt(self.energies[0] / self.energies[-1])
+                  (self.sigma.value / np.sqrt(self.energies[-1] / self.energies[0]))
             kwargs.update(xmin=_xmin, xmax=_xmax)
             try:
                 fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
@@ -1717,8 +1708,8 @@ class GaussianForestBase(AbstractFitModel):
         """
         emin = min(self.energies) / self.energy_scale.value
         emax = max(self.energies) / self.energy_scale.value
-        return (emin - 5 * self.sigma.value / np.sqrt(self.energies[0] / min(self.energies)),
-                emax + 5 * self.sigma.value / np.sqrt(self.energies[0] / max(self.energies)))
+        return (emin - 5 * (self.sigma.value / np.sqrt(min(self.energies) / self.energies[0])),
+                emax + 5 * (self.sigma.value / np.sqrt(max(self.energies) / self.energies[0])))
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
              plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:

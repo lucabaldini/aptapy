@@ -313,3 +313,18 @@ def test_confidence_band_linear():
     model.plot(fit_output=True)
     model.plot_confidence_band(num_sigma=2.)
     plt.legend()
+
+
+def test_random_histogram():
+    """Test the generation of a random histogram.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Gaussian()
+    hist = model.random_histogram(random_state=_RNG)
+    hist.plot()
+    edges = np.linspace(model.mu.value - 3 * model.sigma.value,
+                         model.mu.value + 3 * model.sigma.value, 101)
+    custom_hist = model.random_histogram(edges=edges, random_state=_RNG)
+    custom_hist.plot()
+    assert np.array_equal(hist.bin_edges(), np.linspace(*model.default_plotting_range(), 101))
+    assert np.array_equal(custom_hist.bin_edges(), edges)

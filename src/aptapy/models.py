@@ -16,8 +16,10 @@
 """Built in models.
 """
 
+import functools
+import inspect
 from numbers import Number
-from typing import Tuple, Union
+from typing import Callable, Tuple, Union
 
 import matplotlib
 import numpy as np
@@ -712,6 +714,45 @@ class GaussianForestBase(AbstractFitModel):
                 for intensity, energy in zip(intensities, self.energies)
         )
         return y
+
+    def _wrap_evaluate(self) -> Callable:
+        """Helper function to build a wrapper around the evaluate() method with
+        the (correct) explicit signature, including all the parameter names.
+        """
+        # Build the correct signature for the evaluate() method. Note that
+        # the method bound to the class has signature (self, x, *parameter_values)
+        # and we do want a wrapper with signature (x, param1, param2, ...).
+
+        parameters = [inspect.Parameter("x", inspect.Parameter.POSITIONAL_ONLY)]
+        parameter_kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
+        parameters.extend(inspect.Parameter(par.name, parameter_kind) for par in self)
+        signature = inspect.Signature(parameters)
+
+        # Create a loose wrapper around evaluate().
+        @functools.wraps(self.evaluate)
+        def wrapper(x, *args):
+            return self.evaluate(x, *args)
+
+        # Set the correct signature on the wrapper and return it.
+        wrapper.__signature__ = signature
+        return wrapper
+
+    def freeze(self, model_function, **constraints) -> Callable:
+        """Overloaded method.
+
+        This is a tricky one, for two distinct reasons: (i) for a FitModelSum object
+        evaluate() is not a static method, as it needs to access the list of components
+        to sum over; (ii) since components can be added at runtime, the original
+        signature of the function is generic, so we need to build a new signature that
+        reflects the actual parameters of the model when we actually want to use it in a
+        fit. In order to make this work, when freezing parameters we build a wrapper
+        around evaluate() with the correct signature, and pass it downstream to the
+        static freeze() method of the parent class AbstractFitModel.
+        """
+        # pylint: disable=arguments-differ
+        if not constraints:
+            return model_function
+        return AbstractFitModel.freeze(self._wrap_evaluate(), **constraints)
 
     def _intensities(self):
         """Return the current values of the line intensities for the forest,

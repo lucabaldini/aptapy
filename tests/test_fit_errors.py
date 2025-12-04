@@ -64,7 +64,7 @@ def _test_pulls(model: AbstractFitModelBase, ground_truth: dict, sample_size: in
         plt.legend()
 
 
-@pytest.mark.skip("This is mainly for debuggin purposes")
+@pytest.mark.skip("This is mainly for debugging purposes")
 def test_gaussian_pulls() -> None:
     """Test the pulls for the Gaussian model.
     """
@@ -73,6 +73,7 @@ def test_gaussian_pulls() -> None:
     _test_pulls(model, ground_truth)
 
 
+@pytest.mark.skip("This is mainly for debugging purposes")
 def test_fe_55_pulls() -> None:
     """Test the pulls for the Fe-55 model.
     """

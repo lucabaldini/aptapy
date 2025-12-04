@@ -702,9 +702,9 @@ class Fe55Forest(GaussianForestBase):
     https://xraydb.seescience.org/.
     """
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        # pylint: disable=no-member
         """Overloaded method.
         """
+        # pylint: disable=no-member
         mu0 = xdata[np.argmax(ydata)]
         self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
         self.intensity1.init(0.141)

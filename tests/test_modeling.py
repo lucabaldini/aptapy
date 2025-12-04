@@ -318,6 +318,7 @@ def test_confidence_band_linear():
 def test_gaussian_forest_fit_iterative_scatter():
     """Test an iterative fit for a GaussianForestBase child model class scatter plot.
     """
+    # pylint: disable=no-member
     plt.figure(inspect.currentframe().f_code.co_name)
     model = Fe55Forest(xlabel="x [a.u.]", ylabel="y [a.u.]")
     model.set_parameters(10, 0.15, 1., 0.3)

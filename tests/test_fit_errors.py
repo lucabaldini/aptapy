@@ -77,7 +77,6 @@ def test_fe_55_pulls() -> None:
     """Test the pulls for the Fe-55 model.
     """
     model = models.Fe55Forest()
-    model.amplitude0.set(1.0)
-    model.amplitude1.set(0.2)
-    ground_truth = dict(energy_scale=1., sigma=0.2)
-    _test_pulls(model, ground_truth, debug=False)
+    model.intensity1.freeze(0.2)
+    ground_truth = dict(energy_scale=1., sigma=0.5)
+    _test_pulls(model, ground_truth, debug=True)

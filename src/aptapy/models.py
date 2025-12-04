@@ -16,10 +16,8 @@
 """Built in models.
 """
 
-import functools
-import inspect
 from numbers import Number
-from typing import Callable, Tuple, Union
+from typing import Tuple, Union
 
 import matplotlib
 import numpy as np
@@ -34,7 +32,7 @@ from .modeling import (
     AbstractSigmoidFitModel,
     FitParameter,
     FitStatus,
-    GaussianForestBase
+    GaussianForestBase,
     PhonyCRVFitModel,
     line_forest,
     wrap_rv_continuous,

@@ -1593,6 +1593,7 @@ class GaussianForestBase(AbstractFitModel):
         """Return the current values of the line intensities for the forest,
         properly normalized to one.
         """
+        # pylint: disable=no-member
         intensities = [getattr(self, f"intensity{i}").value for i in range(1, len(self.energies))]
         intensities = [1. - sum(intensities)] + intensities
         return intensities

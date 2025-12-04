@@ -34,10 +34,10 @@ def _test_pulls(model: AbstractFitModelBase, ground_truth: dict, sample_size: in
     pulls = {key: [] for key in ground_truth}
 
     # Loop over the random realizations.
-    for i in range(num_realizations):
+    for _ in range(num_realizations):
         # Reset the parameters to the ground-truth values.
         for name, value in ground_truth.items():
-            model.__getattribute__(name).set(value)
+            getattr(model, name).set(value)
         # Generate a random dataset and fit it.
         _hist = model.random_histogram(sample_size)
         try:
@@ -51,7 +51,7 @@ def _test_pulls(model: AbstractFitModelBase, ground_truth: dict, sample_size: in
             pass
         # Compute the pulls and store them.
         for name, value in ground_truth.items():
-            pulls[name].append(model.__getattribute__(name).pull(value))
+            pulls[name].append(getattr(model, name).pull(value))
 
     # Plot the pull distributions.
     for name, values in pulls.items():
@@ -76,7 +76,8 @@ def test_gaussian_pulls() -> None:
 def test_fe_55_pulls() -> None:
     """Test the pulls for the Fe-55 model.
     """
+    # pylint: disable=no-member
     model = models.Fe55Forest()
     model.intensity1.freeze(0.2)
     ground_truth = dict(energy_scale=1., sigma=0.5)
-    _test_pulls(model, ground_truth, debug=True)
+    _test_pulls(model, ground_truth, debug=False)

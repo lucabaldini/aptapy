@@ -1717,7 +1717,8 @@ class GaussianForestBase(AbstractFitModel):
         """
         emin = min(self.energies) / self.energy_scale.value
         emax = max(self.energies) / self.energy_scale.value
-        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value)
+        return (emin - 5 * self.sigma.value / np.sqrt(self.energies[0] / min(self.energies)),
+                emax + 5 * self.sigma.value / np.sqrt(self.energies[0] / max(self.energies)))
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
              plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:

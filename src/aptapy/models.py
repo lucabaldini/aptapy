@@ -716,11 +716,9 @@ class GaussianForestBase(AbstractFitModel):
         return y
 
     def fwhm(self):
-        """Calculate the ratio between the FWHM and the position of the main line of the forest.
-        The result is expressed as a percentage.
+        """Calculate the ratio between the FWHM of the main line of the forest.
         """
         # pylint: disable=no-member
-        # line_val = self.energies[0] / self.energy_scale.ufloat()
         return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()
 
     def rvs(self, size: int = 1, random_state=None):

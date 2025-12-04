@@ -27,6 +27,7 @@ import scipy.stats
 
 from .hist import Histogram1d
 from .modeling import (
+    SIGMA_TO_FWHM,
     AbstractCRVFitModel,
     AbstractFitModel,
     AbstractSigmoidFitModel,
@@ -512,7 +513,9 @@ class Gaussian(AbstractFitModel):
         return self.sigma.value
 
     def fwhm(self):
-        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()
+        """Calculate the FWHM of the main Gaussian.
+        """
+        return SIGMA_TO_FWHM * self.sigma.ufloat()
 
     def rvs(self, size: int = 1, random_state=None):
         """Generate random variates from the underlying distribution at the current
@@ -698,6 +701,16 @@ class Fe55Forest(GaussianForestBase):
     The energy data are retrieved from the X-ray database at
     https://xraydb.seescience.org/.
     """
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.intensity1.init(0.141)
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

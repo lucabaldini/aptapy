@@ -37,6 +37,8 @@ from .hist import Histogram1d
 from .plotting import AbstractPlottable, last_line_color
 from .typing_ import ArrayLike
 
+SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
+
 
 class Format(str, enum.Enum):
 
@@ -1535,7 +1537,8 @@ def line_forest(*energies: float) -> Callable[[type], type]:
         cls.energies = energies
         cls.amplitude = FitParameter(1., minimum=0.)
         for i in range(1, len(energies)):
-            setattr(cls, f'intensity{i}', FitParameter(1., minimum=0., maximum=1.))
+            setattr(cls, f'intensity{i}', FitParameter(0.5/(len(energies) - 1), minimum=0.,
+                                                       maximum=1.))
         cls.energy_scale = FitParameter(1., minimum=0.)
         cls.sigma = FitParameter(1., minimum=0.)
 
@@ -1602,7 +1605,7 @@ class GaussianForestBase(AbstractFitModel):
         """Calculate the FWHM of the main line of the forest.
         """
         # pylint: disable=no-member
-        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()
+        return SIGMA_TO_FWHM * self.sigma.ufloat()
 
     def rvs(self, size: int = 1, random_state=None):
         # pylint: disable=no-member

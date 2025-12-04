@@ -811,10 +811,13 @@ class GaussianForestBase(AbstractFitModel):
         FitStatus
             The results of the fit.
         """
+        # pylint: disable=no-member
         fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
         for i in range(num_iterations):
-            kwargs.update(xmin=self.energies[0] / self.energy_scale.value - num_sigma_left * self.sigma.value,
-                          xmax=self.energies[-1] / self.energy_scale.value + num_sigma_right * self.sigma.value / np.sqrt(self.energies[0] / self.energies[-1]))
+            _xmin = self.energies[0] / self.energy_scale.value - num_sigma_left * self.sigma.value
+            _xmax = self.energies[-1] / self.energy_scale.value + num_sigma_right * \
+                  self.sigma.value / np.sqrt(self.energies[0] / self.energies[-1])
+            kwargs.update(xmin=_xmin, xmax=_xmax)
             try:
                 fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
                                       sigma=sigma, **kwargs)

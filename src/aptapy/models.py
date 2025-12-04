@@ -772,7 +772,7 @@ class GaussianForestBase(AbstractFitModel):
     def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
             p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
             num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
-        """Fit iteratively line forest spectum data within a given number of sigma around the peaks.
+        """Fit iteratively line forest spectrum data within a given number of sigma around the peaks.
 
         This function performs a first round of fit to the data (either a histogram or
         scatter plot data) and then repeats the fit iteratively, limiting the fit range

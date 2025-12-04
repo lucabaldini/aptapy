@@ -716,7 +716,7 @@ class GaussianForestBase(AbstractFitModel):
         return y
 
     def fwhm(self):
-        """Calculate the ratio between the FWHM of the main line of the forest.
+        """Calculate the FWHM of the main line of the forest.
         """
         # pylint: disable=no-member
         return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()

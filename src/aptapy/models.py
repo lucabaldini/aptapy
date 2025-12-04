@@ -702,15 +702,24 @@ class GaussianForestBase(AbstractFitModel):
     def evaluate(self, x, *args):
         # pylint: disable=no-member
         # pylint: disable=arguments-differ
-        *amplitudes, energy_scale, sigma = args
+        amplitude, *intensities, energy_scale, sigma = args
+        intensities = [1. - sum(intensities)] + list(intensities)
         y = sum(
-            amplitude * scipy.stats.norm.pdf(
+            amplitude * intensity * scipy.stats.norm.pdf(
                 x,
                 loc=energy / energy_scale,
                 scale=sigma / np.sqrt(energy / self.energies[0]))
-                for amplitude, energy in zip(amplitudes, self.energies)
+                for intensity, energy in zip(intensities, self.energies)
         )
         return y
+
+    def _intensities(self):
+        """Return the current values of the line intensities for the forest,
+        properly normalized to one.
+        """
+        intensities = [getattr(self, f"intensity{i}").value for i in range(1, len(self.energies))]
+        intensities = [1. - sum(intensities)] + intensities
+        return intensities
 
     def fwhm(self):
         """Calculate the ratio between the FWHM and the position of the main line of the forest.
@@ -734,8 +743,7 @@ class GaussianForestBase(AbstractFitModel):
             The random seed or generator to use (default None).
         """
         rng = np.random.default_rng(random_state)
-        amplitudes = [getattr(self, f"amplitude{i}").value for i in range(len(self.energies))]
-        vals = rng.choice(self.energies, size=size, p=amplitudes / np.sum(amplitudes))
+        vals = rng.choice(self.energies, size=size, p=self._intensities())
         loc = vals / self.energy_scale.value
         scale = self.sigma.value / np.sqrt(vals / self.energies[0])
         return scipy.stats.norm.rvs(loc=loc, scale=scale, random_state=rng)
@@ -764,7 +772,7 @@ class GaussianForestBase(AbstractFitModel):
         """Overloaded method.
         """
         mu0 = xdata[np.argmax(ydata)]
-        self.amplitude0.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
         self.energy_scale.init(self.energies[0] / mu0)
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 
@@ -804,8 +812,8 @@ class GaussianForestBase(AbstractFitModel):
         axes = super().plot(axes, fit_output=fit_output, **kwargs)
         x = self._plotting_grid()
         if plot_components:
-            for i, energy in enumerate(self.energies):
-                amplitude = getattr(self, f"amplitude{i}").value
+            for intensity, energy in zip(self._intensities(), self.energies):
+                amplitude = self.amplitude.value * intensity
                 loc = energy / self.energy_scale.value
                 scale = self.sigma.value / np.sqrt(energy / self.energies[0])
                 y = amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=scale)

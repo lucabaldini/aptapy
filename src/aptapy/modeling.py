@@ -1508,8 +1508,9 @@ def line_forest(*energies: float) -> Callable[[type], type]:
     def _wrapper(cls: type):
         # pylint: disable=protected-access
         cls.energies = energies
-        for i, _ in enumerate(energies):
-            setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.))
+        cls.amplitude = FitParameter(1., minimum=0.)
+        for i in range(1, len(energies)):
+            setattr(cls, f'intensity{i}', FitParameter(1., minimum=0., maximum=1.))
         cls.energy_scale = FitParameter(1., minimum=0.)
         cls.sigma = FitParameter(1., minimum=0.)
 

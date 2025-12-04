@@ -1327,7 +1327,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         random_state : int or np.random.Generator, optional
             The random seed or generator to use (default None).
         """
-        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        edges = np.linspace(*self.default_plotting_range(), num_bins + 1)
         return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:

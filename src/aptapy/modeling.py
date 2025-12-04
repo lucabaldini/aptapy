@@ -1696,7 +1696,7 @@ class GaussianForestBase(AbstractFitModel):
                   (self.sigma.value / np.sqrt(self.energies[-1] / self.energies[0]))
             kwargs.update(xmin=_xmin, xmax=_xmax)
             try:
-                fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
+                fit_status = self.fit(xdata, ydata, p0=self.free_parameter_values(),
                                       sigma=sigma, **kwargs)
             except RuntimeError as exception:
                 raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception

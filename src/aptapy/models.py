@@ -772,11 +772,11 @@ class GaussianForestBase(AbstractFitModel):
     def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
             p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
             num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
-        """Fit the core of Gaussian data within a given number of sigma around the peak.
+        """Fit GaussianForest data within a given number of sigma around the peaks.
 
         This function performs a first round of fit to the data (either a histogram or
         scatter plot data) and then repeats the fit iteratively, limiting the fit range
-        to a specified interval defined in terms of deviations (in sigma) around the peak.
+        to a specified interval defined in terms of deviations (in sigma) around the peaks.
 
         Arguments
         ----------
@@ -793,11 +793,11 @@ class GaussianForestBase(AbstractFitModel):
             The uncertainties on the y data.
 
         num_sigma_left : float
-            The number of sigma on the left of the peak to be used to define the
+            The number of sigma on the left of the first peak to be used to define the
             fitting range.
 
         num_sigma_right : float
-            The number of sigma on the right of the peak to be used to define the
+            The number of sigma on the right of the last peak to be used to define the
             fitting range.
 
         num_iterations : int

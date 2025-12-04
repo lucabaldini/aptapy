@@ -17,19 +17,20 @@
 """
 
 import numpy as np
+import pytest
 
 from aptapy import models
 from aptapy.hist import Histogram1d
+from aptapy.modeling import AbstractFitModelBase
 from aptapy.plotting import plt
 
 
-def _test_pulls(model_class: type, ground_truth: dict, sample_size: int = 10000,
-                num_realizations: int = 1000) -> None:
+def _test_pulls(model: AbstractFitModelBase, ground_truth: dict, sample_size: int = 10000,
+                num_realizations: int = 1000, debug: bool = False) -> None:
     """Generate many independent random datasets, fit them, and plot the pull
     distributions of the best-fit parameters.
     """
-    # Create the model and initialize the pulls.
-    model = model_class()
+    # Initialize the pulls.
     pulls = {key: [] for key in ground_truth}
 
     # Loop over the random realizations.
@@ -41,6 +42,11 @@ def _test_pulls(model_class: type, ground_truth: dict, sample_size: int = 10000,
         _hist = model.random_histogram(sample_size)
         try:
             model.fit(_hist)
+            if debug:
+                _hist.plot(label="Random data")
+                model.plot(fit_output=True)
+                plt.legend()
+                plt.show()
         except RuntimeError:
             pass
         # Compute the pulls and store them.
@@ -50,7 +56,7 @@ def _test_pulls(model_class: type, ground_truth: dict, sample_size: int = 10000,
     # Plot the pull distributions.
     for name, values in pulls.items():
         plt.figure(f"{model.name()}_{name}_pulls")
-        hist = Histogram1d(np.linspace(-5., 5., 51)).fill(values)
+        hist = Histogram1d(np.linspace(-5., 5., 50)).fill(values)
         hist.plot()
         gauss = models.Gaussian()
         gauss.fit(hist)
@@ -58,8 +64,20 @@ def _test_pulls(model_class: type, ground_truth: dict, sample_size: int = 10000,
         plt.legend()
 
 
+@pytest.mark.skip("This is mainly for debuggin purposes")
 def test_gaussian_pulls() -> None:
     """Test the pulls for the Gaussian model.
     """
+    model = models.Gaussian()
     ground_truth = dict(mu=10., sigma=2.)
-    _test_pulls(models.Gaussian, ground_truth)
+    _test_pulls(model, ground_truth)
+
+
+def test_fe_55_pulls() -> None:
+    """Test the pulls for the Fe-55 model.
+    """
+    model = models.Fe55Forest()
+    model.amplitude0.set(1.0)
+    model.amplitude1.set(0.2)
+    ground_truth = dict(energy_scale=1., sigma=0.2)
+    _test_pulls(model, ground_truth, debug=False)

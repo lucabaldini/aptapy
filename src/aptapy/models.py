@@ -511,6 +511,9 @@ class Gaussian(AbstractFitModel):
     def std(self):
         return self.sigma.value
 
+    def fwhm(self):
+        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat()
+
     def rvs(self, size: int = 1, random_state=None):
         """Generate random variates from the underlying distribution at the current
         parameter values.

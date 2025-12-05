@@ -1537,12 +1537,8 @@ def line_forest(*energies: float) -> Callable[[type], type]:
         cls.energies = energies
         cls.amplitude = FitParameter(1., minimum=0.)
         for i in range(1, len(energies)):
-<<<<<<< HEAD
-            setattr(cls, f'intensity{i}', FitParameter(0.5, minimum=0., maximum=1.))
-=======
             setattr(cls, f'intensity{i}', FitParameter(0.5/(len(energies) - 1), minimum=0.,
                                                        maximum=1.))
->>>>>>> d317c1ee105c0d7c8daeea66608ac928ca0f2710
         cls.energy_scale = FitParameter(1., minimum=0.)
         cls.sigma = FitParameter(1., minimum=0.)
 

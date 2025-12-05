@@ -3,14 +3,22 @@
 Release notes
 =============
 
-
+* Refactored GaussianForestBase parameter structure from individual amplitudes
+  to a shared amplitude with intensity ratios.
+* Moved GaussianForestBase from models.py to modeling.py.
+* Significant refactoring to allow for freezing parameters in line forests.
 * Added the ``fit_iterative()`` method to the ``GaussianForestBase`` class.
 * Added the ``fwhm()`` method to the ``Gaussian`` model class.
 * Modified the ``fwhm()`` method of the ``GaussianForestBase`` to return the real FWHM and not
   the resolution of the line.
+* Added unit tests.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/72
+  - https://github.com/lucabaldini/aptapy/issues/71
+  - https://github.com/lucabaldini/aptapy/issues/70
   - https://github.com/lucabaldini/aptapy/issues/68
+  - https://github.com/lucabaldini/aptapy/issues/66
   - https://github.com/lucabaldini/aptapy/issues/65
 
 

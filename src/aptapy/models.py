@@ -608,7 +608,7 @@ class Gaussian(AbstractFitModel):
                 fit_status = self.fit(xdata, ydata, p0=self.free_parameter_values(),
                                       sigma=sigma, **kwargs)
             except RuntimeError as exception:
-                raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
+                raise RuntimeError(f"Exception after {i + 1} iteration(s)") from exception
         return fit_status
 
     def default_plotting_range(self) -> Tuple[float, float]:

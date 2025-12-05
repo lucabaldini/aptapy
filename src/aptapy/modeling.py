@@ -471,7 +471,7 @@ class AbstractFitModelBase(AbstractPlottable):
         the (correct) explicit signature, including all the parameter names.
 
         This is used, e.g., by FitModelSum and GaussianForestBase to wrap the evaluate()
-        method, which is expressed in terms of a generic *args signature, before the
+        method, which is expressed in terms of a generic signature, before the
         method itself is passed to the freeze() method.
         """
         # Build the correct signature for the evaluate() method. Note that

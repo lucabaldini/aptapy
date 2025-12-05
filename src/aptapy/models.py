@@ -698,19 +698,22 @@ class Fe55Forest(GaussianForestBase):
     of 55Fe. The energy values are computed as the intensity-weighted mean of
     all possible emission lines contributing to each feature.
 
-    The energy data are retrieved from the X-ray database at
-    https://xraydb.seescience.org/.
+    The energy data are retrieved from the X-ray database at https://xraydb.seescience.org/
     """
+
+    # https://xraydb.xrayabsorption.org/element/Mn
+    # This is the sum of the intensities of Kb1, Kb3 and Kb5 lines.
+    TABULATED_KB_INTENSITY = 0.12445
+
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
         """
         # pylint: disable=no-member
         mu0 = xdata[np.argmax(ydata)]
         self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
-        self.intensity1.init(0.141)
+        self.intensity1.init(self.TABULATED_KB_INTENSITY)
         self.energy_scale.init(self.energies[0] / mu0)
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
-
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

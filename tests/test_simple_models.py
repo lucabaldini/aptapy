@@ -47,7 +47,7 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]", **kwargs)
     # Saving the default parameters.
     default_parameters = model.parameter_values()
-    # Setting the test parameters
+    # Setting the test parameters.
     model.set_parameters(*parameter_values)
     print(model)
 

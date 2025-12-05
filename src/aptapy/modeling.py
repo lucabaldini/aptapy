@@ -37,6 +37,8 @@ from .hist import Histogram1d
 from .plotting import AbstractPlottable, last_line_color
 from .typing_ import ArrayLike
 
+SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
+
 
 class Format(str, enum.Enum):
 
@@ -463,6 +465,31 @@ class AbstractFitModelBase(AbstractPlottable):
             The value(s) of the model at the given value(s) of the independent variable
             for a given set of parameter values.
         """
+
+    def _wrap_evaluate(self) -> Callable:
+        """Helper function to build a wrapper around the evaluate() method with
+        the (correct) explicit signature, including all the parameter names.
+
+        This is used, e.g., by FitModelSum and GaussianForestBase to wrap the evaluate()
+        method, which is expressed in terms of a generic signature, before the
+        method itself is passed to the freeze() method.
+        """
+        # Build the correct signature for the evaluate() method. Note that
+        # the method bound to the class has signature (self, x, *parameter_values)
+        # and we do want a wrapper with signature (x, param1, param2, ...).
+        parameters = [inspect.Parameter("x", inspect.Parameter.POSITIONAL_ONLY)]
+        parameter_kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
+        parameters.extend(inspect.Parameter(par.name, parameter_kind) for par in self)
+        signature = inspect.Signature(parameters)
+
+        # Create a loose wrapper around evaluate().
+        @functools.wraps(self.evaluate)
+        def wrapper(x, *args):
+            return self.evaluate(x, *args)
+
+        # Set the correct signature on the wrapper and return it.
+        wrapper.__signature__ = signature
+        return wrapper
 
     def jacobian(self, x: ArrayLike, *parameter_values: float, eps: float = 1.e-8) -> np.ndarray:
         """Numerically calculate the Jacobian matrix of partial derivatives of the model
@@ -1327,7 +1354,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         random_state : int or np.random.Generator, optional
             The random seed or generator to use (default None).
         """
-        edges = np.linspace(*self.plotting_range(), num_bins + 1)
+        edges = np.linspace(*self.default_plotting_range(), num_bins + 1)
         return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
@@ -1508,14 +1535,216 @@ def line_forest(*energies: float) -> Callable[[type], type]:
     def _wrapper(cls: type):
         # pylint: disable=protected-access
         cls.energies = energies
-        for i, _ in enumerate(energies):
-            setattr(cls, f'amplitude{i}', FitParameter(1., minimum=0.))
+        cls.amplitude = FitParameter(1., minimum=0.)
+        for i in range(1, len(energies)):
+            setattr(cls, f'intensity{i}', FitParameter(0.5/(len(energies) - 1), minimum=0.,
+                                                       maximum=1.))
         cls.energy_scale = FitParameter(1., minimum=0.)
         cls.sigma = FitParameter(1., minimum=0.)
 
         return cls
 
     return _wrapper
+
+
+class GaussianForestBase(AbstractFitModel):
+
+    """Abstract base model representing a forest of Gaussian spectral lines
+    at fixed energies.
+
+    Concrete models needs to be decorated with the `@line_forest` decorator,
+    specifying the energies of the lines included in the forest.
+
+    Each peak corresponds to a known energy, and the model allows for
+    fitting the amplitudes, a global energy scale, and a common width
+    (sigma) that scales as the square root of the line energy, as it is
+    common to observe in particle detectors.
+    """
+
+    def evaluate(self, x: ArrayLike, *parameter_values) -> ArrayLike:
+        # pylint: disable=no-member
+        # pylint: disable=arguments-differ
+        amplitude, *intensities, energy_scale, sigma = parameter_values
+        intensities = [1. - sum(intensities)] + list(intensities)
+        y = sum(
+            amplitude * intensity * scipy.stats.norm.pdf(
+                x,
+                loc=energy / energy_scale,
+                scale=sigma / np.sqrt(energy / self.energies[0]))
+                for intensity, energy in zip(intensities, self.energies)
+        )
+        return y
+
+    def freeze(self, model_function, **constraints) -> Callable:
+        """Overloaded method.
+        """
+        # pylint: disable=arguments-differ
+        if not constraints:
+            return model_function
+        return AbstractFitModel.freeze(self._wrap_evaluate(), **constraints)
+
+    def _intensities(self):
+        """Return the current values of the line intensities for the forest,
+        properly normalized to one.
+        """
+        # pylint: disable=no-member
+        intensities = [getattr(self, f"intensity{i}").value for i in range(1, len(self.energies))]
+        intensities = [1. - sum(intensities)] + intensities
+        return intensities
+
+    def fwhm(self):
+        """Calculate the FWHM of the main line of the forest.
+        """
+        # pylint: disable=no-member
+        return SIGMA_TO_FWHM * self.sigma.ufloat()
+
+    def rvs(self, size: int = 1, random_state=None):
+        # pylint: disable=no-member
+        """Generate random variates from the underlying distribution at the current
+        parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 1).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        rng = np.random.default_rng(random_state)
+        vals = rng.choice(self.energies, size=size, p=self._intensities())
+        loc = vals / self.energy_scale.value
+        scale = self.sigma.value / np.sqrt(vals / self.energies[0])
+        return scipy.stats.norm.rvs(loc=loc, scale=scale, random_state=rng)
+
+    def random_histogram(self, size: int = 100000, num_bins: int = 100,
+                         random_state=None) -> Histogram1d:
+        """Generate a histogram filled with random variates from the underlying
+        distribution at the current parameter values.
+
+        Arguments
+        ---------
+        size : int, optional
+            The number of random variates to generate (default 100000).
+
+        num_bins : int, optional
+            The number of bins in the histogram (default 100).
+
+        random_state : int or np.random.Generator, optional
+            The random seed or generator to use (default None).
+        """
+        edges = np.linspace(*self.default_plotting_range(), num_bins + 1)
+        return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
+    def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
+            p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
+            num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
+        """Fit iteratively line forest spectrum data within a given number of sigma around the
+        peaks.
+
+        This function performs a first round of fit to the data (either a histogram or
+        scatter plot data) and then repeats the fit iteratively, limiting the fit range
+        to a specified interval defined in terms of deviations (in sigma) around the peaks.
+
+        Arguments
+        ----------
+        xdata : array_like or Histogram1d
+            The data (scatter plot x values) or histogram to fit.
+
+        ydata : array_like, optional
+            The y data to fit (if xdata is not a Histogram1d).
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        sigma : array_like, optional
+            The uncertainties on the y data.
+
+        num_sigma_left : float
+            The number of sigma on the left of the first peak to be used to define the
+            fitting range.
+
+        num_sigma_right : float
+            The number of sigma on the right of the last peak to be used to define the
+            fitting range.
+
+        num_iterations : int
+            The number of iterations of the fit.
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+
+        Returns
+        -------
+        FitStatus
+            The results of the fit.
+        """
+        # pylint: disable=no-member
+        fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
+        for i in range(num_iterations):
+            _xmin = self.energies[0] / self.energy_scale.value - num_sigma_left * self.sigma.value
+            _xmax = self.energies[-1] / self.energy_scale.value + num_sigma_right * \
+                  (self.sigma.value / np.sqrt(self.energies[-1] / self.energies[0]))
+            kwargs.update(xmin=_xmin, xmax=_xmax)
+            try:
+                fit_status = self.fit(xdata, ydata, p0=self.free_parameter_values(),
+                                      sigma=sigma, **kwargs)
+            except RuntimeError as exception:
+                raise RuntimeError(f"Exception after {i + 1} iteration(s)") from exception
+        return fit_status
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        # pylint: disable=no-member
+        """Overloaded method.
+        """
+        emin = min(self.energies) / self.energy_scale.value
+        emax = max(self.energies) / self.energy_scale.value
+        return (emin - 5 * (self.sigma.value / np.sqrt(min(self.energies) / self.energies[0])),
+                emax + 5 * (self.sigma.value / np.sqrt(max(self.energies) / self.energies[0])))
+
+    def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
+             plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:
+        # pylint: disable=no-member
+        """
+        Overloaded method for plotting the model.
+
+        Arguments
+        ---------
+        axes : matplotlib.axes.Axes, optional
+            The axes on which to plot the model. If None, uses the current axes.
+
+        fit_output : bool, optional
+            If True, displays the fit output on the legend. Default is False.
+
+        plot_components : bool, optional
+            If True, plots the individual components of the model as dashed lines.
+            Default is True.
+
+        kwargs
+            Additional keyword arguments passed to the parent class.
+
+        Returns
+        -------
+        None
+        """
+        axes = super().plot(axes, fit_output=fit_output, **kwargs)
+        x = self._plotting_grid()
+        if plot_components:
+            for intensity, energy in zip(self._intensities(), self.energies):
+                amplitude = self.amplitude.value * intensity
+                loc = energy / self.energy_scale.value
+                scale = self.sigma.value / np.sqrt(energy / self.energies[0])
+                y = amplitude * scipy.stats.norm.pdf(x, loc=loc, scale=scale)
+                axes.plot(x, y, label=None, ls="--")
 
 
 class FitModelSum(AbstractFitModelBase):
@@ -1566,27 +1795,6 @@ class FitModelSum(AbstractFitModelBase):
         """Iterate over `all` the parameters of the underlying components.
         """
         return chain(*self._components)
-
-    def _wrap_evaluate(self) -> Callable:
-        """Helper function to build a wrapper around the evaluate() method with
-        the (correct) explicit signature, including all the parameter names.
-        """
-        # Build the correct signature for the evaluate() method. Note that
-        # the method bound to the class has signature (self, x, *parameter_values)
-        # and we do want a wrapper with signature (x, param1, param2, ...).
-        parameters = [inspect.Parameter("x", inspect.Parameter.POSITIONAL_ONLY)]
-        parameter_kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
-        parameters.extend(inspect.Parameter(par.name, parameter_kind) for par in self)
-        signature = inspect.Signature(parameters)
-
-        # Create a loose wrapper around evaluate().
-        @functools.wraps(self.evaluate)
-        def wrapper(x, *args):
-            return self.evaluate(x, *args)
-
-        # Set the correct signature on the wrapper and return it.
-        wrapper.__signature__ = signature
-        return wrapper
 
     def freeze(self, model_function, **constraints) -> Callable:
         """Overloaded method.

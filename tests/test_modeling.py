@@ -22,7 +22,7 @@ import numpy as np
 
 from aptapy.hist import Histogram1d
 from aptapy.modeling import FitParameter, FitStatus
-from aptapy.models import Constant, Exponential, Gaussian, Line
+from aptapy.models import Constant, Exponential, Fe55Forest, Gaussian, Line
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -313,3 +313,23 @@ def test_confidence_band_linear():
     model.plot(fit_output=True)
     model.plot_confidence_band(num_sigma=2.)
     plt.legend()
+
+
+def test_gaussian_forest_fit_iterative_scatter():
+    """Test an iterative fit for a GaussianForestBase child model class scatter plot.
+    """
+    # pylint: disable=no-member
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Fe55Forest(xlabel="x [a.u.]", ylabel="y [a.u.]")
+    model.set_parameters(10, 0.15, 1., 0.3)
+    print(model)
+    sigma = 0.01
+    xdata, ydata = model.random_fit_dataset(sigma, seed=313)
+    plt.errorbar(xdata, ydata, sigma, fmt="o", label="Random data")
+    model.fit_iterative(xdata, ydata, sigma=sigma, num_sigma_left=1.5, num_sigma_right=1.5,
+                        num_iterations=3)
+    model.plot(fit_output=True)
+    plt.legend()
+    assert model.intensity1.compatible_with(0.15, NUM_SIGMA)
+    assert model.sigma.compatible_with(0.3, NUM_SIGMA)
+    assert model.status.pvalue > 0.001

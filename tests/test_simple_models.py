@@ -45,6 +45,9 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     plt.figure(model_class.__name__)
     # Create the model and set the basic parameters.
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]", **kwargs)
+    # Saving the default parameters.
+    default_parameters = model.parameter_values()
+    # Setting the test parameters.
     model.set_parameters(*parameter_values)
     print(model)
 
@@ -54,7 +57,6 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     #color = last_line_color()
 
     # Reset the model to a generic state before initializing the parameters.
-    default_parameters = tuple(1. for _ in model)
     model.set_parameters(*default_parameters)
     model.init_parameters(xdata, ydata, sigma)
     model.plot(label="Initial guess", ls="--", color="gray")
@@ -115,4 +117,4 @@ def test_stretched_exponential_complement():
 
 
 def test_line_forest():
-    _test_model_base(models.Fe55Forest, 10., 2., 1., 0.2, sigma=0.5, num_sigma=500.)
+    _test_model_base(models.Fe55Forest, 10., 0.2, 1., 0.2, sigma=0.5, num_sigma=500.)

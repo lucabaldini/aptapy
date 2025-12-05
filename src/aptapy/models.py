@@ -513,7 +513,7 @@ class Gaussian(AbstractFitModel):
         return self.sigma.value
 
     def fwhm(self):
-        """Calculate the FWHM of the main Gaussian.
+        """Calculate the FWHM.
         """
         return SIGMA_TO_FWHM * self.sigma.ufloat()
 

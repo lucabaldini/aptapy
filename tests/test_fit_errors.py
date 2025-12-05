@@ -74,7 +74,7 @@ def test_gaussian_pulls() -> None:
 
 
 @pytest.mark.skip("This is specifically for debugging purposes")
-def test_fe_55_pulls() -> None:
+def test_fe55_pulls() -> None:
     """Test the pulls for the Fe-55 model.
     """
     # pylint: disable=no-member

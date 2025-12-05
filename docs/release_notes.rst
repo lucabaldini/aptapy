@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.17.0 (2025-12-05)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Refactored GaussianForestBase parameter structure from individual amplitudes
   to a shared amplitude with intensity ratios.
 * Moved GaussianForestBase from models.py to modeling.py.

@@ -37,6 +37,8 @@ from .hist import Histogram1d
 from .plotting import AbstractPlottable, last_line_color
 from .typing_ import ArrayLike
 
+SIGMA_TO_FWHM = 2. * np.sqrt(2. * np.log(2.))
+
 
 class Format(str, enum.Enum):
 
@@ -468,7 +470,7 @@ class AbstractFitModelBase(AbstractPlottable):
         """Helper function to build a wrapper around the evaluate() method with
         the (correct) explicit signature, including all the parameter names.
 
-        This is used, e.g., by FitModelSum and GainForestBase to wrap the evaluate()
+        This is used, e.g., by FitModelSum and GaussianForestBase to wrap the evaluate()
         method, which is expressed in terms of a generic *args signature, before the
         method itself is passed to the freeze() method.
         """
@@ -1535,7 +1537,12 @@ def line_forest(*energies: float) -> Callable[[type], type]:
         cls.energies = energies
         cls.amplitude = FitParameter(1., minimum=0.)
         for i in range(1, len(energies)):
+<<<<<<< HEAD
             setattr(cls, f'intensity{i}', FitParameter(0.5, minimum=0., maximum=1.))
+=======
+            setattr(cls, f'intensity{i}', FitParameter(0.5/(len(energies) - 1), minimum=0.,
+                                                       maximum=1.))
+>>>>>>> d317c1ee105c0d7c8daeea66608ac928ca0f2710
         cls.energy_scale = FitParameter(1., minimum=0.)
         cls.sigma = FitParameter(1., minimum=0.)
 
@@ -1574,15 +1581,6 @@ class GaussianForestBase(AbstractFitModel):
 
     def freeze(self, model_function, **constraints) -> Callable:
         """Overloaded method.
-
-        This is a tricky one, for two distinct reasons: (i) for a FitModelSum object
-        evaluate() is not a static method, as it needs to access the list of components
-        to sum over; (ii) since components can be added at runtime, the original
-        signature of the function is generic, so we need to build a new signature that
-        reflects the actual parameters of the model when we actually want to use it in a
-        fit. In order to make this work, when freezing parameters we build a wrapper
-        around evaluate() with the correct signature, and pass it downstream to the
-        static freeze() method of the parent class AbstractFitModel.
         """
         # pylint: disable=arguments-differ
         if not constraints:
@@ -1599,12 +1597,10 @@ class GaussianForestBase(AbstractFitModel):
         return intensities
 
     def fwhm(self):
-        """Calculate the ratio between the FWHM and the position of the main line of the forest.
-        The result is expressed as a percentage.
+        """Calculate the FWHM of the main line of the forest.
         """
         # pylint: disable=no-member
-        line_val = self.energies[0] / self.energy_scale.ufloat()
-        return 2 * np.sqrt(2 * np.log(2)) * self.sigma.ufloat() / line_val * 100.
+        return SIGMA_TO_FWHM * self.sigma.ufloat()
 
     def rvs(self, size: int = 1, random_state=None):
         # pylint: disable=no-member
@@ -1653,13 +1649,71 @@ class GaussianForestBase(AbstractFitModel):
         self.energy_scale.init(self.energies[0] / mu0)
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 
+    def fit_iterative(self, xdata: Union[ArrayLike, Histogram1d], ydata: ArrayLike = None, *,
+            p0: ArrayLike = None, sigma: ArrayLike = None, num_sigma_left: float = 2.,
+            num_sigma_right: float = 2., num_iterations: int = 2, **kwargs) -> "FitStatus":
+        """Fit iteratively line forest spectrum data within a given number of sigma around the
+        peaks.
+
+        This function performs a first round of fit to the data (either a histogram or
+        scatter plot data) and then repeats the fit iteratively, limiting the fit range
+        to a specified interval defined in terms of deviations (in sigma) around the peaks.
+
+        Arguments
+        ----------
+        xdata : array_like or Histogram1d
+            The data (scatter plot x values) or histogram to fit.
+
+        ydata : array_like, optional
+            The y data to fit (if xdata is not a Histogram1d).
+
+        p0 : array_like, optional
+            The initial values for the fit parameters.
+
+        sigma : array_like, optional
+            The uncertainties on the y data.
+
+        num_sigma_left : float
+            The number of sigma on the left of the first peak to be used to define the
+            fitting range.
+
+        num_sigma_right : float
+            The number of sigma on the right of the last peak to be used to define the
+            fitting range.
+
+        num_iterations : int
+            The number of iterations of the fit.
+
+        kwargs : dict, optional
+            Additional keyword arguments passed to `fit()`.
+
+        Returns
+        -------
+        FitStatus
+            The results of the fit.
+        """
+        # pylint: disable=no-member
+        fit_status = self.fit(xdata, ydata, p0=p0, sigma=sigma, **kwargs)
+        for i in range(num_iterations):
+            _xmin = self.energies[0] / self.energy_scale.value - num_sigma_left * self.sigma.value
+            _xmax = self.energies[-1] / self.energy_scale.value + num_sigma_right * \
+                  (self.sigma.value / np.sqrt(self.energies[-1] / self.energies[0]))
+            kwargs.update(xmin=_xmin, xmax=_xmax)
+            try:
+                fit_status = self.fit(xdata, ydata, p0=self.free_parameter_values(),
+                                      sigma=sigma, **kwargs)
+            except RuntimeError as exception:
+                raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
+        return fit_status
+
     def default_plotting_range(self) -> Tuple[float, float]:
         # pylint: disable=no-member
         """Overloaded method.
         """
         emin = min(self.energies) / self.energy_scale.value
         emax = max(self.energies) / self.energy_scale.value
-        return (emin - 5 * self.sigma.value, emax + 5 * self.sigma.value)
+        return (emin - 5 * (self.sigma.value / np.sqrt(min(self.energies) / self.energies[0])),
+                emax + 5 * (self.sigma.value / np.sqrt(max(self.energies) / self.energies[0])))
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
              plot_components: bool = True, **kwargs) -> matplotlib.axes.Axes:

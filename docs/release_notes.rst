@@ -4,6 +4,16 @@ Release notes
 =============
 
 
+* Added the ``fit_iterative()`` method to the ``GaussianForestBase`` class.
+* Added the ``fwhm()`` method to the ``Gaussian`` model class.
+* Modified the ``fwhm()`` method of the ``GaussianForestBase`` to return the real FWHM and not
+  the resolution of the line.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/issues/68
+  - https://github.com/lucabaldini/aptapy/issues/65
+
+
 Version 0.16.0 (2025-12-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

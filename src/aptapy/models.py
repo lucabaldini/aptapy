@@ -27,6 +27,7 @@ import scipy.stats
 
 from .hist import Histogram1d
 from .modeling import (
+    SIGMA_TO_FWHM,
     AbstractCRVFitModel,
     AbstractFitModel,
     AbstractSigmoidFitModel,
@@ -511,6 +512,11 @@ class Gaussian(AbstractFitModel):
     def std(self):
         return self.sigma.value
 
+    def fwhm(self):
+        """Calculate the FWHM of the main Gaussian.
+        """
+        return SIGMA_TO_FWHM * self.sigma.ufloat()
+
     def rvs(self, size: int = 1, random_state=None):
         """Generate random variates from the underlying distribution at the current
         parameter values.
@@ -599,7 +605,7 @@ class Gaussian(AbstractFitModel):
             kwargs.update(xmin=self.mean() - num_sigma_left * self.std(),
                           xmax=self.mean() + num_sigma_right * self.std())
             try:
-                fit_status = self.fit(xdata, ydata, p0=self.parameter_values(),
+                fit_status = self.fit(xdata, ydata, p0=self.free_parameter_values(),
                                       sigma=sigma, **kwargs)
             except RuntimeError as exception:
                 raise RuntimeError(f"Exception after {i+1} iteration(s)") from exception
@@ -695,6 +701,16 @@ class Fe55Forest(GaussianForestBase):
     The energy data are retrieved from the X-ray database at
     https://xraydb.seescience.org/.
     """
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        # pylint: disable=no-member
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.intensity1.init(0.141)
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

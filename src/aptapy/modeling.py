@@ -195,7 +195,7 @@ class FitParameter:
             The parameter value and error as a ufloat object.
         """
         # Setting the error to a very small number if it is None to avoid unexpected
-        # behaviors of uncertainties.ufloat(). 
+        # behaviors of uncertainties.ufloat().
         error = self.error if self.error is not None else 1e-15
         return uncertainties.ufloat(self.value, error)
 

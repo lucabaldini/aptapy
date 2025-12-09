@@ -50,6 +50,8 @@ def test_fit_parameter():
     parameter = FitParameter(1., 'normalization', 0.1)
     assert not parameter.frozen
     assert not parameter.is_bound()
+    assert parameter.ufloat().n == 1.
+    assert parameter.ufloat().s == 0.1
     print(parameter)
     parameter = FitParameter(1., 'normalization', _frozen=True)
     assert not parameter.is_bound()
@@ -67,7 +69,7 @@ def test_fit_parameter():
     assert parameter.error is None
     assert parameter.frozen
     assert parameter.ufloat().n == 3.
-    assert parameter.ufloat().s == 0.
+    assert np.isclose(parameter.ufloat().s, 0.)
     print(parameter)
 
 
@@ -82,9 +84,13 @@ def test_fit_status():
     assert status.valid()
     assert status.chisquare == chisquare
     assert status.dof == dof
-    par_diff = status.correlated_popt[1] + status.correlated_popt[0]
-    assert par_diff.n == 3.
-    assert np.isclose(par_diff.s, np.sqrt(0.1 + 0.2))
+    par_sum = status.correlated_pars[1] + status.correlated_pars[0]
+    assert par_sum.n == 3.
+    assert np.isclose(par_sum.s, np.sqrt(0.1 + 0.2))
+    status.reset()
+    status.update(np.array([1., 2.]), np.array([[0.1, 0.05], [0.05, 0.2]]), chisquare, dof)
+    par_sum = status.correlated_pars[1] + status.correlated_pars[0]
+    assert np.isclose(par_sum.s, np.sqrt(0.1 + 0.2 + 2 * 0.05))
     status.reset()
     assert not status.valid()
 

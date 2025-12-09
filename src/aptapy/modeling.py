@@ -194,7 +194,9 @@ class FitParameter:
         ufloat : uncertainties.ufloat
             The parameter value and error as a ufloat object.
         """
-        error = self.error if self.error is not None else 0.
+        # Setting the error to a very small number if it is None to avoid unexpected
+        # behaviors of uncertainties.ufloat(). 
+        error = self.error if self.error is not None else 1e-15
         return uncertainties.ufloat(self.value, error)
 
     def pull(self, expected: float) -> float:
@@ -303,7 +305,7 @@ class FitStatus:
     chisquare: float = None
     dof: int = None
     pvalue: float = None
-    correlated_popt: ArrayLike = None
+    correlated_pars: np.ndarray = None
 
     def reset(self) -> None:
         """Reset the fit status.
@@ -344,7 +346,7 @@ class FitStatus:
         self.chisquare = chisquare
         self.dof = dof
         self.pvalue = scipy.stats.chi2.sf(self.chisquare, self.dof)
-        self.correlated_popt = uncertainties.correlated_values(popt, pcov)
+        self.correlated_pars = uncertainties.correlated_values(popt, pcov)
         # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
         # function is > 0.5, we flip it around, so that we always report the smallest
         # tail, and the pvalue is the probability of obtaining a chisquare value more

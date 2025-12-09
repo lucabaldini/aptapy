@@ -194,7 +194,8 @@ class FitParameter:
         ufloat : uncertainties.ufloat
             The parameter value and error as a ufloat object.
         """
-        return uncertainties.ufloat(self.value, self.error)
+        error = self.error if self.error is not None else 0.
+        return uncertainties.ufloat(self.value, error)
 
     def pull(self, expected: float) -> float:
         """Calculate the pull of the parameter with respect to a given expected value.

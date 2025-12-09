@@ -66,6 +66,8 @@ def test_fit_parameter():
     assert parameter.value == 3.
     assert parameter.error is None
     assert parameter.frozen
+    assert parameter.ufloat().n == 3.
+    assert parameter.ufloat().s == 0.
     print(parameter)
 
 

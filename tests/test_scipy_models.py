@@ -63,7 +63,7 @@ def _test_base(model_class: type, *shape_parameters, location: float = 10.,
 
     # Generate a random histogram.
     edges = np.linspace(xmin, xmax, 101)
-    histogram = model.random_histogram(edges, random_state=313)
+    histogram = model.random_histogram(edges, size=100000, random_state=313)
     histogram.plot(label="Random sample")
 
     # Run the parameter initialization on the histogram data and plot the

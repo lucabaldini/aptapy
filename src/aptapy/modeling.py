@@ -1019,7 +1019,7 @@ class AbstractFitModelBase(AbstractPlottable):
         ydata = self(xdata) + np.random.default_rng(seed).normal(0., sigma)
         return xdata, ydata
 
-    def rvs(self, size: int = 1, random_state=None) -> np.ndarray:
+    def rvs(self, size: int = 1, random_state=None):
         """Generate random variates from the underlying distribution at the current
         parameter values.
 
@@ -1048,6 +1048,11 @@ class AbstractFitModelBase(AbstractPlottable):
 
         random_state : int or np.random.Generator, optional
             The random seed or generator to use (default None).
+
+        Returns
+        -------
+        Histogram1d
+            A histogram filled with random variates from the distribution.
         """
         return Histogram1d(edges).fill(self.rvs(size, random_state=random_state))
 

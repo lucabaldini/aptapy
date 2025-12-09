@@ -303,6 +303,7 @@ class FitStatus:
     chisquare: float = None
     dof: int = None
     pvalue: float = None
+    correlated_popt: ArrayLike = None
 
     def reset(self) -> None:
         """Reset the fit status.
@@ -343,6 +344,7 @@ class FitStatus:
         self.chisquare = chisquare
         self.dof = dof
         self.pvalue = scipy.stats.chi2.sf(self.chisquare, self.dof)
+        self.correlated_popt = uncertainties.correlated_values(popt, pcov)
         # chi2.sf() returns the survival function, i.e., 1 - cdf. If the survival
         # function is > 0.5, we flip it around, so that we always report the smallest
         # tail, and the pvalue is the probability of obtaining a chisquare value more

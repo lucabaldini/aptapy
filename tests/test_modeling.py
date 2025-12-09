@@ -82,6 +82,9 @@ def test_fit_status():
     assert status.valid()
     assert status.chisquare == chisquare
     assert status.dof == dof
+    par_diff = status.correlated_popt[1] + status.correlated_popt[0]
+    assert par_diff.n == 3.
+    assert np.isclose(par_diff.s, np.sqrt(0.1 + 0.2))
     status.reset()
     assert not status.valid()
 

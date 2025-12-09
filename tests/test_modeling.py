@@ -333,3 +333,16 @@ def test_gaussian_forest_fit_iterative_scatter():
     assert model.intensity1.compatible_with(0.15, NUM_SIGMA)
     assert model.sigma.compatible_with(0.3, NUM_SIGMA)
     assert model.status.pvalue > 0.001
+
+
+def test_random_histogram():
+    """Test the generation of a random histogram.
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+    model = Gaussian()
+    edges = np.linspace(model.mu.value - 3 * model.sigma.value,
+                         model.mu.value + 3 * model.sigma.value, 101)
+    hist = model.random_histogram(edges=edges, size=100000, random_state=_RNG)
+    hist.plot()
+    plt.legend()
+    assert np.array_equal(hist.bin_edges(), edges)

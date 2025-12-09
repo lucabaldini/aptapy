@@ -1033,8 +1033,7 @@ class AbstractFitModelBase(AbstractPlottable):
         """
         raise NotImplementedError(f"{self.__class__.__name__} does not implement rvs()")
 
-    def random_histogram(self, edges: np.ndarray, size: int,
-                         random_state=None) -> Histogram1d:
+    def random_histogram(self, edges: np.ndarray, size: int, random_state=None) -> Histogram1d:
         """Generate a histogram filled with random variates from the underlying
         distribution at the current parameter values.
 

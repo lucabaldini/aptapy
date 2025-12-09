@@ -18,6 +18,8 @@
 
 import contextlib
 
+import numpy as np
+
 from aptapy import models
 from aptapy.plotting import plt, setup_gca
 
@@ -60,7 +62,8 @@ def _test_base(model_class: type, *shape_parameters, location: float = 10.,
     print(model)
 
     # Generate a random histogram.
-    histogram = model.random_histogram(random_state=313)
+    edges = np.linspace(xmin, xmax, 101)
+    histogram = model.random_histogram(edges, size=100000, random_state=313)
     histogram.plot(label="Random sample")
 
     # Run the parameter initialization on the histogram data and plot the

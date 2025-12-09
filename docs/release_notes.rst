@@ -4,10 +4,11 @@ Release notes
 =============
 
 
-* Moved ``random_histogram()`` to the ``AbstractFitModelBase`` class; the signature was updated to 
-  require histogram edges instead of the number of bins.
+* Moved ``random_histogram()`` to the ``AbstractFitModelBase`` class
+* Signature updated to require histogram edges instead of the number of bins.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/75
   - https://github.com/lucabaldini/aptapy/issues/67
 
 

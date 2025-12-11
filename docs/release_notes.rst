@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.17.2 (2025-12-11)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Fix for issue #74 (error when calling ufloat with no errors).
 * Correlated fit parameters added to the FitStatus object.
 * Pull requests merged and issues closed:

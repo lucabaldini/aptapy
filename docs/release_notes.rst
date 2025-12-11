@@ -3,10 +3,16 @@
 Release notes
 =============
 
+* Fix for issue #74 (error when calling ufloat with no errors).
+* Correlated fit parameters added to the FitStatus object.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/76
+  - https://github.com/lucabaldini/aptapy/issues/74
+
 
 Version 0.17.1 (2025-12-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 * Moved ``random_histogram()`` to the ``AbstractFitModelBase`` class
 * Signature updated to require histogram edges instead of the number of bins.

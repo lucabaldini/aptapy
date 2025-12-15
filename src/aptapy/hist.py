@@ -207,6 +207,32 @@ class AbstractHistogram(AbstractPlottable):
         histogram._sumw2 = self._sumw2.copy()
         return histogram
 
+    def extract_column(self, *bin_indices: Sequence[int]) -> "Histogram1d":
+        """Extract a 1D histogram along the last axis for a given bin.
+
+        Arguments
+        ---------
+        bin_indices : Sequence[int]
+            the bin indices.
+
+        Returns
+        -------
+        hist : Histogram1d
+            the extracted 1D histogram.
+        """
+        if len(bin_indices) != self._num_axes - 1:
+            raise ValueError("Number of bin indices should be one less than the number of axes of\
+                            the histogram.")
+        for i, bin_val in enumerate(bin_indices):
+            if not 0 <= bin_val < self._shape[i]:
+                raise IndexError("Bin index out of range.")
+        edges = self._edges[len(bin_indices)]
+        hist = Histogram1d(edges, label=f"{self.label} (bin={bin_indices})",
+                           xlabel=self.axis_labels[len(bin_indices)])
+        index_tuple = tuple(bin_indices) + (slice(None), )
+        hist.set_content(self.content[index_tuple])
+        return hist
+
     def _check_compat(self, other: "AbstractHistogram") -> None:
         """Check whether two histogram objects are compatible with each other,
         meaning, e.g., that they can be summed or subtracted.
@@ -503,29 +529,6 @@ class Histogram3d(AbstractHistogram):
         """
         raise NotImplementedError("3D histograms cannot be directly plotted.")
 
-    def extract_column(self, xbin: int, ybin: int) -> Histogram1d:
-        """Extract a 1D histogram corresponding to a specific (x,y) bin.
-
-        Arguments
-        ---------
-        xbin : int
-            the x bin index.
-
-        ybin : int
-            the y bin index.
-
-        Returns
-        -------
-        Histogram1d
-            the extracted 1D histogram.
-        """
-        zedges = self._edges[2]
-        hist = Histogram1d(zedges, label=f"{self.label} (xbin={xbin}, ybin={ybin})",
-                           xlabel=self.axis_labels[2])
-        hist.set_content(self.content[xbin, ybin, :],
-                         errors=np.sqrt(self._sumw2[xbin, ybin, :]))
-        return hist
-
     def collapse_axis(self, axis: int) -> Tuple[Histogram2d, Histogram2d]:
         """Collapse one axis of the 3D Histogram, returning two different 2D Histograms containing
         the mean and the RMS along the collapsed axis.
@@ -540,7 +543,7 @@ class Histogram3d(AbstractHistogram):
         ---------
         axis : int
             the axis to collapse (0 for x, 1 for y, 2 for z).
-            
+
         Returns
         -------
         mean_hist : Histogram2d
@@ -548,12 +551,14 @@ class Histogram3d(AbstractHistogram):
         rms_hist : Histogram2d
             the 2D histogram containing the RMS values along the collapsed axis.
         """
+        if axis < 0 or axis > 2:
+            raise ValueError("Axis must be 0, 1, or 2 for 3D histograms.")
         bin_centers = self.bin_centers(axis)
         axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
         reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
         # Ignore the division warnings, the nan values will be changed to 0.0
         with np.errstate(divide='ignore', invalid='ignore'):
-            mean_values  = np.sum(self.content * reshaped_bin_centers, axis=axis) / \
+            mean_values = np.sum(self.content * reshaped_bin_centers, axis=axis) / \
                 np.sum(self.content, axis=axis)
             rms_values = np.sqrt(np.sum((self.content * reshaped_bin_centers**2), axis=axis) / \
                                  np.sum(self.content, axis=axis))

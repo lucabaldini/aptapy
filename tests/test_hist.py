@@ -205,6 +205,23 @@ def test_from_amptek_file(datadir):
     assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
 
 
+def test_extract_column(size: int = 10000):
+    """Test extracting a column from a 2D histogram.
+    """
+    x, y = _RNG.uniform(size=(2, size))
+    xedges = np.linspace(0., 1., 11)
+    yedges = np.linspace(0., 1., 21)
+
+    hist = Histogram2d(xedges, yedges)
+    hist.fill(x, y)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
+    col_hist = hist.extract_column(5)
+    col_hist.plot()
+    assert col_hist.content.shape == (20,)
+    with pytest.raises(ValueError, match="one less"):
+        hist.extract_column(0, 1)
+
+
 def test_3d_hist(size: int = 100000):
     """Test basic functionalities of 3D histograms.
     """
@@ -216,6 +233,7 @@ def test_3d_hist(size: int = 100000):
 
     hist = Histogram3d(xedges, yedges, zedges)
     hist.fill(x, y, z)
+    # Test collapsing axis 2 (z axis)
     mean_hist, rms_hist = hist.collapse_axis(2)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean")
     mean_hist.plot()
@@ -227,7 +245,15 @@ def test_3d_hist(size: int = 100000):
     assert rms_hist.content.shape == (10, 10)
     assert np.all(stddev >= 0.)
     assert np.allclose((5 - mean_hist.content[zero_mask]) / (5 * stddev[zero_mask]), 0, atol=0.1)
-
+    # Test collapsing axis 0 (x axis)
+    mean_hist, rms_hist = hist.collapse_axis(0)
+    assert mean_hist.content.shape == (10, 20)
+    assert rms_hist.content.shape == (10, 20)
+    # Test collapsing axis 1 (y axis)
+    mean_hist, rms_hist = hist.collapse_axis(1)
+    assert mean_hist.content.shape == (10, 20)
+    assert rms_hist.content.shape == (10, 20)
+    # Test extracting a column (x=5, y=5)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
     col_hist = hist.extract_column(5, 5)
     col_hist.plot()

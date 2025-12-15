@@ -21,7 +21,7 @@ import inspect
 import numpy as np
 import pytest
 
-from aptapy.hist import Histogram1d, Histogram2d
+from aptapy.hist import Histogram1d, Histogram2d, Histogram3d
 from aptapy.models import Gaussian
 from aptapy.plotting import plt
 
@@ -203,3 +203,32 @@ def test_from_amptek_file(datadir):
     assert mean != 0
     assert std != 0
     assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
+
+
+def test_3d_hist(size: int = 100000):
+    """Test basic functionalities of 3D histograms.
+    """
+    x, y = _RNG.uniform(size=(2, size))*0.9
+    z = _RNG.uniform(size=size) * 10.
+    xedges = np.linspace(0., 1., 11)
+    yedges = np.linspace(0., 1., 11)
+    zedges = np.linspace(0., 10., 21)
+
+    hist = Histogram3d(xedges, yedges, zedges)
+    hist.fill(x, y, z)
+    mean_hist, rms_hist = hist.collapse_axis(2)
+    assert mean_hist.content.shape == (10, 10)
+    assert rms_hist.content.shape == (10, 10)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean")
+    mean_hist.plot()
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - RMS")
+    rms_hist.plot()
+    stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
+    zero_mask = mean_hist.content > 0.
+    assert np.all(stddev >= 0.)
+    assert np.allclose((5 - mean_hist.content[zero_mask]) / (5 * stddev[zero_mask]), 0, atol=0.1)
+
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
+    col_hist = hist.extract_column(5, 5)
+    col_hist.plot()
+    assert col_hist.content.shape == (20,)

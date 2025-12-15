@@ -459,3 +459,113 @@ class Histogram2d(AbstractHistogram):
             kwargs.setdefault("norm", matplotlib.colors.LogNorm(vmin, vmax))
         mappable = axes.pcolormesh(*self._edges, self.content.T, **kwargs)
         plt.colorbar(mappable, ax=axes, label=self.axis_labels[2])
+
+
+class Histogram3d(AbstractHistogram):
+
+    """Three-dimensional histogram.
+
+    Arguments
+    ---------
+    xedges : 1-dimensional array
+        the bin edges on the x axis.
+
+    yedges : 1-dimensional array
+        the bin edges on the y axis.
+
+    zedges : 1-dimensional array
+        the bin edges on the z axis.
+
+    label : str
+        overall label for the histogram
+
+    xlabel : str
+        the text label for the x axis.
+
+    ylabel : str
+        the text label for the y axis.
+
+    zlabel : str
+        the text label for the z axis.
+    """
+
+    def __init__(self, xedges, yedges, zedges, label: str = None, xlabel: str = None,
+                 ylabel: str = None, zlabel: str = None) -> None:
+        """Constructor.
+        """
+        super().__init__((xedges, yedges, zedges), label, [xlabel, ylabel, zlabel])
+
+    def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
+        """Overloaded method.
+
+        Note that 3D histograms cannot be directly plotted, so we just raise
+        a NotImplementedError here.
+        """
+        raise NotImplementedError("3D histograms cannot be directly plotted.")
+
+    def extract_column(self, xbin: int, ybin: int) -> Histogram1d:
+        """Extract a 1D histogram corresponding to a specific (x,y) bin.
+
+        Arguments
+        ---------
+        xbin : int
+            the x bin index.
+
+        ybin : int
+            the y bin index.
+
+        Returns
+        -------
+        Histogram1d
+            the extracted 1D histogram.
+        """
+        zedges = self._edges[2]
+        hist = Histogram1d(zedges, label=f"{self.label} (xbin={xbin}, ybin={ybin})",
+                           xlabel=self.axis_labels[2])
+        hist.set_content(self.content[xbin, ybin, :],
+                         errors=np.sqrt(self._sumw2[xbin, ybin, :]))
+        return hist
+
+    def collapse_axis(self, axis: int) -> tuple[Histogram2d, Histogram2d]:
+        """Collapse one axis of the 3D Histogram, returning two different 2D Histograms containing
+        the mean and the RMS along the collapsed axis.
+        Note that if a bin has zero content along the collapsed axis, both the mean and RMS
+        for that bin will be set to 0.0.
+
+        This method could be implemented in the base class, but it should be able to call the
+        constructor of a derived class with (ndim - 1) axes. It could be useful also for 2D
+        histograms.
+
+        Arguments
+        ---------
+        axis : int
+            the axis to collapse (0 for x, 1 for y, 2 for z).
+            
+        Returns
+        -------
+        mean_hist : Histogram2d
+            the 2D histogram containing the mean values along the collapsed axis.
+        rms_hist : Histogram2d
+            the 2D histogram containing the RMS values along the collapsed axis.
+        """
+        bin_centers = self.bin_centers(axis)
+        axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
+        reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
+        # Ignore the division warnings, the nan values will be changed to 0.0
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mean_values  = np.sum(self.content * reshaped_bin_centers, axis=axis) / \
+                np.sum(self.content, axis=axis)
+            rms_values = np.sqrt(np.sum((self.content * reshaped_bin_centers**2), axis=axis) / \
+                                 np.sum(self.content, axis=axis))
+        mean_values = np.nan_to_num(mean_values, nan=0.0)
+        rms_values = np.nan_to_num(rms_values, nan=0.0)
+
+        edges = [self._edges[i] for i in axes_to_expand]
+        labels = [self.axis_labels[i] for i in axes_to_expand]
+        mean_hist = Histogram2d(*edges, label=f"{self.label} (mean)", xlabel=labels[0],
+                                ylabel=labels[1])
+        mean_hist.set_content(mean_values)
+        rms_hist = Histogram2d(*edges, label=f"{self.label} (rms)", xlabel=labels[0],
+                                ylabel=labels[1])
+        rms_hist.set_content(rms_values)
+        return mean_hist, rms_hist

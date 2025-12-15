@@ -526,7 +526,7 @@ class Histogram3d(AbstractHistogram):
                          errors=np.sqrt(self._sumw2[xbin, ybin, :]))
         return hist
 
-    def collapse_axis(self, axis: int) -> tuple[Histogram2d, Histogram2d]:
+    def collapse_axis(self, axis: int) -> Tuple[Histogram2d, Histogram2d]:
         """Collapse one axis of the 3D Histogram, returning two different 2D Histograms containing
         the mean and the RMS along the collapsed axis.
         Note that if a bin has zero content along the collapsed axis, both the mean and RMS

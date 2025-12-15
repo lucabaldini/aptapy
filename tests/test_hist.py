@@ -217,14 +217,14 @@ def test_3d_hist(size: int = 100000):
     hist = Histogram3d(xedges, yedges, zedges)
     hist.fill(x, y, z)
     mean_hist, rms_hist = hist.collapse_axis(2)
-    assert mean_hist.content.shape == (10, 10)
-    assert rms_hist.content.shape == (10, 10)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean")
     mean_hist.plot()
     plt.figure(f"{inspect.currentframe().f_code.co_name} - RMS")
     rms_hist.plot()
     stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
     zero_mask = mean_hist.content > 0.
+    assert mean_hist.content.shape == (10, 10)
+    assert rms_hist.content.shape == (10, 10)
     assert np.all(stddev >= 0.)
     assert np.allclose((5 - mean_hist.content[zero_mask]) / (5 * stddev[zero_mask]), 0, atol=0.1)
 

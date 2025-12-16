@@ -233,6 +233,56 @@ class AbstractHistogram(AbstractPlottable):
         hist.set_content(self.content[index_tuple])
         return hist
 
+    def collapse_axis(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:
+        # Modify the doc to refer to Histogram in general
+        """Collapse one axis of the 3D Histogram, returning two different 2D Histograms containing
+        the mean and the RMS along the collapsed axis.
+        Note that if a bin has zero content along the collapsed axis, both the mean and RMS
+        for that bin will be set to 0.0.
+
+        This method could be implemented in the base class, but it should be able to call the
+        constructor of a derived class with (ndim - 1) axes. It could be useful also for 2D
+        histograms.
+
+        Arguments
+        ---------
+        axis : int
+            the axis to collapse (0 for x, 1 for y, 2 for z).
+
+        Returns
+        -------
+        mean_hist : Histogram2d
+            the 2D histogram containing the mean values along the collapsed axis.
+        rms_hist : Histogram2d
+            the 2D histogram containing the RMS values along the collapsed axis.
+        """
+        if axis < 0 or axis > self._num_axes - 1:
+            raise ValueError(f"Axis must be between 0 and {self._num_axes - 1} for {self._num_axes}dHistogram.")
+        bin_centers = self.bin_centers(axis)
+        axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
+        reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
+        # Ignore the division warnings, the nan values will be changed to 0.0
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mean_values = np.sum(self.content * reshaped_bin_centers, axis=axis) / \
+                np.sum(self.content, axis=axis)
+            rms_values = np.sqrt(np.sum((self.content * reshaped_bin_centers**2), axis=axis) / \
+                                 np.sum(self.content, axis=axis))
+        mean_values = np.nan_to_num(mean_values, nan=0.0)
+        rms_values = np.nan_to_num(rms_values, nan=0.0)
+
+        edges = [self._edges[i] for i in axes_to_expand]
+        labels = {"xlabel" : self.axis_labels[axes_to_expand[0]],
+                  "ylabel" : self.axis_labels[axes_to_expand[1]]}
+        if self._num_axes - 1 == 1:
+            Histogram = Histogram1d
+        elif self._num_axes - 1 == 2:
+            Histogram = Histogram2d
+        mean_hist = Histogram(*edges, label=f"{self.label} (mean)", **labels)
+        mean_hist.set_content(mean_values)
+        rms_hist = Histogram(*edges, label=f"{self.label} (rms)", **labels)
+        rms_hist.set_content(rms_values)
+        return mean_hist, rms_hist
+
     def _check_compat(self, other: "AbstractHistogram") -> None:
         """Check whether two histogram objects are compatible with each other,
         meaning, e.g., that they can be summed or subtracted.
@@ -525,52 +575,6 @@ class Histogram3d(AbstractHistogram):
         """Overloaded method.
 
         Note that 3D histograms cannot be directly plotted, so we just raise
-        a NotImplementedError here.
+        a NotImplementedError.
         """
         raise NotImplementedError("3D histograms cannot be directly plotted.")
-
-    def collapse_axis(self, axis: int) -> Tuple[Histogram2d, Histogram2d]:
-        """Collapse one axis of the 3D Histogram, returning two different 2D Histograms containing
-        the mean and the RMS along the collapsed axis.
-        Note that if a bin has zero content along the collapsed axis, both the mean and RMS
-        for that bin will be set to 0.0.
-
-        This method could be implemented in the base class, but it should be able to call the
-        constructor of a derived class with (ndim - 1) axes. It could be useful also for 2D
-        histograms.
-
-        Arguments
-        ---------
-        axis : int
-            the axis to collapse (0 for x, 1 for y, 2 for z).
-
-        Returns
-        -------
-        mean_hist : Histogram2d
-            the 2D histogram containing the mean values along the collapsed axis.
-        rms_hist : Histogram2d
-            the 2D histogram containing the RMS values along the collapsed axis.
-        """
-        if axis < 0 or axis > 2:
-            raise ValueError("Axis must be 0, 1, or 2 for 3D histograms.")
-        bin_centers = self.bin_centers(axis)
-        axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
-        reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
-        # Ignore the division warnings, the nan values will be changed to 0.0
-        with np.errstate(divide='ignore', invalid='ignore'):
-            mean_values = np.sum(self.content * reshaped_bin_centers, axis=axis) / \
-                np.sum(self.content, axis=axis)
-            rms_values = np.sqrt(np.sum((self.content * reshaped_bin_centers**2), axis=axis) / \
-                                 np.sum(self.content, axis=axis))
-        mean_values = np.nan_to_num(mean_values, nan=0.0)
-        rms_values = np.nan_to_num(rms_values, nan=0.0)
-
-        edges = [self._edges[i] for i in axes_to_expand]
-        labels = [self.axis_labels[i] for i in axes_to_expand]
-        mean_hist = Histogram2d(*edges, label=f"{self.label} (mean)", xlabel=labels[0],
-                                ylabel=labels[1])
-        mean_hist.set_content(mean_values)
-        rms_hist = Histogram2d(*edges, label=f"{self.label} (rms)", xlabel=labels[0],
-                                ylabel=labels[1])
-        rms_hist.set_content(rms_values)
-        return mean_hist, rms_hist

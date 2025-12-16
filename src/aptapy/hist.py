@@ -214,7 +214,7 @@ class AbstractHistogram(AbstractPlottable):
         ---------
         bin_indices : Sequence[int]
             the bin indices.
-        axus : int
+        axis : int
             the axis along which to extract the column (default: -1, i.e., the last axis).
 
         Returns
@@ -223,7 +223,7 @@ class AbstractHistogram(AbstractPlottable):
             the extracted 1D histogram.
         """
         if len(bin_indices) != self._num_axes - 1:
-            raise ValueError("Number of bin indices should be one less than the number of axes of\
+            raise ValueError("Number of bin indices should be one less than the number of axes of \
                             the histogram.")
         if axis == -1:
             axis = self._num_axes - 1
@@ -249,15 +249,10 @@ class AbstractHistogram(AbstractPlottable):
         return hist
 
     def collapse_axis(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:
-        # Modify the doc to refer to Histogram in general
-        """Collapse one axis of the 3D Histogram, returning two different 2D Histograms containing
-        the mean and the RMS along the collapsed axis.
+        """Collapse one axis of an histogram, returning two different histograms with one less
+        dimension containing the mean and the RMS along the collapsed axis.
         Note that if a bin has zero content along the collapsed axis, both the mean and RMS
         for that bin will be set to 0.0.
-
-        This method could be implemented in the base class, but it should be able to call the
-        constructor of a derived class with (ndim - 1) axes. It could be useful also for 2D
-        histograms.
 
         Arguments
         ---------
@@ -266,14 +261,14 @@ class AbstractHistogram(AbstractPlottable):
 
         Returns
         -------
-        mean_hist : Histogram2d
-            the 2D histogram containing the mean values along the collapsed axis.
-        rms_hist : Histogram2d
-            the 2D histogram containing the RMS values along the collapsed axis.
+        mean_hist : AbstractHistogram
+            the histogram containing the mean values along the collapsed axis.
+        rms_hist : AbstractHistogram
+            the histogram containing the RMS values along the collapsed axis.
         """
         if not 0 <= axis < self._num_axes:
             raise ValueError(f"Axis must be between 0 and {self._num_axes - 1} for \
-                             {self._num_axes}dHistogram.")
+                              {self._num_axes}dHistogram.")
         bin_centers = self.bin_centers(axis)
         axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
         reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
@@ -288,14 +283,14 @@ class AbstractHistogram(AbstractPlottable):
 
         edges = [self._edges[i] for i in axes_to_expand]
         labels_kwarg = ["xlabel", "ylabel"]
-        labels = {labels_kwarg[i]: self.axis_labels[axes_to_expand[i]] for i in\
+        labels = {labels_kwarg[i]: self.axis_labels[axes_to_expand[i]] for i in
                   range(len(axes_to_expand))}
         if self._num_axes - 1 == 1:
             Histogram = Histogram1d
         elif self._num_axes - 1 == 2:
             Histogram = Histogram2d
         else:
-            raise NotImplementedError("collapse_axis is only implemented for 2D and 3D\
+            raise NotImplementedError("collapse_axis is only implemented for 2D and 3D \
                                       histograms.")
         mean_hist = Histogram(*edges, label=f"{self.label} (mean)", **labels)
         mean_hist.set_content(mean_values)

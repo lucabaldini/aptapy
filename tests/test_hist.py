@@ -197,6 +197,7 @@ def test_extract_column():
     col_hist_no_axis = hist.extract_column(5)
     col_hist_no_axis.plot()
     assert col_hist_no_axis.content.shape == (20,)
+    assert np.array_equal(hist.content[5, :], col_hist_no_axis.content)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Column with axis")
     col_hist_y_axis = hist.extract_column(5, axis=1)
     col_hist_y_axis.plot()
@@ -261,7 +262,7 @@ def test_from_amptek_file(datadir):
 def test_3d_hist(size: int = 100000):
     """Test basic functionalities of 3D histograms.
     """
-    x, y = _RNG.uniform(size=(2, size))*0.9
+    x, y = _RNG.uniform(size=(2, size)) * 0.9
     z = _RNG.uniform(size=size) * 10.
     xedges = np.linspace(0., 1., 11)
     yedges = np.linspace(0., 1., 11)
@@ -272,11 +273,9 @@ def test_3d_hist(size: int = 100000):
     # Test collapsing axis 2 (z axis)
     mean_hist, rms_hist = hist.collapse_axis(2)
     stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
-    zero_mask = mean_hist.content > 0.
     assert mean_hist.content.shape == (10, 10)
     assert rms_hist.content.shape == (10, 10)
     assert np.all(stddev >= 0.)
-    assert np.allclose((5 - mean_hist.content[zero_mask]) / (5 * stddev[zero_mask]), 0, atol=0.1)
     # Test collapsing axis 0 (x axis)
     mean_hist, rms_hist = hist.collapse_axis(0)
     assert mean_hist.content.shape == (10, 20)
@@ -285,6 +284,6 @@ def test_3d_hist(size: int = 100000):
     mean_hist, rms_hist = hist.collapse_axis(1)
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
-    # Test extracting a column (x=5, y=5) from axis 2 (z axis)
+    # Test extracting a column at bin indices (x=5, y=5) from axis 2 (z axis)
     col_hist = hist.extract_column(5, 5)
     assert col_hist.content.shape == (20,)

@@ -7,6 +7,7 @@
 
 # %%
 
+# We could change this example to show collapsing axis with a 2d histogram
 import numpy as np
 
 from aptapy.hist import Histogram3d

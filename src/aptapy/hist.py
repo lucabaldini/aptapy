@@ -207,13 +207,15 @@ class AbstractHistogram(AbstractPlottable):
         histogram._sumw2 = self._sumw2.copy()
         return histogram
 
-    def extract_column(self, *bin_indices: Sequence[int]) -> "Histogram1d":
-        """Extract a 1D histogram along the last axis for a given bin.
+    def extract_column(self, *bin_indices: Sequence[int], axis: int = -1) -> "Histogram1d":
+        """Extract a 1D histogram along an axis for a given bin.
 
         Arguments
         ---------
         bin_indices : Sequence[int]
             the bin indices.
+        axus : int
+            the axis along which to extract the column (default: -1, i.e., the last axis).
 
         Returns
         -------
@@ -223,13 +225,26 @@ class AbstractHistogram(AbstractPlottable):
         if len(bin_indices) != self._num_axes - 1:
             raise ValueError("Number of bin indices should be one less than the number of axes of\
                             the histogram.")
-        for i, bin_val in enumerate(bin_indices):
-            if not 0 <= bin_val < self._shape[i]:
+        if axis == -1:
+            axis = self._num_axes - 1
+        else:
+            if not 0 <= axis < self._num_axes:
+                raise ValueError("Axis index out of range.")
+        # Generating the list of axes other than the specified one to check the bin indices
+        axes = list(range(self._num_axes))
+        axes.remove(axis)
+        for _ax, _bin in zip(axes, bin_indices):
+            if not 0 <= _bin < self._shape[_ax]:
                 raise IndexError("Bin index out of range.")
-        edges = self._edges[len(bin_indices)]
+        edges = self._edges[axis]
         hist = Histogram1d(edges, label=f"{self.label} (bin={bin_indices})",
-                           xlabel=self.axis_labels[len(bin_indices)])
-        index_tuple = tuple(bin_indices) + (slice(None), )
+                           xlabel=self.axis_labels[axis])
+        # Create the index tuple to extract the right slice
+        indices_iter = iter(bin_indices)
+        index_tuple = tuple(
+            slice(None) if i == axis else next(indices_iter)
+            for i in range(self._num_axes)
+        )
         hist.set_content(self.content[index_tuple])
         return hist
 
@@ -256,8 +271,9 @@ class AbstractHistogram(AbstractPlottable):
         rms_hist : Histogram2d
             the 2D histogram containing the RMS values along the collapsed axis.
         """
-        if axis < 0 or axis > self._num_axes - 1:
-            raise ValueError(f"Axis must be between 0 and {self._num_axes - 1} for {self._num_axes}dHistogram.")
+        if not 0 <= axis < self._num_axes:
+            raise ValueError(f"Axis must be between 0 and {self._num_axes - 1} for \
+                             {self._num_axes}dHistogram.")
         bin_centers = self.bin_centers(axis)
         axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
         reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
@@ -271,12 +287,16 @@ class AbstractHistogram(AbstractPlottable):
         rms_values = np.nan_to_num(rms_values, nan=0.0)
 
         edges = [self._edges[i] for i in axes_to_expand]
-        labels = {"xlabel" : self.axis_labels[axes_to_expand[0]],
-                  "ylabel" : self.axis_labels[axes_to_expand[1]]}
+        labels_kwarg = ["xlabel", "ylabel"]
+        labels = {labels_kwarg[i]: self.axis_labels[axes_to_expand[i]] for i in\
+                  range(len(axes_to_expand))}
         if self._num_axes - 1 == 1:
             Histogram = Histogram1d
         elif self._num_axes - 1 == 2:
             Histogram = Histogram2d
+        else:
+            raise NotImplementedError("collapse_axis is only implemented for 2D and 3D\
+                                      histograms.")
         mean_hist = Histogram(*edges, label=f"{self.label} (mean)", **labels)
         mean_hist.set_content(mean_values)
         rms_hist = Histogram(*edges, label=f"{self.label} (rms)", **labels)

@@ -184,6 +184,59 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     plt.gca().set_aspect("equal")
 
 
+def test_extract_column():
+    """Test extracting a column from 2d histogram.
+    """
+    x = _RNG.uniform(size=10000)
+    y = _RNG.uniform(size=10000) * 0.9
+    xedges = np.linspace(0., 1., 11)
+    yedges = np.linspace(0., 1., 21)
+    hist = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
+    hist.fill(x, y)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
+    col_hist_no_axis = hist.extract_column(5)
+    col_hist_no_axis.plot()
+    assert col_hist_no_axis.content.shape == (20,)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column with axis")
+    col_hist_y_axis = hist.extract_column(5, axis=1)
+    col_hist_y_axis.plot()
+    assert np.array_equal(col_hist_no_axis.content, col_hist_y_axis.content)
+    col_hist_x_axis = hist.extract_column(5, axis=0)
+    assert col_hist_x_axis.content.shape == (10,)
+    with pytest.raises(ValueError, match="one less"):
+        hist.extract_column(0, 1)
+
+
+def test_collapse_axis():
+    """Test collapsing axis of 2d and 3d histograms.
+    """
+    x, y = _RNG.uniform(size=(2, 10000)) * 0.9
+    z = _RNG.uniform(size=10000) * 10
+    xedges = np.linspace(0., 1., 51)
+    yedges = np.linspace(0., 1., 31)
+    zedges = np.linspace(0., 10., 21)
+
+    hist2d = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
+    hist2d.fill(x, y)
+    mean_hist, rms_hist = hist2d.collapse_axis(1)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean y")
+    mean_hist.plot()
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - RMS y")
+    rms_hist.plot()
+    assert mean_hist.content.shape == (50,)
+    assert rms_hist.content.shape == (50,)
+    mean_hist, rms_hist = hist2d.collapse_axis(0)
+    assert mean_hist.content.shape == (30,)
+    assert rms_hist.content.shape == (30,)
+    hist3d = Histogram3d(xedges, yedges, zedges, xlabel="x", ylabel="y", zlabel="z")
+    hist3d.fill(x, y, z)
+    mean_hist, rms_hist = hist3d.collapse_axis(2)
+    plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean z")
+    mean_hist.plot()
+    assert mean_hist.content.shape == (50, 30)
+    assert rms_hist.content.shape == (50, 30)
+
+
 def test_from_amptek_file(datadir):
     """Test building histogram from amptek file
     """
@@ -205,23 +258,6 @@ def test_from_amptek_file(datadir):
     assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
 
 
-def test_extract_column(size: int = 10000):
-    """Test extracting a column from a 2D histogram.
-    """
-    x, y = _RNG.uniform(size=(2, size))
-    xedges = np.linspace(0., 1., 11)
-    yedges = np.linspace(0., 1., 21)
-
-    hist = Histogram2d(xedges, yedges)
-    hist.fill(x, y)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
-    col_hist = hist.extract_column(5)
-    col_hist.plot()
-    assert col_hist.content.shape == (20,)
-    with pytest.raises(ValueError, match="one less"):
-        hist.extract_column(0, 1)
-
-
 def test_3d_hist(size: int = 100000):
     """Test basic functionalities of 3D histograms.
     """
@@ -235,10 +271,6 @@ def test_3d_hist(size: int = 100000):
     hist.fill(x, y, z)
     # Test collapsing axis 2 (z axis)
     mean_hist, rms_hist = hist.collapse_axis(2)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean")
-    mean_hist.plot()
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - RMS")
-    rms_hist.plot()
     stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
     zero_mask = mean_hist.content > 0.
     assert mean_hist.content.shape == (10, 10)
@@ -253,8 +285,6 @@ def test_3d_hist(size: int = 100000):
     mean_hist, rms_hist = hist.collapse_axis(1)
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
-    # Test extracting a column (x=5, y=5)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
+    # Test extracting a column (x=5, y=5) from axis 2 (z axis)
     col_hist = hist.extract_column(5, 5)
-    col_hist.plot()
     assert col_hist.content.shape == (20,)

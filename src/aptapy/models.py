@@ -279,15 +279,33 @@ class Cubic(Polynomial):
 class PowerLaw(AbstractFitModel):
 
     """Power-law model.
+
+    Arguments
+    ---------
+    pivot : float, optional
+        The pivot point of the power-law (default 1.).
+
+    label : str, optional
+        The model label.
+
+    xlabel : str, optional
+        The label for the x axis.
+
+    ylabel : str, optional
+        The label for the y axis.
     """
 
     prefactor = FitParameter(1.)
     index = FitParameter(-2.)
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
+    def __init__(self, pivot: float = 1., label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        super().__init__(label, xlabel, ylabel)
+        self.pivot = pivot
+
+    def evaluate(self, x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * x**index
+        return prefactor * (x / self.pivot)**index
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.

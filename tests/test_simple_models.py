@@ -132,8 +132,11 @@ def test_probit(offset = 0.5, sigma = 0.12):
     model = models.Probit()
     x = np.linspace(0., 1., 100)
     y = model.evaluate(x, amplitude=1., offset=offset, sigma=sigma)
+    # Make sure that we got the ppf of the gaussian right.
     assert np.allclose(y,  scipy.stats.norm.ppf(x, loc=offset, scale=sigma))
 
+    # Note this is not using the generic test function since we want to
+    # freeze some parameters during the fit.
     plt.figure("Probit")
     model.set_parameters(1., offset, sigma)
     sigma_y = 0.01
@@ -142,5 +145,6 @@ def test_probit(offset = 0.5, sigma = 0.12):
     model.amplitude.freeze(1.)
     model.offset.freeze(offset)
     model.fit(xdata, ydata, sigma=sigma_y)
+    assert model.sigma.compatible_with(sigma, 5.)
     model.plot(fit_output=True)
     plt.legend()

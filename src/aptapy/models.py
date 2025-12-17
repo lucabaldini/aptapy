@@ -513,7 +513,7 @@ class Gaussian(AbstractFitModel):
 
     The main reason for this is to be able to call the underlying parameters with
     more familiar names (mu, sigma, rather than loc, scale), as well as
-    providing additional convenice methods such the iterative fitting around
+    providing additional convenience methods such the iterative fitting around
     the peak.
     """
 

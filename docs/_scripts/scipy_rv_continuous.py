@@ -51,7 +51,7 @@ def plot_rv_shape(model_class, shape_parameters=None, location=0., scale=1., **k
     # Case 1: the distribution has no shape parameters.
     if shape_parameters is None:
         model.set_parameters(1., location, scale)
-        model.plot(label="")
+        model.plot(label="Model")
         plt.legend(title=legend_title)
         print(f"Saving figure to {file_path}...")
         plt.savefig(file_path, dpi=150)

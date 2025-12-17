@@ -205,7 +205,7 @@ class.
 .. seealso:: The :class:`~aptapy.models.Normal` is an alternative, equivalent
    implementation wrapping :scipy_rv_wrap:`norm` as all the other location-scale
    models. Any additional features specific to the gaussian distribution will
-   be implemented in :class:`~aptapy.models.Gaussian`, so user are encouraged
+   be implemented in :class:`~aptapy.models.Gaussian`, so users are encouraged
    to use this class over :class:`~aptapy.models.Normal`, except for testing
    purposes.
 

@@ -21,7 +21,7 @@ from aptapy.plotting import plt
 
 
 def _test_model_base(model_class: type, *parameter_values: float, sigma: float = 0.1,
-                     num_sigma: float = 5., **kwargs) -> None:
+                     num_sigma: float = 5., figure_name: str = None, **kwargs) -> None:
     """Basic tests for the Model base class.
 
     Arguments
@@ -42,7 +42,9 @@ def _test_model_base(model_class: type, *parameter_values: float, sigma: float =
     kwargs: dict
         Additional keyword arguments to be passed to the model constructor.
     """
-    plt.figure(model_class.__name__)
+    if figure_name is None:
+        figure_name = model_class.__name__
+    plt.figure(figure_name)
     # Create the model and set the basic parameters.
     model = model_class(xlabel="x [a.u.]", ylabel="y [a.u.]", **kwargs)
     # Saving the default parameters.
@@ -98,6 +100,7 @@ def test_polynomial():
 def test_power_law():
     _test_model_base(models.PowerLaw, 10., -2.)
     _test_model_base(models.PowerLaw, 10., -1.)
+    _test_model_base(models.PowerLaw, 10., -3., figure_name="PowerLaw pivot", pivot=10.)
 
 
 def test_exponential():

@@ -83,11 +83,12 @@ A power-law model with the general form:
 
 .. math::
 
-    f(x;~N, \Gamma) = N x^\Gamma
+    f(x;~N, \Gamma) = N \left(\frac{x}{x_0}\right)^\Gamma
     \quad \text{with} \quad
     \begin{cases}
     N \rightarrow \texttt{prefactor}\\
-    \Gamma \rightarrow \texttt{index}
+    \Gamma \rightarrow \texttt{index}\\
+    x_0 \rightarrow \texttt{pivot}~\text{(set at creation time)}
     \end{cases}
 
 .. note::

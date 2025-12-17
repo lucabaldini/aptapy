@@ -279,15 +279,33 @@ class Cubic(Polynomial):
 class PowerLaw(AbstractFitModel):
 
     """Power-law model.
+
+    Arguments
+    ---------
+    pivot : float, optional
+        The pivot point of the power-law (default 1.).
+
+    label : str, optional
+        The model label.
+
+    xlabel : str, optional
+        The label for the x axis.
+
+    ylabel : str, optional
+        The label for the y axis.
     """
 
     prefactor = FitParameter(1.)
     index = FitParameter(-2.)
 
-    @staticmethod
-    def evaluate(x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
+    def __init__(self, pivot: float = 1., label: str = None, xlabel: str = None,
+                 ylabel: str = None) -> None:
+        super().__init__(label, xlabel, ylabel)
+        self.pivot = pivot
+
+    def evaluate(self, x: ArrayLike, prefactor: float, index: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * x**index
+        return prefactor * (x / self.pivot)**index
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
@@ -313,13 +331,15 @@ class PowerLaw(AbstractFitModel):
         Sxy = (weights * (X - X0) * (Y - Y0)).sum()
         if Sxx != 0.:
             self.index.init(Sxy / Sxx)
-            self.prefactor.init(np.exp(Y0 - self.index.value * X0))
+            self.prefactor.init(np.exp(Y0 - self.index.value * X0) * self.pivot**self.index.value)
 
     def primitive(self, x: ArrayLike) -> ArrayLike:
+        """Overloaded method.
+        """
         prefactor, index = self.parameter_values()
         if index == -1.:
-            return prefactor * np.log(x)
-        return prefactor / (index + 1.) * (x**(index + 1.))
+            return prefactor * self.pivot * np.log(x)
+        return prefactor * self.pivot / (index + 1.) * ((x / self.pivot)**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
@@ -328,7 +348,7 @@ class PowerLaw(AbstractFitModel):
         not bogus when the index is negative, which should cover the most common
         use cases.
         """
-        return (0.1, 10.)
+        return (0.1 * self.pivot, 10. * self.pivot)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Overloaded method.
@@ -370,7 +390,7 @@ class Exponential(AbstractFitModel):
     """
 
     prefactor = FitParameter(1.)
-    scale = FitParameter(1.)
+    scale = FitParameter(1., minimum=0.)
 
     def __init__(self, location: float = 0., label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:

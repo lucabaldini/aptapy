@@ -693,6 +693,21 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
         return 0.5 * (1. + np.tanh(z))
 
 
+class Probit(AbstractFitModel):
+
+    """
+    """
+
+    amplitude = FitParameter(1.)
+    mu = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
+
+    def evaluate(self, x: ArrayLike, amplitude: float, mu: float, sigma: float) -> ArrayLike:
+        # pylint: disable=arguments-differ
+        z = (x - mu) / sigma
+        return amplitude * 0.5 * (1. + scipy.special.erf(z / np.sqrt(2.)))
+
+
 @line_forest(5.896, 6.492)
 class Fe55Forest(GaussianForestBase):
     """Model representing the Kα and Kβ emission lines produced in the decay

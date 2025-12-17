@@ -94,3 +94,18 @@ def test_arctan():
 
 def test_hyperbolic_tangent():
     _test_base(models.HyperbolicTangent)
+
+
+if __name__ == "__main__":
+    import scipy.special
+    import scipy.stats
+    import numpy as np
+
+    sigma = 0.12
+
+    x = np.linspace(0., 1., 100)
+    y1 = 0.5 + sigma * scipy.special.ndtri(x)
+    y2 = scipy.stats.norm.ppf(x, loc=0.5, scale=sigma)
+    plt.plot(x, y1)
+    plt.plot(x, y2, ls="--")
+    plt.show()

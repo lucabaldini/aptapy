@@ -144,8 +144,3 @@ def test_probit(offset = 0.5, sigma = 0.12):
     model.fit(xdata, ydata, sigma=sigma_y)
     model.plot(fit_output=True)
     plt.legend()
-    plt.show()
-
-
-if __name__ == "__main__":
-    test_probit()

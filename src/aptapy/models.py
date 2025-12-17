@@ -691,8 +691,7 @@ class Probit(AbstractFitModel):
     sigma = FitParameter(1., minimum=0.)
 
     def evaluate(self, x: ArrayLike, amplitude: float, offset: float, sigma: float) -> ArrayLike:
-        """Overloaded method.
-        """
+        # pylint: disable=arguments-differ
         return amplitude * (offset + sigma * scipy.special.ndtri(x))
 
     def default_plotting_range(self) -> Tuple[float, float]:

@@ -126,9 +126,11 @@ def test_line_forest():
     _test_model_base(models.Fe55Forest, 10., 0.2, 1., 0.2, sigma=0.5, num_sigma=500.)
 
 
-def test_probit(offset = 0.5, sigma = 0.12):
+def test_probit():
     """Custom unit test for the Probit model.
     """
+    offset = 0.5
+    sigma = 0.12
     model = models.Probit()
     x = np.linspace(0., 1., 100)
     y = model.evaluate(x, amplitude=1., offset=offset, sigma=sigma)

@@ -221,9 +221,37 @@ decay, using intensity-weighted mean energies from the X-ray database
 :class:`~aptapy.models.Probit`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is a custom implementation of the probit function, i.e., the inverse
-of the cumulative distribution function (also known as the percent-point function)
-of the normal distribution.
+This is a custom implementation of the inverse of the cumulative distribution function
+(also known as the percent-point function) of a normal distribution with generic
+location and scale.
+
+.. math::
+    f(x;~N,~\mu,~\sigma) = N \left( \mu + \sigma \Phi^{-1}(x) \right)
+    \quad \text{with} \quad
+    \begin{cases}
+    N \rightarrow \texttt{prefactor}\\
+    \mu \rightarrow \texttt{offset}\\
+    \sigma \rightarrow \texttt{sigma}
+    \end{cases}
+
+where :math:`\Phi^{-1}(x)` is the actual Probit function (the percent-point function of
+the standard normal distribution).
+
+.. note::
+
+   For completeness, this is internally implemented using the :func:`scipy.special.ndtri`
+   function, rather than using :meth:`scipy.stats.norm.ppf`, but the two are
+   fully equivalent.
+
+The support of this model is the interval :math:`0 < x < 1`, since the Probit
+function diverges at the boundaries. Therefore, when plotting this model, the
+default plotting range is automatically set to a slightly smaller interval in order
+to avoid issues at the boundaries.
+
+Note that, since the mean of the underlying normal distribution translates into
+a vertical shift of the Probit function, the former is called ``offset`` in this
+context---not ``mu``. For completeness the ``sigma`` parameter controls the
+scale of the vertical excursion of the model.
 
 
 

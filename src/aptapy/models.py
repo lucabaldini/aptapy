@@ -331,13 +331,15 @@ class PowerLaw(AbstractFitModel):
         Sxy = (weights * (X - X0) * (Y - Y0)).sum()
         if Sxx != 0.:
             self.index.init(Sxy / Sxx)
-            self.prefactor.init(np.exp(Y0 - self.index.value * X0))
+            self.prefactor.init(np.exp(Y0 - self.index.value * X0) * self.pivot**self.index.value)
 
     def primitive(self, x: ArrayLike) -> ArrayLike:
+        """Overloaded method.
+        """
         prefactor, index = self.parameter_values()
         if index == -1.:
             return prefactor * np.log(x)
-        return prefactor / (index + 1.) * (x**(index + 1.))
+        return prefactor / self.pivot / (index + 1.) * ((x / self.pivot)**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
@@ -346,7 +348,7 @@ class PowerLaw(AbstractFitModel):
         not bogus when the index is negative, which should cover the most common
         use cases.
         """
-        return (0.1, 10.)
+        return (0.1 * self.pivot, 10. * self.pivot)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
         """Overloaded method.

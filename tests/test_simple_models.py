@@ -133,7 +133,7 @@ def test_probit():
     sigma = 0.12
     model = models.Probit()
     x = np.linspace(0., 1., 100)
-    y = model.evaluate(x, amplitude=1., offset=offset, sigma=sigma)
+    y = model.evaluate(x, 1., offset, sigma)
     # Make sure that we got the ppf of the gaussian right.
     assert np.allclose(y, scipy.stats.norm.ppf(x, loc=offset, scale=sigma))
 
@@ -144,7 +144,7 @@ def test_probit():
     sigma_y = 0.01
     xdata, ydata = model.random_fit_dataset(sigma_y, seed=313)
     plt.errorbar(xdata, ydata, sigma_y, fmt="o", label="Random data")
-    model.amplitude.freeze(1.)
+    model.prefactor.freeze(1.)
     model.offset.freeze(offset)
     model.fit(xdata, ydata, sigma=sigma_y)
     assert model.sigma.compatible_with(sigma, 5.)

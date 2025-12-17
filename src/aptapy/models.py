@@ -390,7 +390,7 @@ class Exponential(AbstractFitModel):
     """
 
     prefactor = FitParameter(1.)
-    scale = FitParameter(1.)
+    scale = FitParameter(1., minimum=0.)
 
     def __init__(self, location: float = 0., label: str = None, xlabel: str = None,
                  ylabel: str = None) -> None:

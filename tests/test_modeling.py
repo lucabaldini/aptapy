@@ -354,6 +354,6 @@ def test_random_histogram():
     edges = np.linspace(model.mu.value - 3 * model.sigma.value,
                          model.mu.value + 3 * model.sigma.value, 101)
     hist = model.random_histogram(edges=edges, size=100000, random_state=_RNG)
-    hist.plot()
+    hist.plot(label="Random data")
     plt.legend()
     assert np.array_equal(hist.bin_edges(), edges)

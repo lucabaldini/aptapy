@@ -16,6 +16,9 @@
 """Unit tests for the modeling module.
 """
 
+import numpy as np
+import scipy.stats
+
 from aptapy import models
 from aptapy.plotting import plt
 
@@ -121,3 +124,28 @@ def test_stretched_exponential_complement():
 
 def test_line_forest():
     _test_model_base(models.Fe55Forest, 10., 0.2, 1., 0.2, sigma=0.5, num_sigma=500.)
+
+
+def test_probit(offset = 0.5, sigma = 0.12):
+    """Custom unit test for the Probit model.
+    """
+    model = models.Probit()
+    x = np.linspace(0., 1., 100)
+    y = model.evaluate(x, amplitude=1., offset=offset, sigma=sigma)
+    assert np.allclose(y,  scipy.stats.norm.ppf(x, loc=offset, scale=sigma))
+
+    plt.figure("Probit")
+    model.set_parameters(1., offset, sigma)
+    sigma_y = 0.01
+    xdata, ydata = model.random_fit_dataset(sigma_y, seed=313)
+    plt.errorbar(xdata, ydata, sigma_y, fmt="o", label="Random data")
+    model.amplitude.freeze(1.)
+    model.offset.freeze(offset)
+    model.fit(xdata, ydata, sigma=sigma_y)
+    model.plot(fit_output=True)
+    plt.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
+    test_probit()

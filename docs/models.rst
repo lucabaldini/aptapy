@@ -185,6 +185,48 @@ The complement of the stretched exponential model:
    See notes on :class:`~aptapy.models.Exponential` regarding the ``location`` parameter.
 
 
+
+Models related to the gaussian
+------------------------------
+
+:class:`~aptapy.models.Gaussian`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is actually not wrapped from :scipy_rv_wrap:`norm`, but rather a direct
+implementation of the gaussian (normal) distribution, mainly to override the
+parameter names.
+
+Among other things, this class provides a method to perform an iterative fit
+around the peak, which is not available in the generic :class:`~aptapy.models.Normal`
+class.
+
+.. image:: /_static/plots/gaussian_shape.png
+
+.. seealso:: The :class:`~aptapy.models.Normal` is an alternative, equivalent
+   implementation wrapping :scipy_rv_wrap:`norm` as all the other location-scale
+   models. Any additional features specific to the gaussian distribution will
+   be implemented in :class:`~aptapy.models.Gaussian`, so user are encouraged
+   to use this class over :class:`~aptapy.models.Normal`, except for testing
+   purposes.
+
+
+:class:`~aptapy.models.Fe55Forest`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Gaussian line forest for the Kα and Kβ emission features of :math:`^{55}\mathrm{Fe}`
+decay, using intensity-weighted mean energies from the X-ray database
+(<https://xraydb.seescience.org/>).
+
+
+:class:`~aptapy.models.Probit`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a custom implementation of the probit function, i.e., the inverse
+of the cumulative distribution function (also known as the percent-point function)
+of the normal distribution.
+
+
+
 Sigmoid models
 --------------
 
@@ -260,6 +302,7 @@ An hyperbolic tangent sigmoid defined by the standard shape function:
 
 .. math::
     g(z) = \frac{1}{2} \left(1 + \tanh(z)\right)
+
 
 
 Continuous random variables
@@ -423,46 +466,6 @@ support: :math:`-\infty < z < \infty`;
 shape parameter(s): :math:`m > 1`, :math:`\beta > 0`.
 
 .. image:: /_static/plots/crystalball_shape.png
-
-
-:class:`~aptapy.models.Fe55Forest`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Gaussian line forest for the Kα and Kβ emission features of :math:`^{55}\mathrm{Fe}` decay,
-using intensity-weighted mean energies from the X-ray database (<https://xraydb.seescience.org/>).
-
-
-:class:`~aptapy.models.Gaussian`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is actually not wrapped from :scipy_rv_wrap:`norm`, but rather a direct
-implementation of the gaussian (normal) distribution, mainly to override the
-parameter names.
-
-.. image:: /_static/plots/gaussian_shape.png
-
-.. seealso:: The :class:`~aptapy.models.Normal` is an alternative, equivalent
-   implementation wrapping :scipy_rv_wrap:`norm` as all the other location-scale
-   models. Any additional features specific to the gaussian distribution will
-   be implemented in :class:`~aptapy.models.Gaussian`, so user are encouraged
-   to use this class over :class:`~aptapy.models.Normal`, except for testing
-   purposes.
-
-
-:class:`~aptapy.models.GaussianForest`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Model of a forest of Gaussian peaks with fixed energies :math:`E_i`.
-Each peak has amplitude :math:`A_i`, while all peaks share a global
-energy scale :math:`E_s` and a common width :math:`\sigma`, scaled as
-:math:`1/\sqrt{E_i / E_0}`.
-
-.. math::
-    g(z) = \sum_i A_i \exp \left[- \frac{(z - E_i / E_s)^2}{(\sigma / \sqrt{E_i / E_0})^2} \right]
-
-.. note::
-
-    Base class used by models generated with :meth:`aptapy.modeling.line_forest`.
 
 
 :class:`~aptapy.models.Gibrat`

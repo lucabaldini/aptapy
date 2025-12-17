@@ -53,11 +53,12 @@ __all__ = [
     "StretchedExponential",
     "StretchedExponentialComplement",
     "Gaussian",
+    "Fe55Forest",
+    "Probit",
     "ErfSigmoid",
     "LogisticSigmoid",
     "Arctangent",
     "HyperbolicTangent",
-    "Fe55Forest",
     "Alpha",
     "Anglit",
     "Arcsine",
@@ -507,7 +508,13 @@ class StretchedExponentialComplement(StretchedExponential):
 
 class Gaussian(AbstractFitModel):
 
-    """To be reimplemented from scratch, leaving Normal as the default wrapper.
+    """This is a re-implementation from scratch of the normal distribution, which is
+    also available as a wrapper around scipy.stats.norm as Normal.
+
+    The main reason for this is to be able to call the underlying parameters with
+    more familiar names (mu, sigma, rather than loc, scale), as well as
+    providing additional convenice methods such the iterative fitting around
+    the peak.
     """
 
     amplitude = FitParameter(1.)
@@ -649,6 +656,54 @@ class Gaussian(AbstractFitModel):
             axes.plot(x0, y0, "o", ms=1.5, color=color)
 
 
+@line_forest(5.896, 6.492)
+class Fe55Forest(GaussianForestBase):
+    """Model representing the Kα and Kβ emission lines produced in the decay
+    of 55Fe. The energy values are computed as the intensity-weighted mean of
+    all possible emission lines contributing to each feature.
+
+    The energy data are retrieved from the X-ray database at https://xraydb.seescience.org/
+    """
+
+    # https://xraydb.xrayabsorption.org/element/Mn
+    # This is the sum of the intensities of Kb1, Kb3 and Kb5 lines.
+    TABULATED_KB_INTENSITY = 0.12445
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        # pylint: disable=no-member
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.intensity1.init(self.TABULATED_KB_INTENSITY)
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
+
+class Probit(AbstractFitModel):
+
+    """Custom implementation of the probit model, i.e., the percent-point function
+    of a gaussian distribution.
+    """
+
+    amplitude = FitParameter(1.)
+    offset = FitParameter(0.)
+    sigma = FitParameter(1., minimum=0.)
+
+    def evaluate(self, x: ArrayLike, amplitude: float, offset: float, sigma: float) -> ArrayLike:
+        """Overloaded method.
+        """
+        return amplitude * (offset + sigma * scipy.special.ndtri(x))
+
+    def default_plotting_range(self) -> Tuple[float, float]:
+        """Overloaded method.
+
+        Since the probit function diverges at 0 and 1, we limit the plotting range
+        to a reasonable interval.
+        """
+        return (0.001, 0.999)
+
+
 class ErfSigmoid(AbstractSigmoidFitModel):
 
     """Error function model.
@@ -691,41 +746,6 @@ class HyperbolicTangent(AbstractSigmoidFitModel):
     def shape(z):
         # pylint: disable=arguments-differ
         return 0.5 * (1. + np.tanh(z))
-
-
-class Probit(AbstractFitModel):
-
-    """
-    """
-
-    sigma = FitParameter(1., minimum=0.)
-
-    def evaluate(self, x: ArrayLike, sigma: float) -> ArrayLike:
-        return 0.
-
-
-@line_forest(5.896, 6.492)
-class Fe55Forest(GaussianForestBase):
-    """Model representing the Kα and Kβ emission lines produced in the decay
-    of 55Fe. The energy values are computed as the intensity-weighted mean of
-    all possible emission lines contributing to each feature.
-
-    The energy data are retrieved from the X-ray database at https://xraydb.seescience.org/
-    """
-
-    # https://xraydb.xrayabsorption.org/element/Mn
-    # This is the sum of the intensities of Kb1, Kb3 and Kb5 lines.
-    TABULATED_KB_INTENSITY = 0.12445
-
-    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
-        """Overloaded method.
-        """
-        # pylint: disable=no-member
-        mu0 = xdata[np.argmax(ydata)]
-        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
-        self.intensity1.init(self.TABULATED_KB_INTENSITY)
-        self.energy_scale.init(self.energies[0] / mu0)
-        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 
 
 @wrap_rv_continuous(scipy.stats.alpha)

@@ -135,7 +135,7 @@ def test_probit():
     x = np.linspace(0., 1., 100)
     y = model.evaluate(x, amplitude=1., offset=offset, sigma=sigma)
     # Make sure that we got the ppf of the gaussian right.
-    assert np.allclose(y,  scipy.stats.norm.ppf(x, loc=offset, scale=sigma))
+    assert np.allclose(y, scipy.stats.norm.ppf(x, loc=offset, scale=sigma))
 
     # Note this is not using the generic test function since we want to
     # freeze some parameters during the fit.

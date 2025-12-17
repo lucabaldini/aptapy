@@ -339,7 +339,7 @@ class PowerLaw(AbstractFitModel):
         prefactor, index = self.parameter_values()
         if index == -1.:
             return prefactor * np.log(x)
-        return prefactor / self.pivot / (index + 1.) * ((x / self.pivot)**(index + 1.))
+        return prefactor * self.pivot / (index + 1.) * ((x / self.pivot)**(index + 1.))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.

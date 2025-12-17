@@ -250,7 +250,7 @@ to avoid issues at the boundaries.
 
 Note that, since the mean of the underlying normal distribution translates into
 a vertical shift of the Probit function, the former is called ``offset`` in this
-context---not ``mu``. For completeness the ``sigma`` parameter controls the
+context---not ``mu``. For completeness, the ``sigma`` parameter controls the
 scale of the vertical excursion of the model.
 
 

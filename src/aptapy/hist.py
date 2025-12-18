@@ -346,6 +346,9 @@ class AbstractHistogram(AbstractPlottable):
     def project_statistics(self, axis: int = -1) -> "AbstractHistogram":
         """Project the (binned) statistics along a specific axis over the remaining axes.
 
+        Note we do the mean and rms in the same function as the latter needs the
+        former anyway. If you only need the mean, consider using project_mean() instead.
+
         .. warning::
 
            This is numerically instable, as we are accumulating squares of bin

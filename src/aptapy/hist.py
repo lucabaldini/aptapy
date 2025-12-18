@@ -669,7 +669,7 @@ class Histogram3d(AbstractHistogram):
         the text label for the y axis.
 
     zlabel : str
-        the text label for the z axis.
+        the text label for the z axis (default: None).
     """
 
     def __init__(self, xedges, yedges, zedges, label: str = None, xlabel: str = None,

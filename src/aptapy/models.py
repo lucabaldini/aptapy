@@ -697,8 +697,10 @@ class Probit(AbstractFitModel):
         """Overloaded method.
         """
         # pylint: disable=no-member
+        xmin, xmax = np.min(xdata), np.max(xdata)
+        delta = np.max(ydata) - np.min(ydata)
         self.offset.init(np.mean(ydata))
-        self.sigma.init(np.std(ydata) / scipy.stats.norm.ppf(0.90))
+        self.sigma.init(delta / (scipy.stats.norm.ppf(xmax) - scipy.stats.norm.ppf(xmin)))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.

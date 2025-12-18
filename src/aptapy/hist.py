@@ -210,7 +210,7 @@ class AbstractHistogram(AbstractPlottable):
         return histogram
 
     def _axis_modulo(self, axis: int) -> int:
-        """Normalize the axis index modulo the number of axes, so that we can seaminlessly
+        """Normalize the axis index modulo the number of axes, so that we can seamlessly
         use negative indices as well, following the normal Python convention.
 
         Arguments

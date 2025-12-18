@@ -282,8 +282,8 @@ class AbstractHistogram(AbstractPlottable):
         hist_type = self._projection_hist_class()
         labels = [self.axis_labels[ax] for ax in range(self._num_axes) if ax != axis]
         kwargs = dict(xlabel=labels[0])
-        #if self._num_axes > 1:
-        #    kwargs["ylabel"] = labels[1]
+        if self._num_axes > 2:
+            kwargs["ylabel"] = labels[1]
         histogram = hist_type(*edges, **kwargs)
         return histogram
 

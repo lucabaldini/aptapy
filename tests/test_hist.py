@@ -289,34 +289,39 @@ def test_project2d():
     plt.legend()
 
 
-def _test_hist3d():
+def test_hist3d():
     """Test basic functionalities of 3D histograms.
     """
     # Test parameters.
-    sample_size = 100000
+    sample_size = 10000
+    num_xbins = 10
+    num_ybins = 10
+    dynamic_range = 10.
+    bin_indices = (5, 5)
 
-    x, y = _RNG.uniform(size=(2, sample_size)) * 0.9
-    z = _RNG.uniform(size=sample_size) * 10.
-    xedges = np.linspace(0., 1., 11)
-    yedges = np.linspace(0., 1., 11)
-    zedges = np.linspace(0., 10., 21)
+    # Create and fill a 3-dimensional histogram.
+    xedges = np.arange(-0.5, 0.5 + num_xbins)
+    yedges = np.arange(-0.5, 0.5 + num_ybins)
+    zedges = np.linspace(-5., 5. + dynamic_range, 101)
+    hist3d = Histogram3d(xedges, yedges, zedges, xlabel="x", ylabel="y", zlabel="z")
+    for x in hist3d.bin_centers(0):
+        for y in hist3d.bin_centers(1):
+            mean = (x + y) / (num_xbins + num_ybins) * dynamic_range
+            sample = _RNG.normal(loc=mean, scale=1., size=sample_size)
+            hist3d.fill(np.full_like(sample, x), np.full_like(sample, y), sample)
 
-    hist = Histogram3d(xedges, yedges, zedges)
-    hist.fill(x, y, z)
-    # Test collapsing axis 2 (z axis)
-    mean_hist, rms_hist = hist.project_statistics(2)
-    stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
-    assert mean_hist.content.shape == (10, 10)
-    assert rms_hist.content.shape == (10, 10)
-    assert np.all(stddev >= 0.)
-    # Test collapsing axis 0 (x axis)
-    mean_hist, rms_hist = hist.project_statistics(0)
-    assert mean_hist.content.shape == (10, 20)
-    assert rms_hist.content.shape == (10, 20)
-    # Test collapsing axis 1 (y axis)
-    mean_hist, rms_hist = hist.project_statistics(1)
-    assert mean_hist.content.shape == (10, 20)
-    assert rms_hist.content.shape == (10, 20)
-    # Test extracting a column at bin indices (x=5, y=5) from axis 2 (z axis)
-    col_hist = hist.slice1d(5, 5)
-    assert col_hist.content.shape == (20,)
+    # Look at a sample, one-dimensional slice.
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_slice")
+    slice_hist = hist3d.slice1d(*bin_indices)
+    slice_hist.plot(statistics=True)
+    plt.legend()
+
+    # Test projecting the basic statistics over the x-y plane.
+    hist_mean, hist_rms = hist3d.project_statistics()
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_mean")
+    hist_mean.plot(label="Mean z")
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_rms")
+    hist_rms.plot(label="RMS z")
+    mean_slice, rms_slice = slice_hist.binned_statistics()
+    assert hist_mean.content[bin_indices] == pytest.approx(mean_slice)
+    assert hist_rms.content[bin_indices] == pytest.approx(rms_slice)

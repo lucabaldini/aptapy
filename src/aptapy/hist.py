@@ -187,7 +187,6 @@ class AbstractHistogram(AbstractPlottable):
             if errors.shape != self._shape:
                 raise ValueError("Shape of errors does not match number of bins")
             self._sumw2 = errors**2
-
         return self
 
     def copy(self, label: str = None) -> "AbstractHistogram":
@@ -242,16 +241,10 @@ class AbstractHistogram(AbstractPlottable):
         edges = self._edges[axis]
         label = f"{self.label} slice at bins {bin_indices}"
         hist = Histogram1d(edges, label=label, xlabel=self.axis_labels[axis])
-        # ... create the index tuple to extract the right slice
-        indices_iter = iter(bin_indices)
-        index_tuple = tuple(
-            slice(None) if i == axis else next(indices_iter)
-            for i in range(self._num_axes)
-        )
-        #tmp = list(bin_indices)
-        #tmp.insert(axis, slice(None))
-        #print(index_tuple, tmp)
-        hist.set_content(self.content[index_tuple])
+        # ... and set the actual content.
+        indices = list(bin_indices)
+        indices.insert(axis, slice(None))
+        hist.set_content(self.content[tuple(indices)])
         return hist
 
     def collapse_axis(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:

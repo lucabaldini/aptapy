@@ -185,25 +185,35 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
 
 
 def test_slice1d():
-    """Test extracting a column from 2d histogram.
+    """Test extracting a column from a 2-dimensional histogram.
     """
-    x = _RNG.uniform(size=10000)
-    y = _RNG.uniform(size=10000) * 0.9
+    # Create and fill a 2-dimensional histogram.
     xedges = np.linspace(0., 1., 11)
     yedges = np.linspace(0., 1., 21)
     hist = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
+    x = _RNG.uniform(size=10000)
+    y = _RNG.uniform(0., 0.9, size=10000)
     hist.fill(x, y)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
-    col_hist_no_axis = hist.slice1d(5)
-    col_hist_no_axis.plot()
-    assert col_hist_no_axis.content.shape == (20,)
-    assert np.array_equal(hist.content[5, :], col_hist_no_axis.content)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Column with axis")
-    col_hist_y_axis = hist.slice1d(5, axis=1)
-    col_hist_y_axis.plot()
-    assert np.array_equal(col_hist_no_axis.content, col_hist_y_axis.content)
-    col_hist_x_axis = hist.slice1d(5, axis=0)
-    assert col_hist_x_axis.content.shape == (10,)
+    bin_index = 5
+
+    # This is extracting a vertical slice at bin index 5.
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_vertical")
+    vslice = hist.slice1d(bin_index)
+    vslice.plot()
+    assert vslice.content.shape == (len(yedges) - 1,)
+    assert np.array_equal(vslice.content, hist.content[bin_index, :])
+    assert np.array_equal(vslice.errors, hist.errors[bin_index, :])
+    # Since we are at it, selecting axis=1 should give the same result as the default (-1).
+    assert np.array_equal(vslice.content, hist.slice1d(bin_index, axis=1).content)
+
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_horizontal")
+    hslice = hist.slice1d(bin_index, axis=0)
+    hslice.plot()
+    assert hslice.content.shape == (len(xedges) - 1,)
+    assert np.array_equal(hslice.content, hist.content[:, bin_index])
+    assert np.array_equal(hslice.errors, hist.errors[:, bin_index])
+
+    # And if we pass two indices, we should fail miserably.
     with pytest.raises(ValueError, match="bin indices are required"):
         hist.slice1d(0, 1)
 

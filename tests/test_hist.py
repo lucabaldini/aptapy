@@ -208,14 +208,17 @@ def test_from_amptek_file(datadir):
 def test_slice1d():
     """Test extracting a column from a 2-dimensional histogram.
     """
+    # Test parameters.
+    sample_size = 10000
+    bin_index = 5
+
     # Create and fill a 2-dimensional histogram.
     xedges = np.linspace(0., 1., 11)
     yedges = np.linspace(0., 1., 21)
     hist = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
-    x = _RNG.uniform(size=10000)
-    y = _RNG.uniform(0., 0.9, size=10000)
+    x = _RNG.uniform(size=sample_size)
+    y = _RNG.uniform(0., 0.9, size=sample_size)
     hist.fill(x, y)
-    bin_index = 5
 
     # This is extracting a vertical slice at bin index 5.
     plt.figure(f"{inspect.currentframe().f_code.co_name}_vertical")
@@ -239,41 +242,61 @@ def test_slice1d():
         hist.slice1d(0, 1)
 
 
-def test_project():
-    """Test collapsing axis of 2d and 3d histograms.
+def test_project2d():
+    """Test projecting a 2-dimensional histogram along the y axis.
     """
-    x, y = _RNG.uniform(size=(2, 10000)) * 0.9
-    z = _RNG.uniform(size=10000) * 10
-    xedges = np.linspace(0., 1., 51)
-    yedges = np.linspace(0., 1., 31)
-    zedges = np.linspace(0., 10., 21)
+    # Test parameters
+    sample_size = 10000
+    num_xbins = 50
+    num_ybins = 30
+    bin_index = 1
 
+    # Create the histogram and fill it with uniform random numbers.
+    xedges = np.linspace(0., 1., num_xbins + 1)
+    yedges = np.linspace(0., 1., num_ybins + 1)
     hist2d = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
+    x, y = _RNG.uniform(0., 0.9, size=(2, sample_size))
     hist2d.fill(x, y)
-    mean_hist, rms_hist = hist2d.project(1)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean y")
-    mean_hist.plot()
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - RMS y")
-    rms_hist.plot()
-    assert mean_hist.content.shape == (50,)
-    assert rms_hist.content.shape == (50,)
-    mean_hist, rms_hist = hist2d.project(0)
-    assert mean_hist.content.shape == (30,)
-    assert rms_hist.content.shape == (30,)
-    hist3d = Histogram3d(xedges, yedges, zedges, xlabel="x", ylabel="y", zlabel="z")
-    hist3d.fill(x, y, z)
-    mean_hist, rms_hist = hist3d.project(2)
-    plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean z")
-    mean_hist.plot()
-    assert mean_hist.content.shape == (50, 30)
-    assert rms_hist.content.shape == (50, 30)
+
+    # Plot the original histogram and a test slice.
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_2d")
+    hist2d.plot()
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_slice")
+    vslice = hist2d.slice1d(bin_index)
+    vslice.plot(statistics=True)
+    plt.legend()
+
+    # Do the actual projections.
+    hist_meany, hist_rmsy = hist2d.project_statistics()
+    assert hist_meany.content.shape == (num_xbins,)
+    assert hist_rmsy.content.shape == (num_xbins,)
+    # And, since we have a slice already, we can compare the binned statistics
+    # for the one-dimensional slice with the projected ones in the proper bin.
+    bin_mean, bin_rms = vslice.binned_statistics()
+    assert hist_meany.content[bin_index] == pytest.approx(bin_mean)
+    assert hist_rmsy.content[bin_index] == pytest.approx(bin_rms)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_projy")
+    hist_meany.plot(label="Mean y")
+    hist_rmsy.plot(label="RMS y")
+    plt.legend()
+
+    hist_meanx, hist_rmsx = hist2d.project_statistics(axis=0)
+    assert hist_meanx.content.shape == (num_ybins,)
+    assert hist_rmsx.content.shape == (num_ybins,)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_projx")
+    hist_meanx.plot(label="Mean x")
+    hist_rmsx.plot(label="RMS x")
+    plt.legend()
 
 
-def test_3d_hist(size: int = 100000):
+def _test_hist3d():
     """Test basic functionalities of 3D histograms.
     """
-    x, y = _RNG.uniform(size=(2, size)) * 0.9
-    z = _RNG.uniform(size=size) * 10.
+    # Test parameters.
+    sample_size = 100000
+
+    x, y = _RNG.uniform(size=(2, sample_size)) * 0.9
+    z = _RNG.uniform(size=sample_size) * 10.
     xedges = np.linspace(0., 1., 11)
     yedges = np.linspace(0., 1., 11)
     zedges = np.linspace(0., 10., 21)
@@ -281,17 +304,17 @@ def test_3d_hist(size: int = 100000):
     hist = Histogram3d(xedges, yedges, zedges)
     hist.fill(x, y, z)
     # Test collapsing axis 2 (z axis)
-    mean_hist, rms_hist = hist.project(2)
+    mean_hist, rms_hist = hist.project_statistics(2)
     stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
     assert mean_hist.content.shape == (10, 10)
     assert rms_hist.content.shape == (10, 10)
     assert np.all(stddev >= 0.)
     # Test collapsing axis 0 (x axis)
-    mean_hist, rms_hist = hist.project(0)
+    mean_hist, rms_hist = hist.project_statistics(0)
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
     # Test collapsing axis 1 (y axis)
-    mean_hist, rms_hist = hist.project(1)
+    mean_hist, rms_hist = hist.project_statistics(1)
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
     # Test extracting a column at bin indices (x=5, y=5) from axis 2 (z axis)

@@ -209,6 +209,17 @@ class AbstractHistogram(AbstractPlottable):
         histogram._sumw2 = self._sumw2.copy()
         return histogram
 
+    def _axis_modulo(self, axis: int) -> int:
+        """Normalize the axis index modulo the number of axes, so that we can seaminlessly
+        use negative indices as well, following the normal Python convention.
+
+        Arguments
+        ---------
+        axis : int
+            the axis index to normalize.
+        """
+        return axis % self._num_axes
+
     def slice1d(self, *bin_indices: int, axis: int = -1) -> "Histogram1d":
         """Extract a 1D histogram along a given axis for the specified bin.
 
@@ -230,9 +241,7 @@ class AbstractHistogram(AbstractPlottable):
         # a keyword argument.
         if len(bin_indices) != self._num_axes - 1:
             raise ValueError(f"Exactly {self._num_axes - 1} bin indices are required.")
-        # Normalize the axis index modulo the number of axes, so that we can use
-        # negative indices as well, following the normal Python convention.
-        axis = axis % self._num_axes
+        axis = self._axis_modulo(axis)
         # Generate the list of axes other than the specified one to check the bin indices.
         axes = list(range(self._num_axes))
         axes.remove(axis)
@@ -265,6 +274,7 @@ class AbstractHistogram(AbstractPlottable):
         axis : int
             the axis along which to project.
         """
+        axis = self._axis_modulo(axis)
         edges = [self._edges[ax] for ax in range(self._num_axes) if ax != axis]
         hist_type = self._projection_hist_class()
         #labels = [self.axis_labels[ax] for ax in range(self._num_axes) if ax != axis]
@@ -287,6 +297,7 @@ class AbstractHistogram(AbstractPlottable):
         axis : int
             the axis along which to expand the bin centers.
         """
+        axis = self._axis_modulo(axis)
         bin_centers = self.bin_centers(axis)
         axes = [ax for ax in range(self._num_axes) if ax != axis]
         return np.expand_dims(bin_centers, axis=axes)
@@ -302,86 +313,65 @@ class AbstractHistogram(AbstractPlottable):
         values : np.ndarray
             the values to set in the projected histogram.
         """
-        # Normalize the axis index modulo the number of axes, so that we can use
-        # negative indices as well, following the normal Python convention.
-        axis = axis % self._num_axes
+        axis = self._axis_modulo(axis)
         histogram = self._empty_projection_histogram(axis)
         histogram.set_content(values)
         return histogram
 
-    def project_mean(self, axis: int) -> "AbstractHistogram":
+    def project_mean(self, axis: int = -1) -> "AbstractHistogram":
         """Project the (binned) mean along a specific axis over the remaining axes.
-        """
-        bin_centers = self._expand_bin_centers(axis)
-        norm = np.sum(self.content, axis=axis)
-        # Ignore the division warnings, the nan values will be changed to 0.
-        with np.errstate(divide='ignore', invalid='ignore'):
-            values = np.sum(self.content * bin_centers, axis=axis) / norm
-        values = np.nan_to_num(values, nan=0.)
-        return self._project_base(axis, values)
-
-    def project_rms(self, axis: int) -> "AbstractHistogram":
-        """Project the (binned) RMS along a specific axis over the remaining axes.
-        """
-        bin_centers = self._expand_bin_centers(axis)
-        norm = np.sum(self.content, axis=axis)
-        # Ignore the division warnings, the nan values will be changed to 0.
-        with np.errstate(divide='ignore', invalid='ignore'):
-            values = np.sqrt(np.sum((self.content * bin_centers**2), axis=axis) / norm)
-        values = np.nan_to_num(values, nan=0.)
-        return self._project_base(axis, values)
-
-    def project(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:
-        """Collapse one axis of an histogram, returning two different histograms
-        with one less dimension containing the mean and the RMS along the collapsed axis.
-
-        Note that if a bin has zero content along the collapsed axis, both the
-        mean and RMS for that bin will be set to 0.0.
 
         Arguments
         ---------
         axis : int
-            the axis to collapse (e.g., 0 for x, 1 for y, 2 for z).
+            the axis along which to project (default: -1, i.e., the last axis).
+
+        Returns
+        -------
+        AbstractHistogram
+            the histogram containing the mean values along the specified axis.
+        """
+        axis = self._axis_modulo(axis)
+        bin_centers = self._expand_bin_centers(axis)
+        norm = np.sum(self.content, axis=axis)
+        # Ignore the division warnings---the nan values will be changed to 0.
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mean = np.sum(self.content * bin_centers, axis=axis) / norm
+        mean = np.nan_to_num(mean, nan=0.)
+        return self._project_base(axis, mean)
+
+    def project_statistics(self, axis: int = -1) -> "AbstractHistogram":
+        """Project the (binned) statistics along a specific axis over the remaining axes.
+
+        .. warning::
+
+           This is numerically instable, as we are accumulating squares of bin
+           centers. We should probably think carefully about a better way to do this.
+
+        Arguments
+        ---------
+        axis : int
+            the axis along which to project (default: -1, i.e., the last axis).
 
         Returns
         -------
         mean_hist : AbstractHistogram
-            the histogram containing the mean values along the collapsed axis.
+            the histogram containing the mean values along the specified axis.
 
         rms_hist : AbstractHistogram
-            the histogram containing the RMS values along the collapsed axis.
+            the histogram containing the RMS values along the specified axis.
         """
-        if not 0 <= axis < self._num_axes:
-            raise ValueError(f"Axis must be between 0 and {self._num_axes - 1} for \
-                              {self._num_axes}dHistogram.")
-        bin_centers = self.bin_centers(axis)
-        axes_to_expand = [i for i in range(self.content.ndim) if i != axis]
-        reshaped_bin_centers = np.expand_dims(bin_centers, axis=axes_to_expand)
-        # Ignore the division warnings, the nan values will be changed to 0.0
+        axis = self._axis_modulo(axis)
+        bin_centers = self._expand_bin_centers(axis)
+        norm = np.sum(self.content, axis=axis)
+        # Ignore the division warnings, the nan values will be changed to 0.
         with np.errstate(divide='ignore', invalid='ignore'):
-            mean_values = np.sum(self.content * reshaped_bin_centers, axis=axis) / \
-                np.sum(self.content, axis=axis)
-            rms_values = np.sqrt(np.sum((self.content * reshaped_bin_centers**2), axis=axis) / \
-                                 np.sum(self.content, axis=axis))
-        mean_values = np.nan_to_num(mean_values, nan=0.0)
-        rms_values = np.nan_to_num(rms_values, nan=0.0)
-
-        edges = [self._edges[i] for i in axes_to_expand]
-        labels_kwarg = ["xlabel", "ylabel"]
-        labels = {labels_kwarg[i]: self.axis_labels[axes_to_expand[i]] for i in
-                  range(len(axes_to_expand))}
-        if self._num_axes - 1 == 1:
-            Histogram = Histogram1d
-        elif self._num_axes - 1 == 2:
-            Histogram = Histogram2d
-        else:
-            raise NotImplementedError("collapse_axis is only implemented for 2D and 3D \
-                                      histograms.")
-        mean_hist = Histogram(*edges, label=f"{self.label} (mean)", **labels)
-        mean_hist.set_content(mean_values)
-        rms_hist = Histogram(*edges, label=f"{self.label} (rms)", **labels)
-        rms_hist.set_content(rms_values)
-        return mean_hist, rms_hist
+            mean = np.sum(self.content * bin_centers, axis=axis) / norm
+            sum2 = np.sum(self.content * bin_centers**2, axis=axis) / norm
+        mean = np.nan_to_num(mean, nan=0.)
+        sum2 = np.nan_to_num(sum2, nan=0.)
+        rms = np.sqrt(sum2 - mean**2)
+        return self._project_base(axis, mean), self._project_base(axis, rms)
 
     def _check_compat(self, other: "AbstractHistogram") -> None:
         """Check whether two histogram objects are compatible with each other,

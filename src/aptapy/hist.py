@@ -331,6 +331,11 @@ class AbstractHistogram(AbstractPlottable):
 
         values : np.ndarray
             the values to set in the projected histogram.
+
+        Returns
+        -------
+        AbstractHistogram
+            the histogram containing the projected values.
         """
         axis = self._axis_modulo(axis)
         histogram = self._empty_projection_histogram(axis)

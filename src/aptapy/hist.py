@@ -250,7 +250,10 @@ class AbstractHistogram(AbstractPlottable):
                 raise IndexError(f"Bin index out of range for axis {_ax}.")
         # We are good to go: we build the new, one-dimensional histogram...
         edges = self._edges[axis]
-        label = f"{self.label} slice at bins {bin_indices}"
+        if self.label is None:
+            label = f"Slice at bins {bin_indices}"
+        else:
+            label = f"{self.label} slice at bins {bin_indices}"
         hist = Histogram1d(edges, label=label, xlabel=self.axis_labels[axis])
         # ... and set the actual content.
         indices = list(bin_indices)
@@ -277,11 +280,11 @@ class AbstractHistogram(AbstractPlottable):
         axis = self._axis_modulo(axis)
         edges = [self._edges[ax] for ax in range(self._num_axes) if ax != axis]
         hist_type = self._projection_hist_class()
-        #labels = [self.axis_labels[ax] for ax in range(self._num_axes) if ax != axis]
-        #kwargs = dict(xlabel=labels[0])
+        labels = [self.axis_labels[ax] for ax in range(self._num_axes) if ax != axis]
+        kwargs = dict(xlabel=labels[0])
         #if self._num_axes > 1:
         #    kwargs["ylabel"] = labels[1]
-        histogram = hist_type(*edges)
+        histogram = hist_type(*edges, **kwargs)
         return histogram
 
     def _expand_bin_centers(self, axis: int) -> np.ndarray:

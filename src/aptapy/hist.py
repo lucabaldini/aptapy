@@ -258,7 +258,8 @@ class AbstractHistogram(AbstractPlottable):
         # ... and set the actual content.
         indices = list(bin_indices)
         indices.insert(axis, slice(None))
-        hist.set_content(self.content[tuple(indices)])
+        indices = tuple(indices)
+        hist.set_content(self.content[indices], self.errors[indices])
         return hist
 
     @abstractmethod

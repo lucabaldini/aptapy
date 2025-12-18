@@ -217,6 +217,11 @@ class AbstractHistogram(AbstractPlottable):
         ---------
         axis : int
             the axis index to normalize.
+
+        Returns
+        -------
+        int
+            the normalized axis index.
         """
         return axis % self._num_axes
 

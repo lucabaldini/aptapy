@@ -209,6 +209,28 @@ the implementation of the evaluation method reads:
    :pyobject: AbstractSigmoidFitModel.evaluate
 
 
+Gaussian forests
+----------------
+
+The :class:`~aptapy.modeling.GaussianForestBase` class provides a base for
+implementing models made of a forest of Gaussian peaks with fixed energies.
+An example of such a model is provided by the :class:`~aptapy.models.Fe55Forest`
+class, which implements a forest of Gaussian peaks for the Kα and Kβ emission
+features of :math:`^{55}\mathrm{Fe}` decay.
+
+Model of a forest of Gaussian peaks with fixed energies :math:`E_i`.
+Each peak has amplitude :math:`A_i`, while all peaks share a global
+energy scale :math:`E_s` and a common width :math:`\sigma`, scaled as
+:math:`1/\sqrt{E_i / E_0}`.
+
+.. math::
+    g(z) = \sum_i A_i \exp \left[- \frac{(z - E_i / E_s)^2}{(\sigma / \sqrt{E_i / E_0})^2} \right]
+
+.. note::
+
+    Base class used by models generated with :meth:`aptapy.modeling.line_forest`.
+
+
 Composite models
 ----------------
 

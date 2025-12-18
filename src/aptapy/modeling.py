@@ -852,7 +852,8 @@ class AbstractFitModelBase(AbstractPlottable):
         self.status.update(popt, pcov, self.calculate_chisquare(xdata, ydata, sigma), dof)
         return self.status
 
-    def default_plotting_range(self) -> Tuple[float, float]:
+    @staticmethod
+    def default_plotting_range() -> Tuple[float, float]:
         """Return the default plotting range for the model.
 
         This can be reimplemented in concrete models, and can be parameter-dependent

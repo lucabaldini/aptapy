@@ -27,6 +27,7 @@ from .typing_ import ArrayLike, PathLike
 __all__ = [
     "Histogram1d",
     "Histogram2d",
+    "Histogram3d",
 ]
 
 class AbstractHistogram(AbstractPlottable):
@@ -592,4 +593,4 @@ class Histogram3d(AbstractHistogram):
         Note that 3D histograms cannot be directly plotted, so we just raise
         a NotImplementedError.
         """
-        raise NotImplementedError("3D histograms cannot be directly plotted.")
+        raise NotImplementedError("3D histograms cannot be plotted yet.")

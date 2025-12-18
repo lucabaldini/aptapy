@@ -226,7 +226,7 @@ This is a custom implementation of the inverse of the cumulative distribution fu
 location and scale.
 
 .. math::
-    f(x;~N,~\mu,~\sigma) = \mu + \sigma \Phi^{-1}(x)
+    f(x;~\mu,~\sigma) = \mu + \sigma \Phi^{-1}(x)
     \quad \text{with} \quad
     \begin{cases}
     \mu \rightarrow \texttt{offset}\\

@@ -1279,6 +1279,7 @@ class AbstractSigmoidFitModel(AbstractFitModel):
         By default the plotting range is set to be an interval centered on the
         location parameter, and extending for a number of scale units on each side.
         """
+        # pylint: disable=arguments-differ
         left, right = 5., 5.
         location = self.location.value
         scale = self.scale.value
@@ -1420,6 +1421,7 @@ class AbstractCRVFitModel(AbstractFitModel):
         when they are finite), so we can be fairly clever in setting up a generic method
         that works out of the box in many cases.
         """
+        # pylint: disable=arguments-differ
         # If the distribution has finite support, use it.
         minimum, maximum = self.support()
         if np.isfinite(minimum) and np.isfinite(maximum):
@@ -1707,7 +1709,7 @@ class GaussianForestBase(AbstractFitModel):
         return fit_status
 
     def default_plotting_range(self) -> Tuple[float, float]:
-        # pylint: disable=no-member
+        # pylint: disable=no-member, arguments-differ
         """Overloaded method.
         """
         emin = min(self.energies) / self.energy_scale.value

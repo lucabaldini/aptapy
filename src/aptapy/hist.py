@@ -16,6 +16,7 @@
 """Histogram facilities.
 """
 
+from abc import abstractmethod
 from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
@@ -248,12 +249,85 @@ class AbstractHistogram(AbstractPlottable):
         hist.set_content(self.content[tuple(indices)])
         return hist
 
-    def _project_base(self, axis: int):
+    @abstractmethod
+    def _projection_hist_class(self):
+        """Return the class of the histogram resulting from a projection.
+
+        Note that, in order to be able to be instantiated, all subclasses of
+        AbstractHistogram must implement this method.
         """
+
+    def _empty_projection_histogram(self, axis: int) -> "AbstractHistogram":
+        """Return an empty histogram for the projection along the specified axis.
+
+        Arguments
+        ---------
+        axis : int
+            the axis along which to project.
+        """
+        edges = [self._edges[ax] for ax in range(self._num_axes) if ax != axis]
+        hist_type = self._projection_hist_class()
+        #labels = [self.axis_labels[ax] for ax in range(self._num_axes) if ax != axis]
+        #kwargs = dict(xlabel=labels[0])
+        #if self._num_axes > 1:
+        #    kwargs["ylabel"] = labels[1]
+        histogram = hist_type(*edges)
+        return histogram
+
+    def _expand_bin_centers(self, axis: int) -> np.ndarray:
+        """Expand the dimensions of the bin centers along the specified axis in
+        order to make them broadcastable with the histogram content.
+
+        If we have a 3-dimensional histogram with binning [1., 2., 3.] along the
+        z axis and we expand the latter along axis=2, we get an array with shape
+        (1, 1, 3) containing the bin centers themselves.
+
+        Arguments
+        ---------
+        axis : int
+            the axis along which to expand the bin centers.
+        """
+        bin_centers = self.bin_centers(axis)
+        axes = [ax for ax in range(self._num_axes) if ax != axis]
+        return np.expand_dims(bin_centers, axis=axes)
+
+    def _project_base(self, axis: int, values: np.ndarray) -> "AbstractHistogram":
+        """Base method for projecting a given quantity along a specified axis.
+
+        Arguments
+        ---------
+        axis : int
+            the axis along which to project.
+
+        values : np.ndarray
+            the values to set in the projected histogram.
         """
         # Normalize the axis index modulo the number of axes, so that we can use
         # negative indices as well, following the normal Python convention.
         axis = axis % self._num_axes
+        histogram = self._empty_projection_histogram(axis)
+        histogram.set_content(values)
+        return histogram
+
+    def project_mean(self, axis: int) -> "AbstractHistogram":
+        """Project the (binned) mean along a specific axis over the remaining axes.
+        """
+        # Ignore the division warnings, the nan values will be changed to 0.0
+        bin_centers = self._expand_bin_centers(axis)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            values = np.sum(self.content * bin_centers, axis=axis) / np.sum(self.content, axis=axis)
+        values = np.nan_to_num(values, nan=0.0)
+        return self._project_base(axis, values)
+
+    def project_rms(self, axis: int) -> "AbstractHistogram":
+        """Project the (binned) RMS along a specific axis over the remaining axes.
+        """
+        # Ignore the division warnings, the nan values will be changed to 0.0
+        bin_centers = self._expand_bin_centers(axis)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            values = np.sqrt(np.sum((self.content * bin_centers**2), axis=axis) / np.sum(self.content, axis=axis))
+        values = np.nan_to_num(values, nan=0.0)
+        return self._project_base(axis, values)
 
     def project(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:
         """Collapse one axis of an histogram, returning two different histograms
@@ -403,6 +477,11 @@ class Histogram1d(AbstractHistogram):
         """
         super().__init__((xedges, ), label, [xlabel, ylabel])
 
+    def _projection_hist_class(self):
+        """Overloaded method.
+        """
+        raise NotImplementedError("1D histograms cannot be projected.")
+
     @classmethod
     def from_amptek_file(cls, file_path: PathLike) -> "Histogram1d":
         """Return a Histogram1d filled with ADC counts from a file acquired with
@@ -549,6 +628,11 @@ class Histogram2d(AbstractHistogram):
         """
         super().__init__((xedges, yedges), label, [xlabel, ylabel, zlabel])
 
+    def _projection_hist_class(self):
+        """Overloaded method.
+        """
+        return Histogram1d
+
     def _render(self, axes: matplotlib.axes.Axes, logz: bool = False, **kwargs) -> None:
         """Overloaded method.
         """
@@ -594,6 +678,11 @@ class Histogram3d(AbstractHistogram):
         """Constructor.
         """
         super().__init__((xedges, yedges, zedges), label, [xlabel, ylabel, zlabel])
+
+    def _projection_hist_class(self):
+        """Overloaded method.
+        """
+        return Histogram2d
 
     def _render(self, axes: matplotlib.axes.Axes, **kwargs) -> None:
         """Overloaded method.

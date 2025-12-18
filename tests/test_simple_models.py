@@ -129,22 +129,26 @@ def test_line_forest():
 def test_probit():
     """Custom unit test for the Probit model.
     """
+    # Cache the test parameters.
     offset = 0.5
     sigma = 0.12
+    sigma_y = 0.01
+
     model = models.Probit()
     x = np.linspace(0., 1., 100)
-    y = model.evaluate(x, 1., offset, sigma)
+    y = model.evaluate(x, offset, sigma)
     # Make sure that we got the ppf of the gaussian right.
     assert np.allclose(y, scipy.stats.norm.ppf(x, loc=offset, scale=sigma))
 
+    # Standard test.
+    _test_model_base(models.Probit, offset, sigma, sigma=sigma_y)
+
     # Note this is not using the generic test function since we want to
     # freeze some parameters during the fit.
-    plt.figure("Probit")
-    model.set_parameters(1., offset, sigma)
-    sigma_y = 0.01
+    plt.figure("Probit typical")
+    model.set_parameters(offset, sigma)
     xdata, ydata = model.random_fit_dataset(sigma_y, seed=313)
     plt.errorbar(xdata, ydata, sigma_y, fmt="o", label="Random data")
-    model.prefactor.freeze(1.)
     model.offset.freeze(offset)
     model.fit(xdata, ydata, sigma=sigma_y)
     assert model.sigma.compatible_with(sigma, 5.)

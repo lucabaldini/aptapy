@@ -226,10 +226,9 @@ This is a custom implementation of the inverse of the cumulative distribution fu
 location and scale.
 
 .. math::
-    f(x;~N,~\mu,~\sigma) = N \left( \mu + \sigma \Phi^{-1}(x) \right)
+    f(x;~N,~\mu,~\sigma) = \mu + \sigma \Phi^{-1}(x)
     \quad \text{with} \quad
     \begin{cases}
-    N \rightarrow \texttt{prefactor}\\
     \mu \rightarrow \texttt{offset}\\
     \sigma \rightarrow \texttt{sigma}
     \end{cases}
@@ -251,8 +250,9 @@ to avoid issues at the boundaries.
 Note that, since the mean of the underlying normal distribution translates into
 a vertical shift of the Probit function, the former is called ``offset`` in this
 context---not ``mu``. For completeness, the ``sigma`` parameter controls the
-scale of the vertical excursion of the model.
-
+scale of the vertical excursion of the model. Also note that we do not provide a
+``prefactor`` parameter since  it would be completely degenerate with the other two,
+and would be basically impossible to fit in a sensible way.
 
 
 Sigmoid models

@@ -686,13 +686,19 @@ class Probit(AbstractFitModel):
     of a gaussian distribution.
     """
 
-    prefactor = FitParameter(1.)
     offset = FitParameter(0.)
     sigma = FitParameter(1., minimum=0.)
 
-    def evaluate(self, x: ArrayLike, prefactor: float, offset: float, sigma: float) -> ArrayLike:
+    def evaluate(self, x: ArrayLike, offset: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
-        return prefactor * (offset + sigma * scipy.special.ndtri(x))
+        return offset + sigma * scipy.special.ndtri(x)
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        # pylint: disable=no-member
+        self.offset.init(np.mean(ydata))
+        self.sigma.init(np.std(ydata) / scipy.stats.norm.ppf(0.90))
 
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.

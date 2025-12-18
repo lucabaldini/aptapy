@@ -248,6 +248,9 @@ class AbstractHistogram(AbstractPlottable):
             slice(None) if i == axis else next(indices_iter)
             for i in range(self._num_axes)
         )
+        #tmp = list(bin_indices)
+        #tmp.insert(axis, slice(None))
+        #print(index_tuple, tmp)
         hist.set_content(self.content[index_tuple])
         return hist
 

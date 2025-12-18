@@ -208,39 +208,41 @@ class AbstractHistogram(AbstractPlottable):
         histogram._sumw2 = self._sumw2.copy()
         return histogram
 
-    def extract_column(self, *bin_indices: Sequence[int], axis: int = -1) -> "Histogram1d":
-        """Extract a 1D histogram along an axis for a given bin.
+    def slice1d(self, *bin_indices: int, axis: int = -1) -> "Histogram1d":
+        """Extract a 1D histogram along a given axis for the specified bin.
 
         Arguments
         ---------
-        bin_indices : Sequence[int]
+        bin_indices : int
             the bin indices.
+
         axis : int
             the axis along which to extract the column (default: -1, i.e., the last axis).
 
         Returns
         -------
         hist : Histogram1d
-            the extracted 1D histogram.
+            the one-dimensional histogram along the specified axis for the given bin indices.
         """
+        # Check the input arguments: we need exactly num_axes - 1 bin indices,
+        # and assume that the axis, if a non-default value is given, is given as
+        # a keyword argument.
         if len(bin_indices) != self._num_axes - 1:
-            raise ValueError("Number of bin indices should be one less than the number of axes of \
-                            the histogram.")
-        if axis == -1:
-            axis = self._num_axes - 1
-        else:
-            if not 0 <= axis < self._num_axes:
-                raise ValueError("Axis index out of range.")
-        # Generating the list of axes other than the specified one to check the bin indices
+            raise ValueError(f"Exactly {self._num_axes - 1} bin indices are required.")
+        # Normalize the axis index modulo the number of axes, so that we can use
+        # negative indices as well, following the normal Python convention.
+        axis = axis % self._num_axes
+        # Generate the list of axes other than the specified one to check the bin indices.
         axes = list(range(self._num_axes))
         axes.remove(axis)
         for _ax, _bin in zip(axes, bin_indices):
             if not 0 <= _bin < self._shape[_ax]:
-                raise IndexError("Bin index out of range.")
+                raise IndexError(f"Bin index out of range for axis {_ax}.")
+        # We are good to go: we build the new, one-dimensional histogram...
         edges = self._edges[axis]
-        hist = Histogram1d(edges, label=f"{self.label} (bin={bin_indices})",
-                           xlabel=self.axis_labels[axis])
-        # Create the index tuple to extract the right slice
+        label = f"{self.label} slice at bins {bin_indices}"
+        hist = Histogram1d(edges, label=label, xlabel=self.axis_labels[axis])
+        # ... create the index tuple to extract the right slice
         indices_iter = iter(bin_indices)
         index_tuple = tuple(
             slice(None) if i == axis else next(indices_iter)

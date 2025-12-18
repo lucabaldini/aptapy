@@ -184,7 +184,7 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     plt.gca().set_aspect("equal")
 
 
-def test_extract_column():
+def test_slice1d():
     """Test extracting a column from 2d histogram.
     """
     x = _RNG.uniform(size=10000)
@@ -194,18 +194,18 @@ def test_extract_column():
     hist = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
     hist.fill(x, y)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Column")
-    col_hist_no_axis = hist.extract_column(5)
+    col_hist_no_axis = hist.slice1d(5)
     col_hist_no_axis.plot()
     assert col_hist_no_axis.content.shape == (20,)
     assert np.array_equal(hist.content[5, :], col_hist_no_axis.content)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Column with axis")
-    col_hist_y_axis = hist.extract_column(5, axis=1)
+    col_hist_y_axis = hist.slice1d(5, axis=1)
     col_hist_y_axis.plot()
     assert np.array_equal(col_hist_no_axis.content, col_hist_y_axis.content)
-    col_hist_x_axis = hist.extract_column(5, axis=0)
+    col_hist_x_axis = hist.slice1d(5, axis=0)
     assert col_hist_x_axis.content.shape == (10,)
-    with pytest.raises(ValueError, match="one less"):
-        hist.extract_column(0, 1)
+    with pytest.raises(ValueError, match="bin indices are required"):
+        hist.slice1d(0, 1)
 
 
 def test_collapse_axis():
@@ -285,5 +285,5 @@ def test_3d_hist(size: int = 100000):
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
     # Test extracting a column at bin indices (x=5, y=5) from axis 2 (z axis)
-    col_hist = hist.extract_column(5, 5)
+    col_hist = hist.slice1d(5, 5)
     assert col_hist.content.shape == (20,)

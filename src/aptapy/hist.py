@@ -314,8 +314,9 @@ class AbstractHistogram(AbstractPlottable):
         """
         # Ignore the division warnings, the nan values will be changed to 0.0
         bin_centers = self._expand_bin_centers(axis)
+        norm = np.sum(self.content, axis=axis)
         with np.errstate(divide='ignore', invalid='ignore'):
-            values = np.sum(self.content * bin_centers, axis=axis) / np.sum(self.content, axis=axis)
+            values = np.sum(self.content * bin_centers, axis=axis) / norm
         values = np.nan_to_num(values, nan=0.0)
         return self._project_base(axis, values)
 
@@ -324,8 +325,9 @@ class AbstractHistogram(AbstractPlottable):
         """
         # Ignore the division warnings, the nan values will be changed to 0.0
         bin_centers = self._expand_bin_centers(axis)
+        norm = np.sum(self.content, axis=axis)
         with np.errstate(divide='ignore', invalid='ignore'):
-            values = np.sqrt(np.sum((self.content * bin_centers**2), axis=axis) / np.sum(self.content, axis=axis))
+            values = np.sqrt(np.sum((self.content * bin_centers**2), axis=axis) / norm)
         values = np.nan_to_num(values, nan=0.0)
         return self._project_base(axis, values)
 

@@ -184,6 +184,27 @@ def test_plotting2d(size: int = 100000, x0: float = 1., y0: float = -1.):
     plt.gca().set_aspect("equal")
 
 
+def test_from_amptek_file(datadir):
+    """Test building histogram from amptek file
+    """
+    plt.figure(inspect.currentframe().f_code.co_name)
+
+    file_path = datadir / "amptek_test.mca"
+    histogram = Histogram1d.from_amptek_file(file_path)
+    histogram.plot()
+
+    model = Gaussian()
+    model.fit(histogram, xmin=20, xmax=35)
+    model.plot(fit_output=True)
+    dof = model.status.dof
+    plt.legend()
+
+    mean, std = histogram.binned_statistics()
+    assert mean != 0
+    assert std != 0
+    assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
+
+
 def test_slice1d():
     """Test extracting a column from a 2-dimensional histogram.
     """
@@ -218,7 +239,7 @@ def test_slice1d():
         hist.slice1d(0, 1)
 
 
-def test_collapse_axis():
+def test_project():
     """Test collapsing axis of 2d and 3d histograms.
     """
     x, y = _RNG.uniform(size=(2, 10000)) * 0.9
@@ -229,44 +250,23 @@ def test_collapse_axis():
 
     hist2d = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
     hist2d.fill(x, y)
-    mean_hist, rms_hist = hist2d.collapse_axis(1)
+    mean_hist, rms_hist = hist2d.project(1)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean y")
     mean_hist.plot()
     plt.figure(f"{inspect.currentframe().f_code.co_name} - RMS y")
     rms_hist.plot()
     assert mean_hist.content.shape == (50,)
     assert rms_hist.content.shape == (50,)
-    mean_hist, rms_hist = hist2d.collapse_axis(0)
+    mean_hist, rms_hist = hist2d.project(0)
     assert mean_hist.content.shape == (30,)
     assert rms_hist.content.shape == (30,)
     hist3d = Histogram3d(xedges, yedges, zedges, xlabel="x", ylabel="y", zlabel="z")
     hist3d.fill(x, y, z)
-    mean_hist, rms_hist = hist3d.collapse_axis(2)
+    mean_hist, rms_hist = hist3d.project(2)
     plt.figure(f"{inspect.currentframe().f_code.co_name} - Mean z")
     mean_hist.plot()
     assert mean_hist.content.shape == (50, 30)
     assert rms_hist.content.shape == (50, 30)
-
-
-def test_from_amptek_file(datadir):
-    """Test building histogram from amptek file
-    """
-    plt.figure(inspect.currentframe().f_code.co_name)
-
-    file_path = datadir / "amptek_test.mca"
-    histogram = Histogram1d.from_amptek_file(file_path)
-    histogram.plot()
-
-    model = Gaussian()
-    model.fit(histogram, xmin=20, xmax=35)
-    model.plot(fit_output=True)
-    dof = model.status.dof
-    plt.legend()
-
-    mean, std = histogram.binned_statistics()
-    assert mean != 0
-    assert std != 0
-    assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
 
 
 def test_3d_hist(size: int = 100000):
@@ -281,17 +281,17 @@ def test_3d_hist(size: int = 100000):
     hist = Histogram3d(xedges, yedges, zedges)
     hist.fill(x, y, z)
     # Test collapsing axis 2 (z axis)
-    mean_hist, rms_hist = hist.collapse_axis(2)
+    mean_hist, rms_hist = hist.project(2)
     stddev = np.sqrt(rms_hist.content**2 - mean_hist.content**2)
     assert mean_hist.content.shape == (10, 10)
     assert rms_hist.content.shape == (10, 10)
     assert np.all(stddev >= 0.)
     # Test collapsing axis 0 (x axis)
-    mean_hist, rms_hist = hist.collapse_axis(0)
+    mean_hist, rms_hist = hist.project(0)
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
     # Test collapsing axis 1 (y axis)
-    mean_hist, rms_hist = hist.collapse_axis(1)
+    mean_hist, rms_hist = hist.project(1)
     assert mean_hist.content.shape == (10, 20)
     assert rms_hist.content.shape == (10, 20)
     # Test extracting a column at bin indices (x=5, y=5) from axis 2 (z axis)

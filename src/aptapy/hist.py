@@ -133,6 +133,7 @@ class AbstractHistogram(AbstractPlottable):
         -------
         mean : float
             the mean value along the specified axis.
+
         stddev : float
             the standard deviation along the specified axis.
         """
@@ -247,21 +248,30 @@ class AbstractHistogram(AbstractPlottable):
         hist.set_content(self.content[tuple(indices)])
         return hist
 
-    def collapse_axis(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:
-        """Collapse one axis of an histogram, returning two different histograms with one less
-        dimension containing the mean and the RMS along the collapsed axis.
-        Note that if a bin has zero content along the collapsed axis, both the mean and RMS
-        for that bin will be set to 0.0.
+    def _project_base(self, axis: int):
+        """
+        """
+        # Normalize the axis index modulo the number of axes, so that we can use
+        # negative indices as well, following the normal Python convention.
+        axis = axis % self._num_axes
+
+    def project(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:
+        """Collapse one axis of an histogram, returning two different histograms
+        with one less dimension containing the mean and the RMS along the collapsed axis.
+
+        Note that if a bin has zero content along the collapsed axis, both the
+        mean and RMS for that bin will be set to 0.0.
 
         Arguments
         ---------
         axis : int
-            the axis to collapse (0 for x, 1 for y, 2 for z).
+            the axis to collapse (e.g., 0 for x, 1 for y, 2 for z).
 
         Returns
         -------
         mean_hist : AbstractHistogram
             the histogram containing the mean values along the collapsed axis.
+
         rms_hist : AbstractHistogram
             the histogram containing the RMS values along the collapsed axis.
         """

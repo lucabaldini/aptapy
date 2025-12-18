@@ -689,7 +689,8 @@ class Probit(AbstractFitModel):
     offset = FitParameter(0.)
     sigma = FitParameter(1., minimum=0.)
 
-    def evaluate(self, x: ArrayLike, offset: float, sigma: float) -> ArrayLike:
+    @staticmethod
+    def evaluate(x: ArrayLike, offset: float, sigma: float) -> ArrayLike:
         # pylint: disable=arguments-differ
         return offset + sigma * scipy.special.ndtri(x)
 
@@ -702,7 +703,8 @@ class Probit(AbstractFitModel):
         self.offset.init(np.mean(ydata))
         self.sigma.init(delta / (scipy.stats.norm.ppf(xmax) - scipy.stats.norm.ppf(xmin)))
 
-    def default_plotting_range(self) -> Tuple[float, float]:
+    @staticmethod
+    def default_plotting_range() -> Tuple[float, float]:
         """Overloaded method.
 
         Since the probit function diverges at 0 and 1, we limit the plotting range

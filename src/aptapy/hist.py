@@ -282,6 +282,11 @@ class AbstractHistogram(AbstractPlottable):
         ---------
         axis : int
             the axis along which to project.
+
+        Returns
+        -------
+        AbstractHistogram
+            The empty histogram for projection along the specified axis.
         """
         axis = self._axis_modulo(axis)
         edges = [self._edges[ax] for ax in range(self._num_axes) if ax != axis]

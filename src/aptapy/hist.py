@@ -310,6 +310,11 @@ class AbstractHistogram(AbstractPlottable):
         ---------
         axis : int
             the axis along which to expand the bin centers.
+
+        Returns
+        -------
+        np.ndarray
+            the expanded bin centers, broadcastable with the histogram content.
         """
         axis = self._axis_modulo(axis)
         bin_centers = self.bin_centers(axis)

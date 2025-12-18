@@ -206,7 +206,7 @@ def test_from_amptek_file(datadir):
 
 
 def test_slice1d():
-    """Test extracting a column from a 2-dimensional histogram.
+    """Test extracting a 1D slice from a 2-dimensional histogram.
     """
     # Test parameters.
     sample_size = 10000

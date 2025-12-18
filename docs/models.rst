@@ -251,7 +251,7 @@ Note that, since the mean of the underlying normal distribution translates into
 a vertical shift of the Probit function, the former is called ``offset`` in this
 context---not ``mu``. For completeness, the ``sigma`` parameter controls the
 scale of the vertical excursion of the model. Also note that we do not provide a
-``prefactor`` parameter since  it would be completely degenerate with the other two,
+``prefactor`` parameter since it would be completely degenerate with the other two,
 and would be basically impossible to fit in a sensible way.
 
 

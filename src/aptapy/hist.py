@@ -312,23 +312,23 @@ class AbstractHistogram(AbstractPlottable):
     def project_mean(self, axis: int) -> "AbstractHistogram":
         """Project the (binned) mean along a specific axis over the remaining axes.
         """
-        # Ignore the division warnings, the nan values will be changed to 0.0
         bin_centers = self._expand_bin_centers(axis)
         norm = np.sum(self.content, axis=axis)
+        # Ignore the division warnings, the nan values will be changed to 0.
         with np.errstate(divide='ignore', invalid='ignore'):
             values = np.sum(self.content * bin_centers, axis=axis) / norm
-        values = np.nan_to_num(values, nan=0.0)
+        values = np.nan_to_num(values, nan=0.)
         return self._project_base(axis, values)
 
     def project_rms(self, axis: int) -> "AbstractHistogram":
         """Project the (binned) RMS along a specific axis over the remaining axes.
         """
-        # Ignore the division warnings, the nan values will be changed to 0.0
         bin_centers = self._expand_bin_centers(axis)
         norm = np.sum(self.content, axis=axis)
+        # Ignore the division warnings, the nan values will be changed to 0.
         with np.errstate(divide='ignore', invalid='ignore'):
             values = np.sqrt(np.sum((self.content * bin_centers**2), axis=axis) / norm)
-        values = np.nan_to_num(values, nan=0.0)
+        values = np.nan_to_num(values, nan=0.)
         return self._project_base(axis, values)
 
     def project(self, axis: int) -> Tuple["AbstractHistogram", "AbstractHistogram"]:

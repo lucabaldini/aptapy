@@ -6,6 +6,7 @@ Release notes
 * Changed parametrization of the PowerLaw model to include an arbitrary pivot that
   can be set at creation time.
 * Probit fitting model added.
+* Added the Histogram3d class for three-dimensional histograms.
 * Minor warning fixes in various places (docs and unit tests).
 * Pull requests merged and issues closed:
 

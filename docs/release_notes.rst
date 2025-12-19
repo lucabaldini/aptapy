@@ -13,8 +13,8 @@ Release notes
 
   - https://github.com/lucabaldini/aptapy/pull/86
   - https://github.com/lucabaldini/aptapy/pull/85
-  - https://github.com/lucabaldini/aptapy/pull/80
   - https://github.com/lucabaldini/aptapy/pull/82
+  - https://github.com/lucabaldini/aptapy/pull/80
   - https://github.com/lucabaldini/aptapy/issues/84
   - https://github.com/lucabaldini/aptapy/issues/83
   - https://github.com/lucabaldini/aptapy/issues/81

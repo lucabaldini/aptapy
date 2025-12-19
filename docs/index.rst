@@ -40,6 +40,7 @@ Have fun!
    install
    auto_examples/index
    develop
+   team
    release_notes
 
 .. toctree::

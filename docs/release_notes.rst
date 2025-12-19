@@ -8,11 +8,14 @@ Release notes
 * Probit fitting model added.
 * Minor warning fixes in various places (docs and unit tests).
 * Updated copyright notice.
+* Added team page in the documentation.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/86
   - https://github.com/lucabaldini/aptapy/pull/85
   - https://github.com/lucabaldini/aptapy/pull/80
   - https://github.com/lucabaldini/aptapy/pull/82
+  - https://github.com/lucabaldini/aptapy/issues/84
   - https://github.com/lucabaldini/aptapy/issues/83
   - https://github.com/lucabaldini/aptapy/issues/81
   - https://github.com/lucabaldini/aptapy/issues/79

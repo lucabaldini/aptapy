@@ -7,10 +7,13 @@ Release notes
   can be set at creation time.
 * Probit fitting model added.
 * Minor warning fixes in various places (docs and unit tests).
+* Updated copyright notice.
 * Pull requests merged and issues closed:
 
+  - https://github.com/lucabaldini/aptapy/pull/85
   - https://github.com/lucabaldini/aptapy/pull/80
   - https://github.com/lucabaldini/aptapy/pull/82
+  - https://github.com/lucabaldini/aptapy/issues/83
   - https://github.com/lucabaldini/aptapy/issues/81
   - https://github.com/lucabaldini/aptapy/issues/79
 

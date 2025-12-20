@@ -25,6 +25,7 @@ Version 0.18.0 (2025-12-20)
   - https://github.com/lucabaldini/aptapy/issues/83
   - https://github.com/lucabaldini/aptapy/issues/81
   - https://github.com/lucabaldini/aptapy/issues/79
+  - https://github.com/lucabaldini/aptapy/issues/77
 
 
 Version 0.17.2 (2025-12-11)

@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.18.0 (2025-12-20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Changed parametrization of the PowerLaw model to include an arbitrary pivot that
   can be set at creation time.
 * Probit fitting model added.

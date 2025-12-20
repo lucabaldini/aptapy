@@ -21,7 +21,7 @@ import inspect
 import numpy as np
 import pytest
 
-from aptapy.hist import Histogram1d, Histogram2d
+from aptapy.hist import Histogram1d, Histogram2d, Histogram3d
 from aptapy.models import Gaussian
 from aptapy.plotting import plt
 
@@ -203,3 +203,125 @@ def test_from_amptek_file(datadir):
     assert mean != 0
     assert std != 0
     assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
+
+
+def test_slice1d():
+    """Test extracting a 1D slice from a 2-dimensional histogram.
+    """
+    # Test parameters.
+    sample_size = 10000
+    bin_index = 5
+
+    # Create and fill a 2-dimensional histogram.
+    xedges = np.linspace(0., 1., 11)
+    yedges = np.linspace(0., 1., 21)
+    hist = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
+    x = _RNG.uniform(size=sample_size)
+    y = _RNG.uniform(0., 0.9, size=sample_size)
+    hist.fill(x, y)
+
+    # This is extracting a vertical slice at bin index 5.
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_vertical")
+    vslice = hist.slice1d(bin_index)
+    vslice.plot()
+    assert vslice.content.shape == (len(yedges) - 1,)
+    assert np.array_equal(vslice.content, hist.content[bin_index, :])
+    assert np.array_equal(vslice.errors, hist.errors[bin_index, :])
+    # Since we are at it, selecting axis=1 should give the same result as the default (-1).
+    assert np.array_equal(vslice.content, hist.slice1d(bin_index, axis=1).content)
+
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_horizontal")
+    hslice = hist.slice1d(bin_index, axis=0)
+    hslice.plot()
+    assert hslice.content.shape == (len(xedges) - 1,)
+    assert np.array_equal(hslice.content, hist.content[:, bin_index])
+    assert np.array_equal(hslice.errors, hist.errors[:, bin_index])
+
+    # And if we pass two indices, we should fail miserably.
+    with pytest.raises(ValueError, match="bin indices are required"):
+        hist.slice1d(0, 1)
+
+
+def test_project2d():
+    """Test projecting a 2-dimensional histogram along the y axis.
+    """
+    # Test parameters
+    sample_size = 10000
+    num_xbins = 50
+    num_ybins = 30
+    bin_index = 1
+
+    # Create the histogram and fill it with uniform random numbers.
+    xedges = np.linspace(0., 1., num_xbins + 1)
+    yedges = np.linspace(0., 1., num_ybins + 1)
+    hist2d = Histogram2d(xedges, yedges, xlabel="x", ylabel="y")
+    x, y = _RNG.uniform(0., 0.9, size=(2, sample_size))
+    hist2d.fill(x, y)
+
+    # Plot the original histogram and a test slice.
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_2d")
+    hist2d.plot()
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_slice")
+    vslice = hist2d.slice1d(bin_index)
+    vslice.plot(statistics=True)
+    plt.legend()
+
+    # Do the actual projections.
+    hist_meany, hist_rmsy = hist2d.project_statistics()
+    assert hist_meany.content.shape == (num_xbins,)
+    assert hist_rmsy.content.shape == (num_xbins,)
+    # And, since we have a slice already, we can compare the binned statistics
+    # for the one-dimensional slice with the projected ones in the proper bin.
+    bin_mean, bin_rms = vslice.binned_statistics()
+    assert hist_meany.content[bin_index] == pytest.approx(bin_mean)
+    assert hist_rmsy.content[bin_index] == pytest.approx(bin_rms)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_proj_vertical")
+    hist_meany.plot(label="Mean y")
+    hist_rmsy.plot(label="RMS y")
+    plt.legend()
+
+    hist_meanx, hist_rmsx = hist2d.project_statistics(axis=0)
+    assert hist_meanx.content.shape == (num_ybins,)
+    assert hist_rmsx.content.shape == (num_ybins,)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_proj_horizontal")
+    hist_meanx.plot(label="Mean x")
+    hist_rmsx.plot(label="RMS x")
+    plt.legend()
+
+
+def test_hist3d():
+    """Test basic functionalities of 3D histograms.
+    """
+    # Test parameters.
+    sample_size = 10000
+    num_xbins = 10
+    num_ybins = 10
+    dynamic_range = 10.
+    bin_indices = (5, 5)
+
+    # Create and fill a 3-dimensional histogram.
+    xedges = np.arange(-0.5, 0.5 + num_xbins)
+    yedges = np.arange(-0.5, 0.5 + num_ybins)
+    zedges = np.linspace(-5., 5. + dynamic_range, 101)
+    hist3d = Histogram3d(xedges, yedges, zedges, xlabel="x", ylabel="y", zlabel="z")
+    for x in hist3d.bin_centers(0):
+        for y in hist3d.bin_centers(1):
+            mean = (x + y) / (num_xbins + num_ybins) * dynamic_range
+            sample = _RNG.normal(loc=mean, scale=1., size=sample_size)
+            hist3d.fill(np.full_like(sample, x), np.full_like(sample, y), sample)
+
+    # Look at a sample, one-dimensional slice.
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_slice")
+    slice_hist = hist3d.slice1d(*bin_indices)
+    slice_hist.plot(statistics=True)
+    plt.legend()
+
+    # Test projecting the basic statistics over the x-y plane.
+    hist_mean, hist_rms = hist3d.project_statistics()
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_mean")
+    hist_mean.plot(label="Mean z")
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_rms")
+    hist_rms.plot(label="RMS z")
+    mean_slice, rms_slice = slice_hist.binned_statistics()
+    assert hist_mean.content[bin_indices] == pytest.approx(mean_slice)
+    assert hist_rms.content[bin_indices] == pytest.approx(rms_slice)

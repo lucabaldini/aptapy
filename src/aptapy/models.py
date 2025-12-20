@@ -349,6 +349,7 @@ class PowerLaw(AbstractFitModel):
         not bogus when the index is negative, which should cover the most common
         use cases.
         """
+        # pylint: disable=arguments-differ
         return (0.1 * self.pivot, 10. * self.pivot)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False, **kwargs) -> None:
@@ -437,6 +438,9 @@ class Exponential(AbstractFitModel):
         return -prefactor * scale * (np.exp(-(x - self.location) / scale))
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
+        """Overloaded method.
+        """
+        # pylint: disable=arguments-differ
         return (self.location, self.location + scale_factor * self.scale.value)
 
 
@@ -483,6 +487,9 @@ class StretchedExponential(Exponential):
         self.stretch.init(1.)
 
     def default_plotting_range(self, scale_factor: int = 5) -> Tuple[float, float]:
+        """Overloaded method.
+        """
+        # pylint: disable=arguments-differ
         return (
             self.location,
             self.location + scale_factor * self.scale.value / self.stretch.value**1.5
@@ -622,6 +629,7 @@ class Gaussian(AbstractFitModel):
     def default_plotting_range(self) -> Tuple[float, float]:
         """Overloaded method.
         """
+        # pylint: disable=arguments-differ
         return (self.mu.value - 5. * self.sigma.value, self.mu.value + 5. * self.sigma.value)
 
     def plot(self, axes: matplotlib.axes.Axes = None, fit_output: bool = False,
@@ -905,6 +913,7 @@ try:
             and its support is unbounded. It is also asymmetric, with a long right tail.
             Therefore, we resort to a custom function for the plotting range.
             """
+            # pylint: disable=arguments-differ
             location, scale = self.location.value, self.scale.value
             return (location - 2.5 * scale, location + 12.5 * scale)
 

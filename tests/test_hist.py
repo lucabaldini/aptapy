@@ -338,11 +338,13 @@ def test_cdf_ppf():
     plt.plot(x, hist.cdf(x), label="CDF from histogram")
     plt.plot(x, scipy.stats.norm.cdf(x), label="Analytical CDF")
     plt.legend()
+    assert np.isclose(np.max(hist.cdf(x)), 1.0)
     plt.figure("PPF")
     p = np.linspace(0, 1, 100)
     plt.plot(p, hist.ppf(p), label="PPF from histogram")
     plt.plot(p, scipy.stats.norm.ppf(p), label="Analytical PPF")
     plt.legend()
+    assert np.isnan(hist.ppf(1.1))
 
 
 def test_minimum_coverage_interval():
@@ -356,3 +358,6 @@ def test_minimum_coverage_interval():
     plt.vlines([x_left, x_right], 0, max(hist.content), label="68% MCI", color="r")
     plt.vlines([-1, 1], 0, max(hist.content), label="Analytical 68% interval", color="g")
     plt.legend()
+    assert np.isclose(x_right - x_left, 2.0, atol=0.1)
+    assert np.isclose(x_left - (-1.), 0.0, atol=0.1)
+    assert np.isclose(x_right - 1., 0.0, atol=0.1)

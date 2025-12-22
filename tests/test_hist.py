@@ -361,3 +361,7 @@ def test_minimum_coverage_interval():
     assert np.isclose(x_right - x_left, 2.0, atol=0.1)
     assert np.isclose(x_left - (-1.), 0.0, atol=0.1)
     assert np.isclose(x_right - 1., 0.0, atol=0.1)
+    x_left, x_right = hist.minimum_coverage_interval(1.)
+    bin_widths = hist.bin_widths()[0]
+    assert np.isclose(x_left, hist.bin_centers()[hist.content > 0][0], atol=2*bin_widths)
+    assert np.isclose(x_right, hist.bin_centers()[hist.content > 0][-1], atol=2*bin_widths)

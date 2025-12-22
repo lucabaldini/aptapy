@@ -548,17 +548,15 @@ class Histogram1d(AbstractHistogram):
         """Interpolate the cumulative distribution function (CDF) of the histogram and return
         a callable object.
 
-        This attribute is a cached_property to ensure that the interpolation is only computed once.
-        
         Returns
         -------
         cdf : Callable
             the cumulative distribution function (CDF) of the histogram.
         """
-        # We add another bin at the begining to match the edges array dimension.
+        # We add another bin at the beginning to match the edges array dimension.
         cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
         cumsum /= cumsum[-1]
-        return InterpolatedUnivariateSpline(self._edges, cumsum)
+        return InterpolatedUnivariateSpline(self.bin_edges(), cumsum)
 
     def cdf(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the cumulative distribution function (CDF) of the histogram at the specified
@@ -578,8 +576,7 @@ class Histogram1d(AbstractHistogram):
         by interpolating the inverse of the cumulative sums of the histogram contents.
 
         Note that the spline interpolation can extrapolate outside the [0, 1] domain of the ppf,
-        but we need to exclude those values. To do this we use a separate method that wraps this
-        one.
+        but we need to exclude those values.
 
         Returns
         -------

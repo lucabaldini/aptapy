@@ -20,6 +20,7 @@ import inspect
 
 import numpy as np
 import pytest
+import scipy.stats
 
 from aptapy.hist import Histogram1d, Histogram2d, Histogram3d
 from aptapy.models import Gaussian
@@ -325,3 +326,33 @@ def test_hist3d():
     mean_slice, rms_slice = slice_hist.binned_statistics()
     assert hist_mean.content[bin_indices] == pytest.approx(mean_slice)
     assert hist_rms.content[bin_indices] == pytest.approx(rms_slice)
+
+
+def test_cdf_ppf():
+    """Test the methods to calculate the CDF and PPF of a 1d-histogram.
+    """
+    edges = np.linspace(-5., 5., 100)
+    hist = Gaussian().random_histogram(edges, size=10000, random_state=_RNG)
+    x = hist.bin_centers()
+    plt.figure("CDF")
+    plt.plot(x, hist.cdf(x), label="CDF from histogram")
+    plt.plot(x, scipy.stats.norm.cdf(x), label="Analytical CDF")
+    plt.legend()
+    plt.figure("PPF")
+    p = np.linspace(0, 1, 100)
+    plt.plot(p, hist.ppf(p), label="PPF from histogram")
+    plt.plot(p, scipy.stats.norm.ppf(p), label="Analytical PPF")
+    plt.legend()
+
+
+def test_minimum_coverage_interval():
+    """Test the minimum coverage interval calculation.
+    """
+    edges = np.linspace(-5., 5., 101)
+    hist = Gaussian().random_histogram(edges, size=100000, random_state=_RNG)
+    x_left, x_right = hist.minimum_coverage_interval(0.6827)
+    plt.figure("Minimum coverage interval")
+    hist.plot()
+    plt.vlines([x_left, x_right], 0, max(hist.content), label="68% MCI", color="r")
+    plt.vlines([-1, 1], 0, max(hist.content), label="Analytical 68% interval", color="g")
+    plt.legend()

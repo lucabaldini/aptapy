@@ -17,10 +17,12 @@
 """
 
 from abc import abstractmethod
+from functools import cached_property
 from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
 import numpy as np
+from scipy.interpolate import InterpolatedUnivariateSpline
 
 from .plotting import AbstractPlottable, plt
 from .typing_ import ArrayLike, PathLike
@@ -541,6 +543,70 @@ class Histogram1d(AbstractHistogram):
             The total area under the histogram.
         """
         return (self.content * self.bin_widths()).sum()
+
+    @cached_property
+    def cdf(self) -> Callable:
+        """Return the cumulative distribution function (CDF) of the histogram. The CDF is
+        calculated by interpolating the cumulative sums of the histogram contents.
+        """
+        # We add another bin at the beggining to match the edges array dimension.
+        cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
+        cumsum /= cumsum[-1]
+        return InterpolatedUnivariateSpline(self._edges, cumsum)
+
+    @cached_property
+    def _ppf(self) -> Callable:
+        """Return the percent point function (PPF) of the histogram. The PPF is calculated
+        by interpolating the inverse of the cumulative sums of the histogram contents.
+
+        Note that the spline interpolation can extrapolate outside the [0, 1] domain of the ppf,
+        but we need to exclude those values. To do this 
+        """
+        cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
+        cumsum /= cumsum[-1]
+        xppf, idx = np.unique(cumsum, return_index=True)
+        yppf = self.bin_edges()[idx]
+        return InterpolatedUnivariateSpline(xppf, yppf)
+
+    def _ppf_bounded(self, x: np.ndarray) -> np.ndarray:
+        """Evaluate the ppf for the specific values, and return NaN for values outside the
+        [0, 1] domain.
+
+        Arguments
+        ---------
+        x : np.ndarray
+            the values where to evaluate the ppf.
+        
+        Returns
+        -------
+        ppf : np.ndarray
+            the evaluated ppf values, with NaN for out-of-bounds inputs.
+        """
+        results = self._ppf(x)
+        # Check whether the values are outside the domain.
+        mask = (x < 0) | (x > 1)
+        if np.isscalar(x):
+            return np.nan if mask else results
+        results[mask] = np.nan
+        return results
+
+    @property
+    def ppf(self) -> Callable:
+        """Return the percent point function (PPF) of the histogram."""
+        return self._ppf_bounded
+
+    def minimum_coverage_interval(self, coverage: float) -> Tuple[float, float]:
+        if coverage < 0.0 or coverage > 1.0:
+            raise ValueError("Coverage must be between 0 and 1.")
+        edges = self.bin_edges()
+        # We should decide how to decide the binning of the interval. We are not limited by the
+        # initial binning of the histogram, so we can choose a finer grid.
+        x = np.linspace(edges[0], edges[-1], 100)
+        interval = self.ppf(coverage + self.cdf(x)) - x
+        delta = np.nanmin(interval)
+        xmin = x[np.nanargmin(interval)]
+        xmax = xmin + delta
+        return xmin, xmax
 
     def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":
         """Overloaded in-place subtraction operator.

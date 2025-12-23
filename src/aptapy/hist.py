@@ -21,6 +21,7 @@ from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
 import numpy as np
+from scipy.interpolate import PchipInterpolator
 
 from .plotting import AbstractPlottable, plt
 from .typing_ import ArrayLike, PathLike
@@ -541,6 +542,102 @@ class Histogram1d(AbstractHistogram):
             The total area under the histogram.
         """
         return (self.content * self.bin_widths()).sum()
+
+    @property
+    def _cdf(self) -> Callable:
+        """Interpolate the cumulative distribution function (CDF) of the histogram and return
+        a callable object.
+
+        Returns
+        -------
+        cdf : Callable
+            the cumulative distribution function (CDF) of the histogram.
+        """
+        # We add another bin at the beginning to match the edges array dimension.
+        cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
+        cumsum /= cumsum[-1]
+        # Here we are using a PCHIP interpolation to avoid oscillations and preserve monotonicity
+        # of the CDF.
+        return PchipInterpolator(self.bin_edges(), cumsum)
+
+    def cdf(self, x: ArrayLike) -> ArrayLike:
+        """Evaluate the cumulative distribution function (CDF) of the histogram at the specified
+        values.
+
+        Arguments
+        ---------
+        x : ArrayLike
+            the values where to evaluate the cdf.
+        """
+        # Ensure that we return 0 and 1 for values outside the histogram range.
+        return np.clip(self._cdf(x), 0.0, 1.0)
+
+    @property
+    def _ppf(self) -> Callable:
+        """Return the percent point function (PPF) of the histogram. The PPF is calculated
+        by interpolating the inverse of the cumulative sums of the histogram contents.
+
+        Note that the spline interpolation can extrapolate outside the [0, 1] domain of the ppf,
+        but we need to exclude those values.
+
+        Returns
+        -------
+        ppf : Callable
+            the percent point function (PPF) of the histogram.
+        """
+        cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
+        cumsum /= cumsum[-1]
+        xppf, idx = np.unique(cumsum, return_index=True)
+        yppf = self.bin_edges()[idx]
+        # Here we are using a PCHIP interpolation to avoid oscillations and preserve monotonicity
+        # of the PPF.
+        return PchipInterpolator(xppf, yppf)
+
+    def ppf(self, x: ArrayLike) -> ArrayLike:
+        """Evaluate the percent point function (PPF) of the histogram at the specified
+        values.
+
+        Arguments
+        ---------
+        x : ArrayLike
+            the values where to evaluate the ppf.
+        """
+        # Ensure that we return NaN for values outside the [0, 1] domain.
+        results = np.where((x >= 0) & (x <= 1), self._ppf(x), np.nan)
+        if np.isscalar(x):
+            return results.item()
+        return results
+
+    def minimum_coverage_interval(self, coverage: float, bins: int = 100) -> Tuple[float, float]:
+        """Calculate the minimum coverage interval of the histogram for a given coverage.
+
+        Arguments
+        ---------
+        coverage : float
+            the coverage of the interval
+        bins : int, optional
+            the number of bins to use when evaluating the minimum coverage interval (default: 100).
+
+        Returns
+        -------
+        xmin, xmax : Tuple[float, float]
+            the left and right edges of the minimum coverage interval.
+        """
+        if coverage < 0.0 or coverage > 1.0:
+            raise ValueError("Coverage must be between 0 and 1.")
+        edges = self.bin_edges()
+        # We should decide how to decide the binning of the interval. We are not limited by the
+        # initial binning of the histogram, so we can choose a finer grid.
+        x = np.linspace(edges[0], edges[-1], bins)
+        # For each x, we compute the interval length that contains the desired coverage. The
+        # minimum of this function gives the position and the width of the minimum coverage
+        # interval.
+        interval = self.ppf(coverage + self.cdf(x)) - x
+        # If we don't take into account the possibility of NaN values, the results could be wrong.
+        delta = np.nanmin(interval)
+        xmin = x[np.nanargmin(interval)]
+        xmax = xmin + delta
+        return xmin, xmax
 
     def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":
         """Overloaded in-place subtraction operator.

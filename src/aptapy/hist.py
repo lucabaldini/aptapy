@@ -21,7 +21,7 @@ from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.interpolate import PchipInterpolator
 
 from .plotting import AbstractPlottable, plt
 from .typing_ import ArrayLike, PathLike
@@ -556,7 +556,9 @@ class Histogram1d(AbstractHistogram):
         # We add another bin at the beginning to match the edges array dimension.
         cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
         cumsum /= cumsum[-1]
-        return InterpolatedUnivariateSpline(self.bin_edges(), cumsum)
+        # Here we are using a PCHIP interpolation to avoid oscillations and preserve monotonicity
+        # of the CDF.
+        return PchipInterpolator(self.bin_edges(), cumsum)
 
     def cdf(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the cumulative distribution function (CDF) of the histogram at the specified
@@ -587,7 +589,9 @@ class Histogram1d(AbstractHistogram):
         cumsum /= cumsum[-1]
         xppf, idx = np.unique(cumsum, return_index=True)
         yppf = self.bin_edges()[idx]
-        return InterpolatedUnivariateSpline(xppf, yppf)
+        # Here we are using a PCHIP interpolation to avoid oscillations and preserve monotonicity
+        # of the PPF.
+        return PchipInterpolator(xppf, yppf)
 
     def ppf(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the percent point function (PPF) of the histogram at the specified

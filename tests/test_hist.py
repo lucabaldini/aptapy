@@ -345,6 +345,17 @@ def test_cdf_ppf():
     plt.plot(p, scipy.stats.norm.ppf(p), label="Analytical PPF")
     plt.legend()
     assert np.isnan(hist.ppf(1.1))
+    model = Gaussian()
+    model.set_parameters(1, 0, 0.1)
+    hist = model.random_histogram(edges, size=1000, random_state=_RNG)
+    plt.figure("CDF (edge case)")
+    plt.plot(x, hist.cdf(x), label="CDF from histogram")
+    plt.plot(x, scipy.stats.norm.cdf(x, loc=0, scale=0.1), label="Analytical CDF")
+    p = np.linspace(0, 1, 100)
+    plt.figure("PPF (edge case)")
+    plt.plot(p, hist.ppf(p), label="PPF from histogram")
+    plt.plot(p, scipy.stats.norm.ppf(p, loc=0, scale=0.1), label="Analytical PPF")
+    plt.legend()
 
 
 def test_minimum_coverage_interval():

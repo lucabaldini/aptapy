@@ -542,6 +542,22 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
+    def fwhm(self) -> float:
+        """Return the full width at half maximum (FWHM) of the histogram.  
+        """
+        # Find the value of the maximum and its index
+        y = self.content
+        i_max = np.argmax(y)
+        y_max = y[i_max]
+        # Find the left and right indices where the content crosses half maximum
+        l = np.max(np.where(y[:i_max] < y_max / 2))
+        r = np.min(np.where(y[i_max:] < y_max / 2)) + i_max
+        # Linear interpolation to find the exact positions
+        x = self.bin_centers()
+        x_l = x[l] + (y_max/2 - y[l]) / (y[l+1] - y[l]) * (x[l+1] - x[l])
+        x_r = x[r] - (y_max/2 - y[r]) / (y[r-1] - y[r]) * (x[r] - x[r-1])
+        return x_r - x_l
+
     def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":
         """Overloaded in-place subtraction operator.
 

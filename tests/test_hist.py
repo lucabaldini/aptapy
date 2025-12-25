@@ -205,6 +205,16 @@ def test_from_amptek_file(datadir):
     assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
 
 
+def test_fwhm():
+    """Test FWHM computation for 1D histograms.
+    """
+    edges = np.linspace(-5., 5., 101)
+    hist = Gaussian().random_histogram(edges, 100000, _RNG)
+    fwhm = hist.fwhm()
+    expected_fwhm = 2 * np.sqrt(2 * np.log(2)) * 1.
+    assert np.isclose(fwhm, expected_fwhm, rtol=0.01)
+
+
 def test_slice1d():
     """Test extracting a 1D slice from a 2-dimensional histogram.
     """

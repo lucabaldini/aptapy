@@ -543,22 +543,33 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
+    def _normalized_cumsum(self) -> np.ndarray:
+        """Return the normalized cumulative sum of the histogram contents.
+
+        Returns
+        -------
+        cumsum : np.ndarray
+            the normalized cumulative sum of the histogram contents.
+        """
+        # We add another bin at the beginning to match the edges array dimension.
+        cumsum = np.insert(np.cumsum(self.content), 0, 0.)
+        cumsum /= cumsum[-1]
+        return cumsum
+
     @property
     def _cdf(self) -> Callable:
-        """Interpolate the cumulative distribution function (CDF) of the histogram and return
-        a callable object.
+        """Interpolate the cumulative distribution function (CDF) of the histogram and
+        return a callable object.
+
+        Note we are using a PCHIP interpolation to avoid oscillations and preserve
+        monotonicity.
 
         Returns
         -------
         cdf : Callable
             the cumulative distribution function (CDF) of the histogram.
         """
-        # We add another bin at the beginning to match the edges array dimension.
-        cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
-        cumsum /= cumsum[-1]
-        # Here we are using a PCHIP interpolation to avoid oscillations and preserve monotonicity
-        # of the CDF.
-        return PchipInterpolator(self.bin_edges(), cumsum)
+        return PchipInterpolator(self.bin_edges(), self._normalized_cumsum())
 
     def cdf(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the cumulative distribution function (CDF) of the histogram at the specified
@@ -568,6 +579,11 @@ class Histogram1d(AbstractHistogram):
         ---------
         x : ArrayLike
             the values where to evaluate the cdf.
+
+        Returns
+        -------
+        cdf : ArrayLike
+            the cumulative distribution function (CDF) of the histogram evaluated at x.
         """
         # Ensure that we return 0 and 1 for values outside the histogram range.
         return np.clip(self._cdf(x), 0.0, 1.0)
@@ -577,25 +593,28 @@ class Histogram1d(AbstractHistogram):
         """Return the percent point function (PPF) of the histogram. The PPF is calculated
         by interpolating the inverse of the cumulative sums of the histogram contents.
 
-        Note that the spline interpolation can extrapolate outside the [0, 1] domain of the ppf,
-        but we need to exclude those values.
+        As for the CDF, we are using a PCHIP interpolation to avoid oscillations and
+        preserve monotonicity.
+
+        Note that the spline interpolation can extrapolate outside the [0, 1] domain of the
+        ppf, but we need to exclude those values downstream.
 
         Returns
         -------
         ppf : Callable
             the percent point function (PPF) of the histogram.
         """
-        cumsum = np.insert(np.cumsum(self.content), 0, 0.0)
-        cumsum /= cumsum[-1]
-        xppf, idx = np.unique(cumsum, return_index=True)
-        yppf = self.bin_edges()[idx]
-        # Here we are using a PCHIP interpolation to avoid oscillations and preserve monotonicity
-        # of the PPF.
-        return PchipInterpolator(xppf, yppf)
+        cumsum = self._normalized_cumsum()
+        x, idx = np.unique(cumsum, return_index=True)
+        y = self.bin_edges()[idx]
+        return PchipInterpolator(x, y)
 
     def ppf(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the percent point function (PPF) of the histogram at the specified
         values.
+
+        Note that the PPF is only defined in the [0, 1] domain. For values outside
+        this range, NaN is returned.
 
         Arguments
         ---------
@@ -615,6 +634,7 @@ class Histogram1d(AbstractHistogram):
         ---------
         coverage : float
             the coverage of the interval
+
         bins : int, optional
             the number of bins to use when evaluating the minimum coverage interval (default: 100).
 

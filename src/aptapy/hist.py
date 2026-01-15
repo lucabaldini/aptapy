@@ -668,7 +668,8 @@ class Histogram1d(AbstractHistogram):
         else:
             xa = self.bin_edges()[self._normalized_cumsum() > 0.][0]
             xb = self.ppf(1. - coverage)
-            res = minimize_scalar(self._coverage_interval, args=(coverage,), bounds=(xa, xb))
+            res = minimize_scalar(self._coverage_interval, args=(coverage,), bounds=(xa, xb),
+                                  method="bounded")
             xmin = res.x
             xmax = xmin + res.fun
         return xmin, xmax

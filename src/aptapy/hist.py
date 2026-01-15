@@ -573,8 +573,8 @@ class Histogram1d(AbstractHistogram):
         return PchipInterpolator(self.bin_edges(), self._normalized_cumsum())
 
     def cdf(self, x: ArrayLike) -> ArrayLike:
-        """Evaluate the cumulative distribution function (CDF) of the histogram at the specified
-        values.
+        """Evaluate the cumulative distribution function (CDF) of the histogram at the
+        specified values.
 
         Arguments
         ---------
@@ -591,14 +591,16 @@ class Histogram1d(AbstractHistogram):
 
     @property
     def _ppf(self) -> Callable:
-        """Return the percent point function (PPF) of the histogram. The PPF is calculated
-        by interpolating the inverse of the cumulative sums of the histogram contents.
+        """Return the percent point function (PPF) of the histogram.
+
+        The PPF is calculated by interpolating the inverse of the cumulative sums of the
+        histogram contents.
 
         As for the CDF, we are using a PCHIP interpolation to avoid oscillations and
         preserve monotonicity.
 
-        Note that the spline interpolation can extrapolate outside the [0, 1] domain of the
-        ppf, but we need to exclude those values downstream.
+        Note that the spline interpolation can extrapolate outside the [0, 1] domain of
+        the ppf, and we need to exclude those values downstream.
 
         Returns
         -------
@@ -635,14 +637,14 @@ class Histogram1d(AbstractHistogram):
 
     def _coverage_interval(self, x: ArrayLike, coverage: float) -> ArrayLike:
         """Calculate the coverage interval width, given the lower edge of the interval.
-        
+
         Arguments
         ---------
         x : ArrayLike
             the lower edges where to calculate the interval widths.
         coverage : float
             the coverage of the interval
-        
+
         Returns
         -------
         delta : ArrayLike
@@ -665,7 +667,8 @@ class Histogram1d(AbstractHistogram):
         xmin, xmax : Tuple[float, float]
             the left and right edges of the minimum coverage interval.
         """
-        # If the coverage is 1., return the full range of the histogram with non-zero content.
+        # If the coverage is 1., return the full range of the histogram with non-zero
+        # content.
         if coverage == 1.:
             edges = self.bin_edges()
             cumsum = self._normalized_cumsum()

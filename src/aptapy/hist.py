@@ -22,6 +22,7 @@ from typing import Callable, List, Sequence, Tuple, Union
 import matplotlib
 import numpy as np
 from scipy.interpolate import PchipInterpolator
+from scipy.optimize import minimize_scalar
 
 from .plotting import AbstractPlottable, plt
 from .typing_ import ArrayLike, PathLike
@@ -627,7 +628,25 @@ class Histogram1d(AbstractHistogram):
             return results.item()
         return results
 
-    def minimum_coverage_interval(self, coverage: float, bins: int = 100) -> Tuple[float, float]:
+    def _coverage_interval(self, x: ArrayLike, coverage: float) -> ArrayLike:
+        """Calculate the coverage interval width, given the lower edge of the interval.
+        
+        Arguments
+        ---------
+        x : ArrayLike
+            the lower edges where to calculate the interval widths.
+        coverage : float
+            the coverage of the interval
+        
+        Returns:
+        delta : ArrayLike
+            the widths of the interval
+        """
+        if coverage < 0. or coverage > 1.:
+            raise ValueError("Coverage must be between 0 and 1.")
+        return self.ppf(coverage + self.cdf(x)) - x
+
+    def minimum_coverage_interval(self, coverage: float) -> Tuple[float, float]:
         """Calculate the minimum coverage interval of the histogram for a given coverage.
 
         Arguments
@@ -635,28 +654,23 @@ class Histogram1d(AbstractHistogram):
         coverage : float
             the coverage of the interval
 
-        bins : int, optional
-            the number of bins to use when evaluating the minimum coverage interval (default: 100).
-
         Returns
         -------
         xmin, xmax : Tuple[float, float]
             the left and right edges of the minimum coverage interval.
         """
-        if coverage < 0.0 or coverage > 1.0:
-            raise ValueError("Coverage must be between 0 and 1.")
-        edges = self.bin_edges()
-        # We should decide how to decide the binning of the interval. We are not limited by the
-        # initial binning of the histogram, so we can choose a finer grid.
-        x = np.linspace(edges[0], edges[-1], bins)
-        # For each x, we compute the interval length that contains the desired coverage. The
-        # minimum of this function gives the position and the width of the minimum coverage
-        # interval.
-        interval = self.ppf(coverage + self.cdf(x)) - x
-        # If we don't take into account the possibility of NaN values, the results could be wrong.
-        delta = np.nanmin(interval)
-        xmin = x[np.nanargmin(interval)]
-        xmax = xmin + delta
+        # If the coverage is 1., return the full range of the histogram with non-zero content.
+        if coverage == 1.:
+            edges = self.bin_edges()
+            cumsum = self._normalized_cumsum()
+            xmin = edges[cumsum > 0][0]
+            xmax = edges[cumsum == 1][0]
+        else:
+            xa = self.bin_edges()[self._normalized_cumsum() > 0.][0]
+            xb = self.ppf(1. - coverage)
+            res = minimize_scalar(self._coverage_interval, args=(coverage,), bounds=(xa, xb))
+            xmin = res.x
+            xmax = xmin + res.fun
         return xmin, xmax
 
     def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":

@@ -621,6 +621,11 @@ class Histogram1d(AbstractHistogram):
         ---------
         x : ArrayLike
             the values where to evaluate the ppf.
+
+        Returns
+        -------
+        ppf : ArrayLike
+            the percent point function (PPF) of the histogram evaluated at x.
         """
         # Ensure that we return NaN for values outside the [0, 1] domain.
         results = np.where((x >= 0) & (x <= 1), self._ppf(x), np.nan)
@@ -638,7 +643,8 @@ class Histogram1d(AbstractHistogram):
         coverage : float
             the coverage of the interval
         
-        Returns:
+        Returns
+        -------
         delta : ArrayLike
             the widths of the interval
         """

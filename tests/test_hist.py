@@ -362,7 +362,7 @@ def test_minimum_coverage_interval():
     """Test the minimum coverage interval calculation.
     """
     edges = np.linspace(-5., 5., 101)
-    hist = Gaussian().random_histogram(edges, size=100000, random_state=_RNG)
+    hist = Gaussian().random_histogram(edges, size=1000000, random_state=_RNG)
     x_left, x_right = hist.minimum_coverage_interval(0.6827)
     plt.figure(f"{inspect.currentframe().f_code.co_name}_minimum_coverage_interval")
     hist.plot()
@@ -374,8 +374,8 @@ def test_minimum_coverage_interval():
     assert np.isclose(x_right - 1., 0.0, atol=0.1)
     x_left, x_right = hist.minimum_coverage_interval(.98)
     bin_widths = hist.bin_widths()[0]
-    assert np.isclose(x_left, -2.33, atol=2*bin_widths)
-    assert np.isclose(x_right, 2.33, atol=2*bin_widths)
+    assert np.isclose(x_left, -2.33, atol=2. * bin_widths)
+    assert np.isclose(x_right, 2.33, atol=2. * bin_widths)
     x_left, x_right = hist.minimum_coverage_interval(1.0)
     content = np.insert(np.cumsum(hist.content), 0, 0.)
     assert np.isclose(x_left, hist.bin_edges()[content > 0][0])

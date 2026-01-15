@@ -565,6 +565,10 @@ class Histogram1d(AbstractHistogram):
         Note we are using a PCHIP interpolation to avoid oscillations and preserve
         monotonicity.
 
+        Also, we are deliberately not making this a cached property (which is only
+        supported in Python 3.8+, by the way) as the histogram content might change
+        after the first call, and we want to always have the up-to-date CDF.
+
         Returns
         -------
         cdf : Callable
@@ -597,7 +601,9 @@ class Histogram1d(AbstractHistogram):
         histogram contents.
 
         As for the CDF, we are using a PCHIP interpolation to avoid oscillations and
-        preserve monotonicity.
+        preserve monotonicity. Also, we are deliberately not making this a cached property
+        (which is only supported in Python 3.8+, by the way) as the histogram content might
+        change after the first call, and we want to always have the up-to-date PPF.
 
         Note that the spline interpolation can extrapolate outside the [0, 1] domain of
         the ppf, and we need to exclude those values downstream.

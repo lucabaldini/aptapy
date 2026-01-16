@@ -589,7 +589,7 @@ class Histogram1d(AbstractHistogram):
         il = indices[left_slice][left_mask][-1]
         ir = indices[right_slice][right_mask][0]
 
-        # Refine interpolating.
+        # Refine using interpolation.
         xl = x[il] + (half_max - y[il]) / (y[il + 1] - y[il]) * (x[il + 1] - x[il])
         xr = x[ir] - (half_max - y[ir]) / (y[ir - 1] - y[ir]) * (x[ir] - x[ir - 1])
         return xr - xl

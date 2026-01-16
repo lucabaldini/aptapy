@@ -545,18 +545,30 @@ class Histogram1d(AbstractHistogram):
     def fwhm(self) -> float:
         """Return the full width at half maximum (FWHM) of the histogram.
 
+        If the distribution is not well behaved (e.g., the maximum is at the edge or it is flat),
+        a ValueError is raised.
+
         Returns
         -------
         fwhm : float
-            The full width at half maximum of the histogram.  
+            The full width at half maximum of the histogram.
         """
         # Find the value of the maximum and its index
         y = self.content
+        indexes = np.arange(len(y))
         i_max = np.argmax(y)
         y_max = y[i_max]
-        # Find the left and right indices where the content crosses half maximum
-        l_i = np.max(np.where(y[:i_max] < y_max / 2))
-        r_i = np.min(np.where(y[i_max:] < y_max / 2)) + i_max
+        # Create the masks for the left and right indexes where the content crosses half maximum
+        # and is greater than zero
+        mask_left = (y[:i_max] < y_max / 2) & (y[:i_max] > 0)
+        mask_right = (y[i_max:] < y_max / 2) & (y[i_max:] > 0)
+        # If the maximum of the distribution is at the edge of the histogram, or if the
+        # distribution does not cross half maximum on both sides, we cannot compute the FWHM
+        if not np.any(mask_left) or not np.any(mask_right):
+            raise ValueError("FWHM cannot be computed for this histogram.")
+        # Find the left and right indexes where the content crosses half maximum
+        l_i = np.max(indexes[:i_max][mask_left])
+        r_i = np.min(indexes[i_max:][mask_right])
         # Linear interpolation to find the exact positions
         x = self.bin_centers()
         x_l = x[l_i] + (y_max/2 - y[l_i]) / (y[l_i+1] - y[l_i]) * (x[l_i+1] - x[l_i])

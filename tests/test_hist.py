@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d, Histogram2d, Histogram3d
-from aptapy.models import Gaussian
+from aptapy.models import Gaussian, Exponential
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)
@@ -208,11 +208,30 @@ def test_from_amptek_file(datadir):
 def test_fwhm():
     """Test FWHM computation for 1D histograms.
     """
+    # Best case testing: Gaussian with sigma=1
     edges = np.linspace(-5., 5., 101)
     hist = Gaussian().random_histogram(edges, 100000, _RNG)
     fwhm = hist.fwhm()
     expected_fwhm = 2 * np.sqrt(2 * np.log(2)) * 1.
     assert np.isclose(fwhm, expected_fwhm, rtol=0.01)
+    # Edge case testing: maximum at the edge of the histogram
+    edges = np.linspace(0., 5., 101)
+    hist = Gaussian().random_histogram(edges, 100000, _RNG)
+    with pytest.raises(ValueError, match="FWHM cannot be computed"):
+        _ = hist.fwhm()
+    # Edge case testing: maximum at the edge, but support of the histogram larger than
+    # that of the distribution
+    edges = np.arange(-1., 5., 0.1)
+    hist = Histogram1d(edges)
+    hist.fill(_RNG.exponential(scale=1., size=10000))
+    with pytest.raises(ValueError, match="FWHM cannot be computed"):
+        _ = hist.fwhm()
+    # Edge case testing: flat histogram
+    edges = np.linspace(-5., 5., 101)
+    hist = Histogram1d(edges)
+    hist.fill(_RNG.uniform(-5., 5., size=10000))
+    with pytest.raises(ValueError, match="FWHM cannot be computed"):
+        _ = hist.fwhm()
 
 
 def test_slice1d():

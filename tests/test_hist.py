@@ -390,12 +390,12 @@ def test_cdf_ppf():
 def test_minimum_coverage_interval():
     """Test the minimum coverage interval calculation.
     """
-    N = 100000
+    num_entries = 100000
     edges = np.linspace(-5., 5., 101)
     cdf = Gaussian().primitive(edges, 1., 0., 1.)
     cdf_diff = np.diff(cdf)
     hist = Histogram1d(edges)
-    hist.set_content(N * cdf_diff)
+    hist.set_content(num_entries * cdf_diff)
     x_left, x_right = hist.minimum_coverage_interval(0.6827)
     plt.figure(f"{inspect.currentframe().f_code.co_name}_minimum_coverage_interval")
     hist.plot()

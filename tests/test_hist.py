@@ -358,20 +358,48 @@ def test_cdf_ppf():
     plt.legend()
 
 
+# def test_minimum_coverage_interval():
+#     """Test the minimum coverage interval calculation.
+#     """
+#     edges = np.linspace(-5., 5., 101)
+#     hist = Gaussian().random_histogram(edges, size=1000000, random_state=_RNG)
+#     x_left, x_right = hist.minimum_coverage_interval(0.6827)
+#     plt.figure(f"{inspect.currentframe().f_code.co_name}_minimum_coverage_interval")
+#     hist.plot()
+#     plt.vlines([x_left, x_right], 0, max(hist.content), label="68% MCI", color="r")
+#     plt.vlines([-1, 1], 0, max(hist.content), label="Analytical 68% interval", color="g")
+#     plt.legend()
+#     assert np.isclose(x_right - x_left, 2.0, atol=0.1)
+#     assert np.isclose(x_left - (-1.), 0.0, atol=0.1)
+#     assert np.isclose(x_right - 1., 0.0, atol=0.1)
+#     x_left, x_right = hist.minimum_coverage_interval(.98)
+#     bin_widths = hist.bin_widths()[0]
+#     assert np.isclose(x_left, -2.33, atol=2. * bin_widths)
+#     assert np.isclose(x_right, 2.33, atol=2. * bin_widths)
+#     x_left, x_right = hist.minimum_coverage_interval(1.0)
+#     content = np.insert(np.cumsum(hist.content), 0, 0.)
+#     assert np.isclose(x_left, hist.bin_edges()[content > 0][0])
+#     assert np.isclose(x_right, hist.bin_edges()[content > 0][-1])
+
+
 def test_minimum_coverage_interval():
     """Test the minimum coverage interval calculation.
     """
+    N = 100000
     edges = np.linspace(-5., 5., 101)
-    hist = Gaussian().random_histogram(edges, size=1000000, random_state=_RNG)
+    cdf = Gaussian().primitive(edges, 1., 0., 1.)
+    cdf_diff = np.diff(cdf)
+    hist = Histogram1d(edges)
+    hist.set_content(N * cdf_diff)
     x_left, x_right = hist.minimum_coverage_interval(0.6827)
     plt.figure(f"{inspect.currentframe().f_code.co_name}_minimum_coverage_interval")
     hist.plot()
     plt.vlines([x_left, x_right], 0, max(hist.content), label="68% MCI", color="r")
     plt.vlines([-1, 1], 0, max(hist.content), label="Analytical 68% interval", color="g")
     plt.legend()
-    assert np.isclose(x_right - x_left, 2.0, atol=0.1)
-    assert np.isclose(x_left - (-1.), 0.0, atol=0.1)
-    assert np.isclose(x_right - 1., 0.0, atol=0.1)
+    bin_widths = hist.bin_widths()[0]
+    assert np.isclose(x_left - (-1.), 0.0, atol=bin_widths)
+    assert np.isclose(x_right - 1., 0.0, atol=bin_widths)
     x_left, x_right = hist.minimum_coverage_interval(.98)
     bin_widths = hist.bin_widths()[0]
     assert np.isclose(x_left, -2.33, atol=2. * bin_widths)

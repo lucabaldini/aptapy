@@ -20,6 +20,7 @@ import inspect
 
 import numpy as np
 import pytest
+import scipy.stats
 
 from aptapy.hist import Histogram1d, Histogram2d, Histogram3d
 from aptapy.models import Gaussian
@@ -325,3 +326,61 @@ def test_hist3d():
     mean_slice, rms_slice = slice_hist.binned_statistics()
     assert hist_mean.content[bin_indices] == pytest.approx(mean_slice)
     assert hist_rms.content[bin_indices] == pytest.approx(rms_slice)
+
+
+def test_cdf_ppf():
+    """Test the methods to calculate the CDF and PPF of a 1d-histogram.
+    """
+    edges = np.linspace(-5., 5., 100)
+    hist = Gaussian().random_histogram(edges, size=10000, random_state=_RNG)
+    x = hist.bin_centers()
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_cdf")
+    plt.plot(x, hist.cdf(x), label="CDF from histogram")
+    plt.plot(x, scipy.stats.norm.cdf(x), label="Analytical CDF")
+    plt.legend()
+    assert np.isclose(np.max(hist.cdf(x)), 1.0)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_ppf")
+    p = np.linspace(0, 1, 100)
+    plt.plot(p, hist.ppf(p), label="PPF from histogram")
+    plt.plot(p, scipy.stats.norm.ppf(p), label="Analytical PPF")
+    plt.legend()
+    assert np.isnan(hist.ppf(1.1))
+    model = Gaussian()
+    model.set_parameters(1, 0, 0.1)
+    hist = model.random_histogram(edges, size=1000, random_state=_RNG)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_cdf_edge_case")
+    plt.plot(x, hist.cdf(x), label="CDF from histogram")
+    plt.plot(x, scipy.stats.norm.cdf(x, loc=0, scale=0.1), label="Analytical CDF")
+    p = np.linspace(0, 1, 100)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_ppf_edge_case")
+    plt.plot(p, hist.ppf(p), label="PPF from histogram")
+    plt.plot(p, scipy.stats.norm.ppf(p, loc=0, scale=0.1), label="Analytical PPF")
+    plt.legend()
+
+
+def test_minimum_coverage_interval():
+    """Test the minimum coverage interval calculation.
+    """
+    N = 100000
+    edges = np.linspace(-5., 5., 101)
+    cdf = Gaussian().primitive(edges, 1., 0., 1.)
+    cdf_diff = np.diff(cdf)
+    hist = Histogram1d(edges)
+    hist.set_content(N * cdf_diff)
+    x_left, x_right = hist.minimum_coverage_interval(0.6827)
+    plt.figure(f"{inspect.currentframe().f_code.co_name}_minimum_coverage_interval")
+    hist.plot()
+    plt.vlines([x_left, x_right], 0, max(hist.content), label="68% MCI", color="r")
+    plt.vlines([-1, 1], 0, max(hist.content), label="Analytical 68% interval", color="g")
+    plt.legend()
+    bin_widths = hist.bin_widths()[0]
+    assert np.isclose(x_left - (-1.), 0.0, atol=bin_widths)
+    assert np.isclose(x_right - 1., 0.0, atol=bin_widths)
+    x_left, x_right = hist.minimum_coverage_interval(.98)
+    bin_widths = hist.bin_widths()[0]
+    assert np.isclose(x_left, -2.33, atol=2. * bin_widths)
+    assert np.isclose(x_right, 2.33, atol=2. * bin_widths)
+    x_left, x_right = hist.minimum_coverage_interval(1.0)
+    content = np.insert(np.cumsum(hist.content), 0, 0.)
+    assert np.isclose(x_left, hist.bin_edges()[content > 0][0])
+    assert np.isclose(x_right, hist.bin_edges()[content > 0][-1])

@@ -3,6 +3,14 @@
 Release notes
 =============
 
+* Cumulative distribution function and percent point function calculation implemented for
+  ``Histogram1d``.
+* Minimum coverage interval calculation implemented for ``Histogram1d``.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/89
+  - https://github.com/lucabaldini/aptapy/issues/88
+
 
 Version 0.18.0 (2025-12-20)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

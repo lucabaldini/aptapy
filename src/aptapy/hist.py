@@ -1,4 +1,4 @@
-# Copyright 2023--2025 the aptapy team
+# Copyright 2023--2026 the aptapy team
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ from typing import Callable, List, Sequence, Tuple, Union
 
 import matplotlib
 import numpy as np
+from scipy.interpolate import PchipInterpolator
+from scipy.optimize import minimize_scalar
 
 from .plotting import AbstractPlottable, plt
 from .typing_ import ArrayLike, PathLike
@@ -541,6 +543,128 @@ class Histogram1d(AbstractHistogram):
             The total area under the histogram.
         """
         return (self.content * self.bin_widths()).sum()
+
+    def _normalized_cumsum(self) -> np.ndarray:
+        """Return the normalized cumulative sum of the histogram contents.
+
+        Returns
+        -------
+        cumsum : np.ndarray
+            the normalized cumulative sum of the histogram contents.
+        """
+        # We add another bin at the beginning to match the edges array dimension.
+        cumsum = np.insert(np.cumsum(self.content), 0, 0.)
+        cumsum /= cumsum[-1]
+        return cumsum
+
+    def cdf(self, x: ArrayLike) -> ArrayLike:
+        """Evaluate the cumulative distribution function (CDF) of the histogram
+        at the specified values.
+
+        Internally we are using a PCHIP interpolation to avoid oscillations and
+        preserve monotonicity. Note we are deliberately not making the creation
+        of the interpolator a cached property (which is only supported in Python
+        3.8+, by the way) as the histogram content might change after the each call,
+        and we want to always have the up-to-date CDF.
+
+        Arguments
+        ---------
+        x : ArrayLike
+            the values where to evaluate the cdf.
+
+        Returns
+        -------
+        cdf : ArrayLike
+            the cumulative distribution function (CDF) of the histogram evaluated at x.
+        """
+        # Create the interpolator on the fly.
+        cdf_interpolator = PchipInterpolator(self.bin_edges(), self._normalized_cumsum())
+        # Evaluate the interpolator on the input grid and ensure that we return
+        # 0 and 1 for values outside the histogram range.
+        return np.clip(cdf_interpolator(x), 0.0, 1.0)
+
+    def ppf(self, x: ArrayLike) -> ArrayLike:
+        """Evaluate the percent point function (PPF) of the histogram at the specified
+        values.
+
+        The PPF is calculated by interpolating the inverse of the cumulative sums of the
+        histogram contents.
+
+        Note that the PPF is only defined in the [0, 1] domain. For values outside
+        this range, NaN is returned. The same notes about the CDF interpolation
+        apply here, namely: internally we are using a PCHIP interpolation to avoid
+        oscillations and preserve monotonicity. We are deliberately not making the
+        creation of the interpolator a cached property (which is only supported in Python
+        3.8+, by the way) as the histogram content might change after the each call,
+        and we want to always have the up-to-date PPF.
+
+        Arguments
+        ---------
+        x : ArrayLike
+            the values where to evaluate the ppf.
+
+        Returns
+        -------
+        ppf : ArrayLike
+            the percent point function (PPF) of the histogram evaluated at x.
+        """
+        # Create the interpolator on the fly.
+        _x, _idx = np.unique(self._normalized_cumsum(), return_index=True)
+        _y = self.bin_edges()[_idx]
+        ppf_interpolator = PchipInterpolator(_x, _y)
+        # Ensure that we return NaN for values outside the [0, 1] domain.
+        results = np.where((x >= 0) & (x <= 1), ppf_interpolator(x), np.nan)
+        if np.isscalar(x):
+            return results.item()
+        return results
+
+    def _coverage_interval(self, x: ArrayLike, coverage: float) -> ArrayLike:
+        """Calculate the coverage interval width, given the lower edge of the interval.
+
+        Arguments
+        ---------
+        x : ArrayLike
+            the lower edges where to calculate the interval widths.
+        coverage : float
+            the coverage of the interval
+
+        Returns
+        -------
+        delta : ArrayLike
+            the widths of the interval
+        """
+        if coverage < 0. or coverage > 1.:
+            raise ValueError("Coverage must be between 0 and 1.")
+        return self.ppf(coverage + self.cdf(x)) - x
+
+    def minimum_coverage_interval(self, coverage: float) -> Tuple[float, float]:
+        """Calculate the minimum coverage interval of the histogram for a given coverage.
+
+        Arguments
+        ---------
+        coverage : float
+            the coverage of the interval
+
+        Returns
+        -------
+        xmin, xmax : Tuple[float, float]
+            the left and right edges of the minimum coverage interval.
+        """
+        # If the coverage is 1., return the full range of the histogram with non-zero
+        # content.
+        if coverage == 1.:
+            edges = self.bin_edges()
+            cumsum = self._normalized_cumsum()
+            xmin = edges[cumsum > 0][0]
+            xmax = edges[cumsum == 1][0]
+        else:
+            xa = self.bin_edges()[self._normalized_cumsum() > 0.][0]
+            xb = self.ppf(1. - coverage)
+            res = minimize_scalar(self._coverage_interval, args=(coverage,), bounds=(xa, xb),
+                                  method="bounded")
+            xmin = res.x
+            xmax = xmin + res.fun
+        return xmin, xmax
 
     def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":
         """Overloaded in-place subtraction operator.

@@ -543,7 +543,12 @@ class Histogram1d(AbstractHistogram):
         return (self.content * self.bin_widths()).sum()
 
     def fwhm(self) -> float:
-        """Return the full width at half maximum (FWHM) of the histogram.  
+        """Return the full width at half maximum (FWHM) of the histogram.
+
+        Returns
+        -------
+        fwhm : float
+            The full width at half maximum of the histogram.  
         """
         # Find the value of the maximum and its index
         y = self.content

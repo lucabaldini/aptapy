@@ -213,7 +213,7 @@ def test_fwhm():
     edges = np.linspace(-5., 5., 101)
     hist = Gaussian().random_histogram(edges, 100000, _RNG)
     fwhm = hist.fwhm()
-    expected_fwhm = 2 * np.sqrt(2 * np.log(2)) * 1.
+    expected_fwhm = 2. * np.sqrt(2. * np.log(2.)) * 1.
     assert np.isclose(fwhm, expected_fwhm, rtol=0.01)
     # Edge case testing: maximum at the edge of the histogram
     edges = np.linspace(0., 5., 101)

@@ -1,4 +1,4 @@
-# Copyright 2023--2025 the aptapy team
+# Copyright 2023--2026 the aptapy team
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -557,28 +557,15 @@ class Histogram1d(AbstractHistogram):
         cumsum /= cumsum[-1]
         return cumsum
 
-    @property
-    def _cdf(self) -> Callable:
-        """Interpolate the cumulative distribution function (CDF) of the histogram and
-        return a callable object.
-
-        Note we are using a PCHIP interpolation to avoid oscillations and preserve
-        monotonicity.
-
-        Also, we are deliberately not making this a cached property (which is only
-        supported in Python 3.8+, by the way) as the histogram content might change
-        after the first call, and we want to always have the up-to-date CDF.
-
-        Returns
-        -------
-        cdf : Callable
-            the cumulative distribution function (CDF) of the histogram.
-        """
-        return PchipInterpolator(self.bin_edges(), self._normalized_cumsum())
-
     def cdf(self, x: ArrayLike) -> ArrayLike:
-        """Evaluate the cumulative distribution function (CDF) of the histogram at the
-        specified values.
+        """Evaluate the cumulative distribution function (CDF) of the histogram
+        at the specified values.
+
+        Internally we are using a PCHIP interpolation to avoid oscillations and
+        preserve monotonicity. Note we are deliberately not making the creation
+        of the interpolator a cached property (which is only supported in Python
+        3.8+, by the way) as the histogram content might change after the each call,
+        and we want to always have the up-to-date CDF.
 
         Arguments
         ---------
@@ -590,40 +577,26 @@ class Histogram1d(AbstractHistogram):
         cdf : ArrayLike
             the cumulative distribution function (CDF) of the histogram evaluated at x.
         """
-        # Ensure that we return 0 and 1 for values outside the histogram range.
-        return np.clip(self._cdf(x), 0.0, 1.0)
-
-    @property
-    def _ppf(self) -> Callable:
-        """Return the percent point function (PPF) of the histogram.
-
-        The PPF is calculated by interpolating the inverse of the cumulative sums of the
-        histogram contents.
-
-        As for the CDF, we are using a PCHIP interpolation to avoid oscillations and
-        preserve monotonicity. Also, we are deliberately not making this a cached property
-        (which is only supported in Python 3.8+, by the way) as the histogram content might
-        change after the first call, and we want to always have the up-to-date PPF.
-
-        Note that the spline interpolation can extrapolate outside the [0, 1] domain of
-        the ppf, and we need to exclude those values downstream.
-
-        Returns
-        -------
-        ppf : Callable
-            the percent point function (PPF) of the histogram.
-        """
-        cumsum = self._normalized_cumsum()
-        x, idx = np.unique(cumsum, return_index=True)
-        y = self.bin_edges()[idx]
-        return PchipInterpolator(x, y)
+        # Create the interpolator on the fly.
+        cdf_interpolator = PchipInterpolator(self.bin_edges(), self._normalized_cumsum())
+        # Evaluate the interpolator on the input grid and ensure that we return
+        # 0 and 1 for values outside the histogram range.
+        return np.clip(cdf_interpolator(x), 0.0, 1.0)
 
     def ppf(self, x: ArrayLike) -> ArrayLike:
         """Evaluate the percent point function (PPF) of the histogram at the specified
         values.
 
+        The PPF is calculated by interpolating the inverse of the cumulative sums of the
+        histogram contents.
+
         Note that the PPF is only defined in the [0, 1] domain. For values outside
-        this range, NaN is returned.
+        this range, NaN is returned. The same notes about the CDF interpolation
+        apply here, namely: internally we are using a PCHIP interpolation to avoid
+        oscillations and preserve monotonicity. We are deliberately not making the
+        creation of the interpolator a cached property (which is only supported in Python
+        3.8+, by the way) as the histogram content might change after the each call,
+        and we want to always have the up-to-date PPF.
 
         Arguments
         ---------
@@ -635,8 +608,13 @@ class Histogram1d(AbstractHistogram):
         ppf : ArrayLike
             the percent point function (PPF) of the histogram evaluated at x.
         """
+        # Create the interpolator on the fly.
+        cumsum = self._normalized_cumsum()
+        _x, _idx = np.unique(cumsum, return_index=True)
+        _y = self.bin_edges()[_idx]
+        ppf_interpolator = PchipInterpolator(_x, _y)
         # Ensure that we return NaN for values outside the [0, 1] domain.
-        results = np.where((x >= 0) & (x <= 1), self._ppf(x), np.nan)
+        results = np.where((x >= 0) & (x <= 1), ppf_interpolator(x), np.nan)
         if np.isscalar(x):
             return results.item()
         return results

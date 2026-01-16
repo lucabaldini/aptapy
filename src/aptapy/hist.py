@@ -609,8 +609,7 @@ class Histogram1d(AbstractHistogram):
             the percent point function (PPF) of the histogram evaluated at x.
         """
         # Create the interpolator on the fly.
-        cumsum = self._normalized_cumsum()
-        _x, _idx = np.unique(cumsum, return_index=True)
+        _x, _idx = np.unique(self._normalized_cumsum(), return_index=True)
         _y = self.bin_edges()[_idx]
         ppf_interpolator = PchipInterpolator(_x, _y)
         # Ensure that we return NaN for values outside the [0, 1] domain.

@@ -555,12 +555,12 @@ class Histogram1d(AbstractHistogram):
         i_max = np.argmax(y)
         y_max = y[i_max]
         # Find the left and right indices where the content crosses half maximum
-        l = np.max(np.where(y[:i_max] < y_max / 2))
-        r = np.min(np.where(y[i_max:] < y_max / 2)) + i_max
+        l_i = np.max(np.where(y[:i_max] < y_max / 2))
+        r_i = np.min(np.where(y[i_max:] < y_max / 2)) + i_max
         # Linear interpolation to find the exact positions
         x = self.bin_centers()
-        x_l = x[l] + (y_max/2 - y[l]) / (y[l+1] - y[l]) * (x[l+1] - x[l])
-        x_r = x[r] - (y_max/2 - y[r]) / (y[r-1] - y[r]) * (x[r] - x[r-1])
+        x_l = x[l_i] + (y_max/2 - y[l_i]) / (y[l_i+1] - y[l_i]) * (x[l_i+1] - x[l_i])
+        x_r = x[r_i] - (y_max/2 - y[r_i]) / (y[r_i-1] - y[r_i]) * (x[r_i] - x[r_i-1])
         return x_r - x_l
 
     def __isub__(self, other: Union["Histogram1d", Callable]) -> "Histogram1d":

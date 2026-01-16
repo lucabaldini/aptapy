@@ -4,6 +4,14 @@ Release notes
 =============
 
 
+* Added the ``fwhm()`` method to the ``Histogram1d`` class to calculate the full width at half
+  maximum of a one-dimensional histogram.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/90
+  - https://github.com/lucabaldini/aptapy/issues/63
+
+
 Version 0.18.0 (2025-12-20)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

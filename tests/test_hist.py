@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 from aptapy.hist import Histogram1d, Histogram2d, Histogram3d
-from aptapy.models import Gaussian, Exponential
+from aptapy.models import Gaussian
 from aptapy.plotting import plt
 
 _RNG = np.random.default_rng(313)

@@ -544,6 +544,56 @@ class Histogram1d(AbstractHistogram):
         """
         return (self.content * self.bin_widths()).sum()
 
+    def fwhm(self) -> float:
+        """Return the full width at half maximum (FWHM) of the histogram.
+
+        If the distribution is not well behaved (e.g., the maximum is at the edge or it is flat),
+        a ValueError is raised.
+
+        Returns
+        -------
+        fwhm : float
+            The full width at half maximum of the histogram.
+        """
+        x = self.bin_centers()
+        y = self.content
+        indices = np.arange(len(y))
+        imax = np.argmax(y)
+
+        # Calculate the value of the half maximum---note this will be subject to
+        # statistical fluctuations, and we make no attempt at smoothing here.
+        half_max = 0.5 * y[imax]
+        # Create slices for the left and right parts of the histogram (where left
+        # and right really means left and right of the bin with the maximum value)...
+        left_slice = slice(None, imax)
+        right_slice = slice(imax, None)
+        # ... and cache the corresponding values.
+        left_values = y[left_slice]
+        right_values = y[right_slice]
+
+        # Create proper masks identifying the values that are below half maximum
+        # and greater than zero on both sides of the histogram maximum.
+        left_mask = np.logical_and(left_values < half_max, left_values > 0.)
+        right_mask = np.logical_and(right_values < half_max, right_values > 0.)
+        # If the maximum of the distribution is at the edge of the histogram,
+        # or if the distribution does not cross half maximum on both sides, we
+        # just cannot compute the FWHM, and we give up.
+        if not np.any(left_mask) or not np.any(right_mask):
+            raise ValueError("FWHM cannot be computed for the histogram")
+
+        # At this point the first crude estimates for the indices of the crossing
+        # points are just the last and first indices where the masks are true on
+        # the left and right slices, respectively. (Note the indices are sorted by
+        # construction, so we can just use -1 and 0 to get the right values, and
+        # we do not need to use min() and max()).
+        il = indices[left_slice][left_mask][-1]
+        ir = indices[right_slice][right_mask][0]
+
+        # Refine using interpolation.
+        xl = x[il] + (half_max - y[il]) / (y[il + 1] - y[il]) * (x[il + 1] - x[il])
+        xr = x[ir] - (half_max - y[ir]) / (y[ir - 1] - y[ir]) * (x[ir] - x[ir - 1])
+        return xr - xl
+
     def _normalized_cumsum(self) -> np.ndarray:
         """Return the normalized cumulative sum of the histogram contents.
 

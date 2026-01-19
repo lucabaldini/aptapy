@@ -206,6 +206,35 @@ def test_from_amptek_file(datadir):
     assert model.status.chisquare - dof <= 5 * np.sqrt(2 * dof)
 
 
+def test_fwhm():
+    """Test FWHM computation for 1D histograms.
+    """
+    # Best case testing: Gaussian with sigma=1
+    edges = np.linspace(-5., 5., 101)
+    hist = Gaussian().random_histogram(edges, 100000, _RNG)
+    fwhm = hist.fwhm()
+    expected_fwhm = 2. * np.sqrt(2. * np.log(2.)) * 1.
+    assert np.isclose(fwhm, expected_fwhm, rtol=0.01)
+    # Edge case testing: maximum at the edge of the histogram
+    edges = np.linspace(0., 5., 101)
+    hist = Gaussian().random_histogram(edges, 100000, _RNG)
+    with pytest.raises(ValueError, match="FWHM cannot be computed"):
+        _ = hist.fwhm()
+    # Edge case testing: maximum at the edge, but support of the histogram larger than
+    # that of the distribution
+    edges = np.arange(-1., 5., 0.1)
+    hist = Histogram1d(edges)
+    hist.fill(_RNG.exponential(scale=1., size=10000))
+    with pytest.raises(ValueError, match="FWHM cannot be computed"):
+        _ = hist.fwhm()
+    # Edge case testing: flat histogram
+    edges = np.linspace(-5., 5., 101)
+    hist = Histogram1d(edges)
+    hist.fill(_RNG.uniform(-5., 5., size=10000))
+    with pytest.raises(ValueError, match="FWHM cannot be computed"):
+        _ = hist.fwhm()
+
+
 def test_slice1d():
     """Test extracting a 1D slice from a 2-dimensional histogram.
     """
@@ -361,12 +390,12 @@ def test_cdf_ppf():
 def test_minimum_coverage_interval():
     """Test the minimum coverage interval calculation.
     """
-    N = 100000
+    num_entries = 100000
     edges = np.linspace(-5., 5., 101)
     cdf = Gaussian().primitive(edges, 1., 0., 1.)
     cdf_diff = np.diff(cdf)
     hist = Histogram1d(edges)
-    hist.set_content(N * cdf_diff)
+    hist.set_content(num_entries * cdf_diff)
     x_left, x_right = hist.minimum_coverage_interval(0.6827)
     plt.figure(f"{inspect.currentframe().f_code.co_name}_minimum_coverage_interval")
     hist.plot()

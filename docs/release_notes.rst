@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.19.0 (2026-01-19)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Added the ``fwhm()`` method to the ``Histogram1d`` class to calculate the full width at half
   maximum of a one-dimensional histogram.
 * Cumulative distribution function and percent point function calculation implemented for

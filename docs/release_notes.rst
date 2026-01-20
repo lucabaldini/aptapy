@@ -3,6 +3,10 @@
 Release notes
 =============
 
+
+Version 0.19.1 (2026-01-20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Emergency patch removing the minimum constraint on the scale parameter of the
   exponential models, in order to be able to fit rising exponentials.
 * Pull requests merged and issues closed:

@@ -3,6 +3,12 @@
 Release notes
 =============
 
+* Emergency patch removing the minimum constraint on the scale parameter of the
+  exponential model, in order to be able to fit rising exponentials.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/92
+
 
 Version 0.19.0 (2026-01-19)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

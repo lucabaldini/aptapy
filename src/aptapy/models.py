@@ -688,6 +688,20 @@ class Fe55Forest(GaussianForestBase):
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 
 
+@line_forest(9.71, 11.55)
+class AuForest(GaussianForestBase):
+
+    def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
+        """Overloaded method.
+        """
+        # pylint: disable=no-member
+        mu0 = xdata[np.argmax(ydata)]
+        self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
+        self.intensity1.init(0.5)
+        self.energy_scale.init(self.energies[0] / mu0)
+        self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
+
+
 class Probit(AbstractFitModel):
 
     """Custom implementation of the probit model, i.e., the percent-point function

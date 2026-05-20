@@ -4,6 +4,12 @@ Release notes
 =============
 
 
+* Added `AuForest` model.
+* Pull requests merged and issues closed:
+
+  - https://github.com/lucabaldini/aptapy/pull/96
+
+
 Version 0.19.1 (2026-01-20)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -3,8 +3,8 @@
 Release notes
 =============
 
-* Added `AuForest` model.
 
+* Added `AuForest` model.
 * Pull requests merged and issues closed:
 
   - https://github.com/lucabaldini/aptapy/pull/96

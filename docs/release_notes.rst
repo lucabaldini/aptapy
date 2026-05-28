@@ -4,6 +4,10 @@ Release notes
 =============
 
 
+Version 0.19.2 (2026-05-28)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 * Added `AuForest` model.
 * Pull requests merged and issues closed:
 

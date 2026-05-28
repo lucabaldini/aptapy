@@ -688,8 +688,10 @@ class Fe55Forest(GaussianForestBase):
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 
 
-@line_forest(9.71, 11.55)
+@line_forest(9.71, 11.44)
 class AuForest(GaussianForestBase):
+
+    LB_INTENSITY = 0.45
 
     def init_parameters(self, xdata: ArrayLike, ydata: ArrayLike, sigma: ArrayLike = 1.) -> None:
         """Overloaded method.
@@ -697,7 +699,7 @@ class AuForest(GaussianForestBase):
         # pylint: disable=no-member
         mu0 = xdata[np.argmax(ydata)]
         self.amplitude.init(scipy.integrate.trapezoid(ydata, xdata))
-        self.intensity1.init(0.5)
+        self.intensity1.init(self.LB_INTENSITY)
         self.energy_scale.init(self.energies[0] / mu0)
         self.sigma.init(np.sqrt(np.average((xdata - mu0)**2, weights=ydata)))
 

@@ -54,6 +54,7 @@ __all__ = [
     "StretchedExponentialComplement",
     "Gaussian",
     "Fe55Forest",
+    "AuForest",
     "Probit",
     "ErfSigmoid",
     "LogisticSigmoid",
